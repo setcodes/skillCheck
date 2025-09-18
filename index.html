@@ -1,0 +1,38 @@
+<!doctype html><html lang="ru"><head>
+<meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg"/><title>SkillFoundry — Interview Suite</title>
+<style>
+:root{--bg:#0f111a;--fg:#e6e6e6;--muted:#9aa0a6;--card:#161b28;--accent:#60a5fa;--good:#22c55e;--bad:#ef4444;--border:#2a3246}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,"Noto Sans",sans-serif}
+.wrap{max-width:1200px;margin:0 auto;padding:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px}.brand h1{margin:0;font-size:18px}
+.role-switch{display:flex;gap:8px;align-items:center}
+.role-btn{display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9999px;border:1px solid var(--border);background:#0b0f17;color:var(--fg);cursor:pointer}
+.role-btn.active{background:var(--accent);color:#0b0f17;border:none}
+.prof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:10px 0 14px}
+.prof-card{display:flex;flex-direction:column;gap:4px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer}
+.prof-title{display:flex;align-items:center;gap:8px;font-weight:600}.prof-sub{color:var(--muted);font-size:12px}
+      .prof-card.selected{outline:1px solid var(--accent)}
+      .prof-card.selected .prof-title{color:var(--accent)}
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:#0b0f17;color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--accent);color:#081018;border:none}
+.badge{display:inline-block;padding:2px 8px;border-radius:9999px;background:#0b0f17;border:1px solid var(--border);margin-left:8px}
+.card{background:var(--card);border-radius:12px;padding:20px;border:1px solid var(--border)}
+.main-grid{display:grid;grid-template-columns:1fr 440px;gap:18px}
+.left-scroll{max-height:calc(100vh - 220px);overflow:auto;padding:8px 10px 8px 6px}
+.right-sticky{position:sticky;top:12px;max-height:calc(100vh - 220px);overflow:auto;padding-right:6px}
+textarea,input,select{width:100%;max-width:100%;background:#0b0f17;color:var(--fg);border:1px solid var(--border);border-radius:8px;padding:8px}textarea{resize:vertical}
+pre{white-space:pre-wrap;overflow-wrap:anywhere}ul{padding-left:18px}
+.ok{color:var(--good)}.fail{color:var(--bad)}table{width:100%;border-collapse:collapse}th,td{border:1px solid var(--border);padding:8px;text-align:left}
+@media (max-width:1100px){.main-grid{grid-template-columns:1fr}.right-sticky{position:static;max-height:none}}
+@media (max-width:740px){.prof-grid{grid-template-columns:1fr}.brand h1{font-size:16px}}
+@media print {.topbar,.prof-grid,.modes{display:none!important}body{background:#fff;color:#000}.card{box-shadow:none;border:1px solid #ccc}}
+      .card pre, .card code{max-width:100%;overflow-x:auto;white-space:pre;}
+      .card pre{padding-bottom:4px}
+      .right-sticky{overscroll-behavior:contain}
+</style></head><body>
+<div id="root"></div><script type="module" src="/src/main.tsx"></script>
+</body></html>
