@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock, Sun, Moon } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock, Sun, Moon, CircleCheckBig, UserCog, User, AlertTriangle } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Toaster } from '@/shared/ui/toaster'
 import { AppProvider, useApp } from './providers/AppProvider'
@@ -8,6 +8,7 @@ import type { Profession } from '@/entities/profession/model/types'
 import { cn } from '@/shared/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/shared/ui/dropdown-menu'
+import { useToast } from '@/shared/hooks/use-toast'
 
 // Импорты страниц
 import SolvePage from '@/pages/solve/SolvePage'
@@ -87,6 +88,65 @@ function AppContent() {
     localStorage.setItem('theme', theme)
   }, [theme])
 
+  // Toast notifications for global timer (down mode)
+  const { toast } = useToast()
+  const [notifiedHalf, setNotifiedHalf] = useState(false)
+  const [notifiedTen, setNotifiedTen] = useState(false)
+  const prevValRef = React.useRef<number>(intValueSec)
+
+  // Reset notifications when mode/limit changes or timer restarted
+  useEffect(()=>{ setNotifiedHalf(false); setNotifiedTen(false) }, [intMode, intLimitSec])
+  useEffect(()=>{
+    if(!intRunning) { setNotifiedHalf(false); setNotifiedTen(false) }
+  }, [intRunning])
+
+  useEffect(()=>{
+    if (intMode !== 'down') { prevValRef.current = intValueSec; return }
+    const remaining = intValueSec
+    const limit = intLimitSec
+    if (limit > 0 && intRunning) {
+      const half = Math.floor(limit/2)
+      const ten = Math.ceil(limit*0.10)
+      if (!notifiedHalf && remaining <= half) {
+        setNotifiedHalf(true)
+        toast({
+          title: (
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              Половина времени прошла
+            </span>
+          ),
+          description: `Осталось ~ ${formatSeconds(remaining)}`,
+        })
+      }
+      if (!notifiedTen && remaining <= ten) {
+        setNotifiedTen(true)
+        toast({
+          title: (
+            <span className="inline-flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Меньше 10% времени
+            </span>
+          ),
+          description: `Осталось ~ ${formatSeconds(remaining)}`,
+        })
+      }
+    }
+    // Time over
+    if (prevValRef.current > 0 && intValueSec === 0 && intMode==='down') {
+      toast({
+        title: (
+          <span className="inline-flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            Время истекло
+          </span>
+        ),
+        description: 'Глобальный таймер остановлен',
+      })
+    }
+    prevValRef.current = intValueSec
+  }, [intMode, intRunning, intLimitSec, intValueSec])
+
   return (
     <div className="h-screen bg-background overflow-hidden flex flex-col print:h-auto print:overflow-visible">
       {/* Header */}
@@ -94,19 +154,19 @@ function AppContent() {
             <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src="/logo.svg" width="64" height="64" alt="SkillCheck"/>
-              <h1 className="text-2xl font-bold text-foreground">SkillCheck</h1>
+              <div className="p-2 rounded-full bg-primary/10 text-primary">
+                <CircleCheckBig className="h-10 w-10" aria-label="SkillCheck" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground font-brand uppercase tracking-wide">SkillCheck</h1>
             </div>
             <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline" 
-                size="sm"
+              <Button
+                variant="outline"
+                size="icon"
                 onClick={()=> setTheme(t => t==='dark'?'light':'dark')}
-                className="flex items-center gap-2"
                 title={theme==='dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
               >
                 {theme==='dark' ? <Sun className="h-4 w-4"/> : <Moon className="h-4 w-4"/>}
-                <span className="hidden sm:inline">{theme==='dark' ? 'Светлая' : 'Тёмная'}</span>
               </Button>
               <Button 
                 variant={role==='interviewer'?'default':'outline'} 
@@ -114,6 +174,7 @@ function AppContent() {
                 onClick={()=>setRole('interviewer')}
                 className="flex items-center space-x-2"
               >
+                <UserCog className="h-4 w-4" />
                 <span>Интервьюер</span>
               </Button>
               <Button 
@@ -122,6 +183,7 @@ function AppContent() {
                 onClick={()=>setRole('candidate')}
                 className="flex items-center space-x-2"
               >
+                <User className="h-4 w-4" />
                 <span>Кандидат</span>
               </Button>
             </div>
