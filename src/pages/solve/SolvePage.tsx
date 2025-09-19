@@ -423,6 +423,8 @@ export default function Solve(){
                 onResetTests={resetTests}
                 consoleOutput={logs}
                 onClearConsole={()=> setLogs([])}
+                timerLabel={formatSeconds(taskTimerValueSec)}
+                timerStatus={taskTimerRunning ? 'running' : 'paused'}
               />
               
               {/* Reference Solution for Interviewer */}

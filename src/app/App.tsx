@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock, Sun, Moon, CircleCheckBig, UserCog, User, AlertTriangle } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Toaster } from '@/shared/ui/toaster'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
 import { AppProvider, useApp } from './providers/AppProvider'
 import { PROFESSIONS, PROFESSION_ICONS } from '@/entities/profession/model/constants'
 import type { Profession } from '@/entities/profession/model/types'
@@ -15,8 +16,9 @@ import SolvePage from '@/pages/solve/SolvePage'
 import TheoryPage from '@/pages/theory/TheoryPage'
 import InterviewPage from '@/pages/interview/InterviewPage'
 import DataHubPage from '@/pages/data-hub/DataHubPage'
+import MockPage from '@/pages/mock/MockPage'
 
-type Tab = 'solve' | 'interview' | 'theory' | 'data'
+type Tab = 'solve' | 'interview' | 'theory' | 'mock' | 'data'
 
 function AppContent() {
   const { role, prof, selectedProf, setSelectedProf, setRole, setProf } = useApp()
@@ -221,6 +223,53 @@ function AppContent() {
                 )
               })}
             </div>
+            {/* О платформе */}
+            <div className="max-w-6xl mx-auto mt-10">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-brand uppercase tracking-wide text-2xl">SkillCheck</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-4">
+                  <p>
+                    SkillCheck — веб‑платформа для проведения технических интервью, отработки навыков и подготовки к реальным собеседованиям. 
+                    Она объединяет теорию, задачи и удобный отчёт по итогам.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><CodeIcon className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Задачи с автопроверкой</div>
+                        <div>Пишите код и запускайте тесты — моментальная обратная связь по решению.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><BookOpen className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Теоретические вопросы</div>
+                        <div>Банк вопросов по профессиям; эталонные ответы доступны в отчёте.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><Clock className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Мок‑интервью</div>
+                        <div>Случайные вопросы и задачи, общий таймер, сводный отчёт и рекомендация по уровню.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><Users className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Режим интервьюера</div>
+                        <div>Выставляйте оценки, оставляйте комментарии и печатайте итоговый отчёт.</div>
+                      </div>
+                    </div>
+                  </div>
+                  <p>
+                    Начните с выбора профессии выше, затем переходите к теории, задачам или запустите «Мок‑интервью», чтобы максимально приблизиться к формату реального технического собеседования.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </section>
       ) : (
@@ -335,6 +384,14 @@ function AppContent() {
                     <CodeIcon className="h-4 w-4" />
                     <span>Решение задач</span>
                   </Button>
+                  <Button 
+                    variant={tab==='mock'?'default':'outline'} 
+                    onClick={()=>setTab('mock')}
+                    className="flex items-center gap-2"
+                  >
+                    <Clock className="h-4 w-4" />
+                    <span>Мок‑интервью</span>
+                  </Button>
                   {role==='interviewer' && (
                     <Button 
                       variant={tab==='interview'?'default':'outline'} 
@@ -374,6 +431,7 @@ function AppContent() {
               {tab==='solve' && <SolvePage />}
               {tab==='interview' && role==='interviewer' && <InterviewPage />}
               {tab==='theory' && <TheoryPage />}
+              {tab==='mock' && <MockPage />}
               {tab==='data' && role==='interviewer' && <DataHubPage />}
             </div>
           </main>
