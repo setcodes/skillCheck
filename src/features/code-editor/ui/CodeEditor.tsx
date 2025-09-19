@@ -1,13 +1,18 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useImperativeHandle, useRef, useState, forwardRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Editor } from '@monaco-editor/react'
 import { Button } from '@/shared/ui/button'
-import { Wand2, Maximize2, Minimize2, X } from 'lucide-react'
+import { Wand2, Maximize2, Minimize2, X, Play, RotateCcw } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import * as prettier from 'prettier/standalone'
 import parserBabel from 'prettier/parser-babel'
 import parserHtml from 'prettier/parser-html'
 import parserCss from 'prettier/parser-postcss'
 import parserYaml from 'prettier/parser-yaml'
+
+export type CodeEditorHandle = {
+  enterFullscreen: () => void
+}
 
 interface CodeEditorProps {
   value: string
@@ -17,19 +22,43 @@ interface CodeEditorProps {
   className?: string
   placeholder?: string
   onFullscreenChange?: (isFullscreen: boolean) => void
+  // fullscreen actions (optional)
+  onRun?: () => void
+  onResetTask?: () => void
+  onResetTests?: () => void
+  consoleOutput?: string[]
+  onClearConsole?: () => void
 }
 
-export default function CodeEditor({
+const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEditor({
   value,
   onChange,
   language = 'javascript',
   height = '300px',
   className,
   placeholder = 'Введите ваш код здесь...',
-  onFullscreenChange
-}: CodeEditorProps) {
+  onFullscreenChange,
+  onRun,
+  onResetTask,
+  onResetTests,
+  consoleOutput,
+  onClearConsole
+}: CodeEditorProps, ref) {
   const editorRef = useRef<any>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [showConsole, setShowConsole] = useState(true)
+  const consoleRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!showConsole) return
+    const el = consoleRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [consoleOutput, showConsole])
+  useEffect(() => {
+    if (Array.isArray(consoleOutput) && consoleOutput.length > 0) {
+      setShowConsole(true)
+    }
+  }, [consoleOutput])
 
   const handleEditorDidMount = (editor: any, monaco: any) => {
     editorRef.current = editor
@@ -104,6 +133,15 @@ export default function CodeEditor({
     setIsFullscreen(newFullscreen)
     onFullscreenChange?.(newFullscreen)
   }
+
+  useImperativeHandle(ref, () => ({
+    enterFullscreen: () => {
+      if (!isFullscreen) {
+        setIsFullscreen(true)
+        onFullscreenChange?.(true)
+      }
+    }
+  }), [isFullscreen, onFullscreenChange])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Escape' && isFullscreen) {
@@ -190,7 +228,7 @@ export default function CodeEditor({
   }
 
   if (isFullscreen) {
-    return (
+    const overlay = (
       <div 
         className="fixed inset-0 z-50 bg-background flex flex-col"
         onKeyDown={handleKeyDown}
@@ -207,6 +245,59 @@ export default function CodeEditor({
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            {typeof onRun === 'function' && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={onRun}
+                className="h-8 px-3 text-xs"
+              >
+                <Play className="h-3 w-3 mr-1" />
+                Запустить
+              </Button>
+            )}
+            {typeof onResetTests === 'function' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onResetTests}
+                className="h-8 px-3 text-xs"
+              >
+                <RotateCcw className="h-3 w-3 mr-1" />
+                Очистить тесты
+              </Button>
+            )}
+            {typeof consoleOutput !== 'undefined' && (
+              <Button
+                variant={showConsole ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={() => setShowConsole(s => !s)}
+                className="h-8 px-3 text-xs"
+              >
+                Консоль {showConsole ? '▾' : '▸'}
+              </Button>
+            )}
+            {typeof consoleOutput !== 'undefined' && consoleOutput && consoleOutput.length>0 && typeof onClearConsole==='function' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearConsole}
+                className="h-8 px-3 text-xs"
+              >
+                Очистить консоль
+              </Button>
+            )}
+            {typeof onResetTask === 'function' && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onResetTask}
+                className="h-8 px-3 text-xs"
+              >
+                <X className="h-3 w-3 mr-1" />
+                Сбросить задачу
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -228,51 +319,74 @@ export default function CodeEditor({
           </div>
         </div>
         
-        <div className="flex-1">
-          <Editor
-            height="100%"
-            language={language}
-            value={value}
-            onChange={handleEditorChange}
-            onMount={handleEditorDidMount}
-            options={{
-              minimap: { enabled: true },
-              scrollBeyondLastLine: false,
-              fontSize: 16,
-              lineNumbers: 'on',
-              roundedSelection: false,
-              scrollbar: {
-                vertical: 'auto',
-                horizontal: 'auto',
-                verticalScrollbarSize: 12,
-                horizontalScrollbarSize: 12,
-              },
-              automaticLayout: true,
-              tabSize: 2,
-              insertSpaces: true,
-              wordWrap: 'on',
-              padding: { top: 20, bottom: 20 },
-              quickSuggestions: {
-                other: 'on',
-                comments: 'off',
-                strings: 'on',
-              },
-              parameterHints: {
-                enabled: true,
-              },
-              hover: {
-                enabled: true,
-              },
-              contextmenu: true,
-              mouseWheelZoom: true,
-              cursorBlinking: 'blink',
-              cursorSmoothCaretAnimation: 'on',
-              smoothScrolling: true,
-            }}
-          />
+        <div className="flex-1 min-h-0 flex">
+          <div className="flex-1 min-w-0">
+            <Editor
+              height="100%"
+              language={language}
+              value={value}
+              onChange={handleEditorChange}
+              onMount={handleEditorDidMount}
+              options={{
+                minimap: { enabled: true },
+                scrollBeyondLastLine: false,
+                fontSize: 16,
+                lineNumbers: 'on',
+                roundedSelection: false,
+                scrollbar: {
+                  vertical: 'auto',
+                  horizontal: 'auto',
+                  verticalScrollbarSize: 12,
+                  horizontalScrollbarSize: 12,
+                },
+                automaticLayout: true,
+                tabSize: 2,
+                insertSpaces: true,
+                wordWrap: 'on',
+                padding: { top: 20, bottom: 20 },
+                quickSuggestions: {
+                  other: 'on',
+                  comments: 'off',
+                  strings: 'on',
+                },
+                parameterHints: {
+                  enabled: true,
+                },
+                hover: {
+                  enabled: true,
+                },
+                contextmenu: true,
+                mouseWheelZoom: true,
+                cursorBlinking: 'blink',
+                cursorSmoothCaretAnimation: 'on',
+                smoothScrolling: true,
+              }}
+            />
+          </div>
+          {typeof consoleOutput !== 'undefined' && showConsole && (
+            <div className="w-[28rem] max-w-full border-l bg-muted/40 flex flex-col">
+              <div className="px-3 py-2 text-xs border-b flex items-center justify-between">
+                <span className="text-muted-foreground">Консоль</span>
+                {typeof onClearConsole==='function' && (
+                  <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={onClearConsole}>Очистить</Button>
+                )}
+              </div>
+              <div ref={consoleRef} className="flex-1 overflow-auto p-2 text-xs font-mono">
+                {Array.isArray(consoleOutput) && consoleOutput.length>0 ? (
+                  consoleOutput.map((line, i)=> (
+                    <div key={i} className="whitespace-pre-wrap text-muted-foreground">{line}</div>
+                  ))
+                ) : (
+                  <div className="text-muted-foreground/70">Консоль пуста</div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     )
+    // Рендерим оверлей через портал, чтобы не влияли overflow/stacking контексты предков
+    return createPortal(overlay, document.body)
   }
 
   return (
@@ -347,4 +461,6 @@ export default function CodeEditor({
       />
     </div>
   )
-}
+})
+
+export default CodeEditor

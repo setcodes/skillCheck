@@ -1,2 +1,2 @@
-export { getTasks } from './catalog'
+export { getTasks } from './questions'
 export { runModule } from './runner'

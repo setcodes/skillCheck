@@ -72,19 +72,43 @@ const QUESTIONS_BY_PROF: Record<Profession, TheoryQuestion[]> = {
 }
 
 export function getQuestions(prof: Profession): TheoryQuestion[] {
+  try {
+    const raw = localStorage.getItem(lsKeyQuestions(prof))
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed as TheoryQuestion[]
+    }
+  } catch {}
   return QUESTIONS_BY_PROF[prof] || []
 }
 
 export function putQuestions(prof: Profession, questions: TheoryQuestion[]): void {
-  // В реальном приложении здесь была бы логика сохранения
-  console.log(`Saving questions for ${prof}:`, questions)
+  try {
+    localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(questions))
+  } catch (e) {
+    console.error('Failed to save questions', e)
+  }
 }
 
 export function getTasks(prof: Profession): UITask[] {
+  try {
+    const raw = localStorage.getItem(lsKeyTasks(prof))
+    if (raw) {
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed)) return parsed as UITask[]
+    }
+  } catch {}
   return TASKS_BY_PROF[prof] || []
 }
 
 export function putTasks(prof: Profession, tasks: UITask[]): void {
-  // В реальном приложении здесь была бы логика сохранения
-  console.log(`Saving tasks for ${prof}:`, tasks)
+  try {
+    localStorage.setItem(lsKeyTasks(prof), JSON.stringify(tasks))
+  } catch (e) {
+    console.error('Failed to save tasks', e)
+  }
 }
+
+// LocalStorage keys
+function lsKeyQuestions(prof: Profession) { return `bank:${prof}:questions` }
+function lsKeyTasks(prof: Profession) { return `bank:${prof}:tasks` }

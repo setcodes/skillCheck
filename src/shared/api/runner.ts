@@ -1,4 +1,9 @@
-export async function runModule(userCode:string, tests:string):Promise<{ok:boolean;message:string}[]>{
+export async function runModule(
+  userCode: string,
+  tests: string,
+  opts?: { debug?: boolean }
+): Promise<{ ok: boolean; message: string }[]> {
+  const debug = !!opts?.debug
   try {
     // Создаем функцию assert
     const createAssert = (report: (ok: boolean, msg: string) => void) => {
@@ -113,20 +118,24 @@ export async function runModule(userCode:string, tests:string):Promise<{ok:boole
     testCode = testCode.replace(/assert\.deepEqual/g, 'assert.strict.deepEqual')
     testCode = testCode.replace(/assert\.ok/g, 'assert.strict.ok')
     
-    console.log('Original user code:', userCode)
-    console.log('Clean user code:', cleanUserCode)
-    console.log('Function names:', functionNames)
-    console.log('Original test code:', tests)
-    console.log('Processed test code:', testCode)
-    console.log('User module:', userModule)
+    if (debug) {
+      console.log('Original user code:', userCode)
+      console.log('Clean user code:', cleanUserCode)
+      console.log('Function names:', functionNames)
+      console.log('Original test code:', tests)
+      console.log('Processed test code:', testCode)
+      console.log('User module:', userModule)
+    }
     
     // Проверяем, что код стал валидным JavaScript
     try {
       new Function(cleanUserCode)
-      console.log('Clean code is valid JavaScript')
+      if (debug) console.log('Clean code is valid JavaScript')
     } catch (e) {
-      console.error('Clean code is still invalid:', e)
-      console.log('Clean code:', cleanUserCode)
+      if (debug) {
+        console.error('Clean code is still invalid:', e)
+        console.log('Clean code:', cleanUserCode)
+      }
     }
     
     // Проверяем, что все функции доступны
@@ -140,8 +149,10 @@ export async function runModule(userCode:string, tests:string):Promise<{ok:boole
       // Выполняем тест с доступом к модулю и assert
       new Function('assert', 'userModule', testCode)(assert, userModule)
     } catch (e: any) {
-      console.error('Test execution error:', e)
-      console.error('Error stack:', e?.stack)
+      if (debug) {
+        console.error('Test execution error:', e)
+        console.error('Error stack:', e?.stack)
+      }
       results.push({ok: false, message: `Test execution error: ${e?.message || 'Unknown error'}`})
     }
     
@@ -152,7 +163,7 @@ export async function runModule(userCode:string, tests:string):Promise<{ok:boole
 
     return results
   } catch (error: any) {
-    console.error('Error in runModule:', error)
+    if (debug) console.error('Error in runModule:', error)
     return [{ok: false, message: error?.message || 'Unknown error'}]
   }
 }

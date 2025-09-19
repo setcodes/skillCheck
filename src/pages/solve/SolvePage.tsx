@@ -1,16 +1,18 @@
-import React,{useEffect,useMemo,useState} from 'react'
-import { Play, CheckCircle, XCircle, Star, Send } from 'lucide-react'
+import React,{useEffect,useMemo,useRef,useState} from 'react'
+import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { CodeEditor } from '@/features/code-editor/ui'
+import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { useToast } from '@/shared/hooks/use-toast'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
 import { runModule } from '@/shared/api/runner'
 import { getTasks } from '@/shared/api/questions'
 import type { UITask } from '@/entities/task/model/types'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 type Sol={code:string;lastResult?:{ok:boolean;message:string}[];score?:number;comment?:string}
 const K='solutions.v4';const load=()=>{try{const r=localStorage.getItem(K);if(r)return JSON.parse(r)}catch{}return{}};const save=(x:any)=>{try{localStorage.setItem(K,JSON.stringify(x))}catch{}}
 export default function Solve(){
@@ -20,6 +22,56 @@ export default function Solve(){
   const list=tasks.filter((x:UITask)=>x.level===level); const[cur,setCur]=useState<string>(list[0]?.id||''); useEffect(()=>{const l=tasks.filter((x:UITask)=>x.level===level);setCur(l[0]?.id||'')},[level,tasks])
   const task=useMemo(()=>tasks.find((x:UITask)=>x.id===cur),[cur,tasks]); const code=(t[cur]?.code)??(task?.starter||'')
   const {toast}=useToast()
+  const editorRef = useRef<CodeEditorHandle | null>(null)
+  // Per-task timer (configurable, off by default)
+  const [taskTimerMode, setTaskTimerMode] = useState<'up'|'down'>('up')
+  const [taskTimerLimitSec, setTaskTimerLimitSec] = useState<number>(900)
+  const [taskTimerValueSec, setTaskTimerValueSec] = useState<number>(0)
+  const [taskTimerRunning, setTaskTimerRunning] = useState<boolean>(false)
+
+  // Load/save per-task timer settings from localStorage
+  useEffect(()=>{
+    if(!task?.id) return
+    const key = (s:string)=> `task.timer.${prof}.${task.id}.${s}`
+    const m = (localStorage.getItem(key('mode')) as 'up'|'down') || 'up'
+    const limit = Number(localStorage.getItem(key('limitSec'))||'900')
+    const running = localStorage.getItem(key('running'))==='1'
+    const val = Number(localStorage.getItem(key('valueSec'))|| (m==='down'? String(limit) : '0'))
+    setTaskTimerMode(m)
+    setTaskTimerLimitSec(Number.isFinite(limit)?limit:900)
+    setTaskTimerValueSec(Number.isFinite(val)?val:(m==='down'?limit:0))
+    setTaskTimerRunning(running && false) // по умолчанию не включен
+  }, [task?.id, prof])
+
+  useEffect(()=>{
+    if(!task?.id) return
+    const key = (s:string)=> `task.timer.${prof}.${task.id}.${s}`
+    localStorage.setItem(key('mode'), taskTimerMode)
+    localStorage.setItem(key('limitSec'), String(taskTimerLimitSec))
+    localStorage.setItem(key('valueSec'), String(taskTimerValueSec))
+    localStorage.setItem(key('running'), taskTimerRunning ? '1':'0')
+  }, [task?.id, prof, taskTimerMode, taskTimerLimitSec, taskTimerValueSec, taskTimerRunning])
+
+  useEffect(()=>{
+    if(!task?.id || !taskTimerRunning) return
+    const id = setInterval(()=>{
+      setTaskTimerValueSec(v=>{
+        if(taskTimerMode==='up') return v+1
+        const nv = v-1
+        if(nv<=0){ setTaskTimerRunning(false); return 0 }
+        return nv
+      })
+    },1000)
+    return ()=> clearInterval(id)
+  }, [task?.id, taskTimerRunning, taskTimerMode])
+
+  const formatSeconds = (total: number) => {
+    total = Math.max(0, Math.floor(total))
+    const h = Math.floor(total / 3600).toString().padStart(2, '0')
+    const m = Math.floor((total % 3600) / 60).toString().padStart(2, '0')
+    const s = (total % 60).toString().padStart(2, '0')
+    return `${h}:${m}:${s}`
+  }
   
   // Определяем язык программирования в зависимости от профессии
   const getLanguage = () => {
@@ -32,6 +84,7 @@ export default function Solve(){
     }
   }
   
+  const [logs, setLogs] = useState<string[]>([])
   const run=async()=>{
     if(!task)return; 
     
@@ -51,8 +104,19 @@ export default function Solve(){
       description: "Выполняются тесты для задачи",
     })
     
+    // перехватываем вывод консоли во время запуска
+    const tmpLogs: string[] = []
+    const orig = { log: console.log, error: console.error, warn: console.warn, info: console.info }
+    const push = (type: string, args: any[]) => {
+      try { tmpLogs.push(`[${type}] ` + args.map((a:any)=> typeof a==='string'?a:JSON.stringify(a)).join(' ')) } catch { /* noop */ }
+    }
+    console.log = (...a:any[]) => { push('log', a); orig.log(...a) }
+    console.error = (...a:any[]) => { push('error', a); orig.error(...a) }
+    console.warn = (...a:any[]) => { push('warn', a); orig.warn(...a) }
+    console.info = (...a:any[]) => { push('info', a); orig.info(...a) }
+
     try {
-      const res=await runModule(code,task.tests); 
+      const res=await runModule(code,task.tests,{debug:false}); 
       setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,lastResult:res}}))
       
       // Проверяем, есть ли результаты тестов
@@ -95,6 +159,9 @@ export default function Solve(){
         description: `Не удалось запустить тесты: ${errorMessage}`,
         variant: "destructive"
       })
+    } finally {
+      console.log = orig.log; console.error = orig.error; console.warn = orig.warn; console.info = orig.info
+      setLogs(tmpLogs)
     }
   }
   const setScore=(s:number)=>task&&setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,score:s}})); const setComment=(c:string)=>task&&setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,comment:c}}))
@@ -113,16 +180,23 @@ export default function Solve(){
   const resetTask=()=>{
     if(!task)return; 
     setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:task.starter,lastResult:undefined}})); 
+    setLogs([])
     toast({
       title: "🔄 Задача сброшена",
       description: "Код возвращен к исходному состоянию",
       variant: "default"
     })
   }
-  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  const resetTests=()=>{
+    if(!task) return;
+    setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,lastResult:undefined}}))
+    setLogs([])
+    toast({ title: '🧹 Результаты очищены', description: 'Очищены результаты тестов и консоль', variant: 'default' })
+  }
+  return <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
     {/* Tasks List */}
-    <div className="lg:col-span-1">
-      <div className="bg-card border rounded-lg p-6 h-fit">
+    <div className="lg:col-span-1 h-full min-h-0">
+      <div className="bg-card border rounded-lg p-6 h-full flex flex-col min-h-0">
         <h2 className="text-xl font-semibold mb-4">Задачи — {prof}</h2>
         
         {/* Level Filter */}
@@ -141,7 +215,7 @@ export default function Solve(){
         </div>
         
         {/* Tasks List */}
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
           {list.map(x=>(
             <Button 
               key={x.id} 
@@ -160,39 +234,120 @@ export default function Solve(){
     </div>
 
     {/* Task Details */}
-    <div className="lg:col-span-2">
-      <div className="bg-card border rounded-lg p-6">
+    <div className="lg:col-span-2 h-full min-h-0">
+      <div className="bg-card border rounded-lg h-full flex flex-col">
         {task ? (
           <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">{task.title}</h2>
-              <Badge variant={task.level === 'junior' ? 'default' : task.level === 'middle' ? 'secondary' : 'destructive'}>
-                {task.level}
-              </Badge>
+            <div className="p-6 border-b flex flex-col gap-3">
+              {/* Block 1: Timers + Tags */}
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="text-xs text-muted-foreground flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1 font-medium text-foreground">
+                    <Timer className="h-4 w-4" /> Таймер задачи:
+                  </span>
+                  <span className="font-mono">{formatSeconds(taskTimerValueSec)}</span>
+                  <Button variant="outline" size="sm" className="inline-flex items-center gap-1" onClick={()=> setTaskTimerRunning(r=>!r)}>
+                    {taskTimerRunning ? (
+                      <>
+                        <Pause className="h-3 w-3" />
+                        Пауза
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3 w-3" />
+                        Старт
+                      </>
+                    )}
+                  </Button>
+                  <Button variant="outline" size="sm" className="inline-flex items-center gap-1" onClick={()=> setTaskTimerValueSec(taskTimerMode==='down'? taskTimerLimitSec : 0)}>
+                    <RotateCcw className="h-3 w-3" />
+                    Сброс
+                  </Button>
+                  <div className="w-[130px]">
+                    <Select value={taskTimerMode} onValueChange={(m: 'up'|'down')=>{
+                      setTaskTimerMode(m)
+                      setTaskTimerRunning(false)
+                      setTaskTimerValueSec(m==='down'? taskTimerLimitSec : 0)
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Режим" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="up">Прямой</SelectItem>
+                        <SelectItem value="down">Обратный</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {taskTimerMode==='down' && (
+                    <span className="flex items-center gap-1">
+                      <input 
+                        className="w-16 px-1 py-0.5 rounded border bg-card text-right font-mono"
+                        type="number" min={1} step={1}
+                        value={Math.floor(taskTimerLimitSec/60)}
+                        onChange={e=>{
+                          const mins = Math.max(1, Number(e.target.value)||0)
+                          const sec = mins*60
+                          setTaskTimerLimitSec(sec)
+                          if(!taskTimerRunning) setTaskTimerValueSec(sec)
+                        }}
+                      />
+                      <span className="text-muted-foreground">мин</span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={task.level === 'junior' ? 'default' : task.level === 'middle' ? 'secondary' : 'destructive'} className="capitalize">
+                    {task.level}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {getLanguage().toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+              {/* Block 2: Title + Description with icon */}
+              <div>
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-primary" />
+                  {task.title}
+                </h2>
+                <p className="text-muted-foreground mt-1">{task.description}</p>
+              </div>
             </div>
             
-            <p className="text-muted-foreground mb-6">{task.description}</p>
-            
-            {/* Code Editor */}
-            <div className="mb-6">
+            {/* Scrollable content area */}
+            <div className="p-6 flex-1 overflow-y-auto">
+              {/* Code Editor */}
               <div className="flex items-center justify-between mb-2">
-                <label className="text-sm font-medium">Код решения:</label>
-                <Badge variant="outline" className="text-xs">
-                  {getLanguage().toUpperCase()}
-                </Badge>
+                <label className="text-sm font-medium">Код задачи:</label>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="default" onClick={()=>editorRef.current?.enterFullscreen()}>
+                    Перейти к решению
+                  </Button>
+                </div>
               </div>
+              <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto">
+                {task.starter}
+              </pre>
+              {/* Скрытый редактор: используется только для полноэкранного режима */}
               <CodeEditor
+                className="hidden"
+                ref={editorRef}
                 value={code}
                 onChange={(value) => setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:value}}))}
                 language={getLanguage()}
-                height="400px"
+                height="0px"
                 placeholder="Введите ваш код здесь..."
+                onFullscreenChange={()=>{ /* no-op */ }}
+                onRun={run}
+                onResetTask={resetTask}
+                onResetTests={resetTests}
+                consoleOutput={logs}
+                onClearConsole={()=> setLogs([])}
               />
-            </div>
-            
-            {/* Reference Solution for Interviewer */}
-            {role==='interviewer' && task.solution && (
-              <div className="mb-6">
+              
+              {/* Reference Solution for Interviewer */}
+              {role==='interviewer' && task.solution && (
+              <div className="mt-6">
                 <details className="border rounded-lg">
                   <summary className="cursor-pointer p-4 bg-muted/50 hover:bg-muted/70 transition-colors">
                     <div className="flex items-center gap-2">
@@ -211,20 +366,10 @@ export default function Solve(){
                   </div>
                 </details>
               </div>
-            )}
+              )}
             
-            {/* Actions */}
-            <div className="flex flex-wrap gap-3 mb-6">
-              <Button onClick={run} className="flex items-center gap-2">
-                <Play className="h-4 w-4"/>
-                Запустить тесты
-              </Button>
-              
-              <Button variant="outline" onClick={resetTask} className="flex items-center gap-2">
-                <XCircle className="h-4 w-4"/>
-                Сбросить задачу
-              </Button>
-              
+            {/* Actions (без запуска тестов в обычном режиме) */}
+            <div className="flex flex-wrap gap-3 mt-6">
               {role==='interviewer' && (
                 <>
                   <div className="flex items-center gap-2">
@@ -262,7 +407,7 @@ export default function Solve(){
             )}
             
             {/* Test Results */}
-            <div className="mb-6">
+            <div className="mt-6">
               <h3 className="text-lg font-semibold mb-3">Результаты тестов</h3>
               <div className="space-y-2">
                 {(t[task.id]?.lastResult||[]).map((r,i)=>(
@@ -286,6 +431,7 @@ export default function Solve(){
                 {task.tests}
               </pre>
             </details>
+            </div>
           </>
         ) : (
           <div className="text-center py-12">
