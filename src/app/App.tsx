@@ -1,21 +1,24 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock, Sun, Moon, CircleCheckBig, UserCog, User, AlertTriangle } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Toaster } from '@/shared/ui/toaster'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
 import { AppProvider, useApp } from './providers/AppProvider'
 import { PROFESSIONS, PROFESSION_ICONS } from '@/entities/profession/model/constants'
 import type { Profession } from '@/entities/profession/model/types'
 import { cn } from '@/shared/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/shared/ui/dropdown-menu'
+import { useToast } from '@/shared/hooks/use-toast'
 
 // Импорты страниц
 import SolvePage from '@/pages/solve/SolvePage'
 import TheoryPage from '@/pages/theory/TheoryPage'
 import InterviewPage from '@/pages/interview/InterviewPage'
 import DataHubPage from '@/pages/data-hub/DataHubPage'
+import MockPage from '@/pages/mock/MockPage'
 
-type Tab = 'solve' | 'interview' | 'theory' | 'data'
+type Tab = 'solve' | 'interview' | 'theory' | 'mock' | 'data'
 
 function AppContent() {
   const { role, prof, selectedProf, setSelectedProf, setRole, setProf } = useApp()
@@ -73,23 +76,107 @@ function AppContent() {
   }
   const interviewDisplay = useMemo(() => formatSeconds(intValueSec), [intValueSec])
 
+  // Theme (light/dark)
+  const [theme, setTheme] = useState<'light'|'dark'>(() => {
+    const saved = localStorage.getItem('theme') as 'light'|'dark'|null
+    if (saved) return saved
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
+  })
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') root.classList.add('dark')
+    else root.classList.remove('dark')
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  // Toast notifications for global timer (down mode)
+  const { toast } = useToast()
+  const [notifiedHalf, setNotifiedHalf] = useState(false)
+  const [notifiedTen, setNotifiedTen] = useState(false)
+  const prevValRef = React.useRef<number>(intValueSec)
+
+  // Reset notifications when mode/limit changes or timer restarted
+  useEffect(()=>{ setNotifiedHalf(false); setNotifiedTen(false) }, [intMode, intLimitSec])
+  useEffect(()=>{
+    if(!intRunning) { setNotifiedHalf(false); setNotifiedTen(false) }
+  }, [intRunning])
+
+  useEffect(()=>{
+    if (intMode !== 'down') { prevValRef.current = intValueSec; return }
+    const remaining = intValueSec
+    const limit = intLimitSec
+    if (limit > 0 && intRunning) {
+      const half = Math.floor(limit/2)
+      const ten = Math.ceil(limit*0.10)
+      if (!notifiedHalf && remaining <= half) {
+        setNotifiedHalf(true)
+        toast({
+          title: (
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              Половина времени прошла
+            </span>
+          ),
+          description: `Осталось ~ ${formatSeconds(remaining)}`,
+        })
+      }
+      if (!notifiedTen && remaining <= ten) {
+        setNotifiedTen(true)
+        toast({
+          title: (
+            <span className="inline-flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Меньше 10% времени
+            </span>
+          ),
+          description: `Осталось ~ ${formatSeconds(remaining)}`,
+        })
+      }
+    }
+    // Time over
+    if (prevValRef.current > 0 && intValueSec === 0 && intMode==='down') {
+      toast({
+        title: (
+          <span className="inline-flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            Время истекло
+          </span>
+        ),
+        description: 'Глобальный таймер остановлен',
+      })
+    }
+    prevValRef.current = intValueSec
+  }, [intMode, intRunning, intLimitSec, intValueSec])
+
   return (
     <div className="h-screen bg-background overflow-hidden flex flex-col print:h-auto print:overflow-visible">
       {/* Header */}
       <header className="border-b bg-card relative z-10 print:hidden">
-        <div className="container mx-auto px-4 py-4">
+            <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src="/logo.svg" width="64" height="64" alt="SkillCheck"/>
-              <h1 className="text-2xl font-bold text-foreground">SkillCheck</h1>
+              <div className="p-2 rounded-full bg-primary/10 text-primary">
+                <CircleCheckBig className="h-10 w-10" aria-label="SkillCheck" />
+              </div>
+              <h1 className="text-2xl font-bold text-foreground font-brand uppercase tracking-wide">SkillCheck</h1>
             </div>
             <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={()=> setTheme(t => t==='dark'?'light':'dark')}
+                title={theme==='dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+              >
+                {theme==='dark' ? <Sun className="h-4 w-4"/> : <Moon className="h-4 w-4"/>}
+              </Button>
               <Button 
                 variant={role==='interviewer'?'default':'outline'} 
                 size="sm"
                 onClick={()=>setRole('interviewer')}
                 className="flex items-center space-x-2"
               >
+                <UserCog className="h-4 w-4" />
                 <span>Интервьюер</span>
               </Button>
               <Button 
@@ -98,6 +185,7 @@ function AppContent() {
                 onClick={()=>setRole('candidate')}
                 className="flex items-center space-x-2"
               >
+                <User className="h-4 w-4" />
                 <span>Кандидат</span>
               </Button>
             </div>
@@ -134,6 +222,53 @@ function AppContent() {
                   </div>
                 )
               })}
+            </div>
+            {/* О платформе */}
+            <div className="max-w-6xl mx-auto mt-10">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-brand uppercase tracking-wide text-2xl">SkillCheck</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-4">
+                  <p>
+                    SkillCheck — веб‑платформа для проведения технических интервью, отработки навыков и подготовки к реальным собеседованиям. 
+                    Она объединяет теорию, задачи и удобный отчёт по итогам.
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><CodeIcon className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Задачи с автопроверкой</div>
+                        <div>Пишите код и запускайте тесты — моментальная обратная связь по решению.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><BookOpen className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Теоретические вопросы</div>
+                        <div>Банк вопросов по профессиям; эталонные ответы доступны в отчёте.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><Clock className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Мок‑интервью</div>
+                        <div>Случайные вопросы и задачи, общий таймер, сводный отчёт и рекомендация по уровню.</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded bg-primary/10 text-primary"><Users className="h-4 w-4"/></div>
+                      <div>
+                        <div className="text-foreground font-medium">Режим интервьюера</div>
+                        <div>Выставляйте оценки, оставляйте комментарии и печатайте итоговый отчёт.</div>
+                      </div>
+                    </div>
+                  </div>
+                  <p>
+                    Начните с выбора профессии выше, затем переходите к теории, задачам или запустите «Мок‑интервью», чтобы максимально приблизиться к формату реального технического собеседования.
+                  </p>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
@@ -249,6 +384,14 @@ function AppContent() {
                     <CodeIcon className="h-4 w-4" />
                     <span>Решение задач</span>
                   </Button>
+                  <Button 
+                    variant={tab==='mock'?'default':'outline'} 
+                    onClick={()=>setTab('mock')}
+                    className="flex items-center gap-2"
+                  >
+                    <Clock className="h-4 w-4" />
+                    <span>Мок‑интервью</span>
+                  </Button>
                   {role==='interviewer' && (
                     <Button 
                       variant={tab==='interview'?'default':'outline'} 
@@ -288,6 +431,7 @@ function AppContent() {
               {tab==='solve' && <SolvePage />}
               {tab==='interview' && role==='interviewer' && <InterviewPage />}
               {tab==='theory' && <TheoryPage />}
+              {tab==='mock' && <MockPage />}
               {tab==='data' && role==='interviewer' && <DataHubPage />}
             </div>
           </main>

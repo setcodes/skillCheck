@@ -2,8 +2,9 @@ import * as React from "react"
 
 import type { ToastActionElement, ToastProps } from "../ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 5
+const TOAST_REMOVE_DELAY = 1000
+const TOAST_AUTO_DISMISS = 5000
 
 type ToasterToast = Omit<ToastProps, 'title'> & {
   id: string
@@ -155,6 +156,11 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // auto-dismiss and let remove queue clear after animation
+  setTimeout(() => {
+    dispatch({ type: "DISMISS_TOAST", toastId: id })
+  }, TOAST_AUTO_DISMISS)
 
   return {
     id: id,

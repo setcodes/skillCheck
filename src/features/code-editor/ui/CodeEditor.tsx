@@ -2,7 +2,7 @@ import React, { useEffect, useImperativeHandle, useRef, useState, forwardRef } f
 import { createPortal } from 'react-dom'
 import { Editor } from '@monaco-editor/react'
 import { Button } from '@/shared/ui/button'
-import { Wand2, Maximize2, Minimize2, X, Play, RotateCcw } from 'lucide-react'
+import { Wand2, Maximize2, Minimize2, X, Play, RotateCcw, Clock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import * as prettier from 'prettier/standalone'
 import parserBabel from 'prettier/parser-babel'
@@ -28,6 +28,9 @@ interface CodeEditorProps {
   onResetTests?: () => void
   consoleOutput?: string[]
   onClearConsole?: () => void
+  // optional timer indicator for fullscreen header
+  timerLabel?: string
+  timerStatus?: 'running' | 'paused'
 }
 
 const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEditor({
@@ -42,7 +45,9 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
   onResetTask,
   onResetTests,
   consoleOutput,
-  onClearConsole
+  onClearConsole,
+  timerLabel,
+  timerStatus
 }: CodeEditorProps, ref) {
   const editorRef = useRef<any>(null)
   const [isFullscreen, setIsFullscreen] = useState(false)
@@ -298,6 +303,13 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
                 Сбросить задачу
               </Button>
             )}
+            {timerLabel && (
+              <div className="hidden md:flex items-center gap-2 px-2 py-1 rounded border bg-card text-xs">
+                <Clock className="h-3 w-3" />
+                <span className="font-mono">{timerLabel}</span>
+                <span className={cn('h-2 w-2 rounded-full', timerStatus==='running' ? 'bg-green-500' : 'bg-muted-foreground/60')}/>
+              </div>
+            )}
             <Button
               variant="ghost"
               size="sm"
@@ -305,7 +317,7 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
               className="h-8 px-3 text-xs"
             >
               <Wand2 className="h-3 w-3 mr-1" />
-              Format
+              Формат
             </Button>
             <Button
               variant="ghost"

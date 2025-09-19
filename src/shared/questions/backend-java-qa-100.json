@@ -1,0 +1,702 @@
+[
+  {
+    "id": "core_01",
+    "level": "junior",
+    "category": "Java Core",
+    "question": "Разница между JDK, JRE и JVM?",
+    "answer": "JVM исполняет байткод; JRE — JVM + библиотеки; JDK — JRE + компилятор/инструменты."
+  },
+  {
+    "id": "core_02",
+    "level": "junior",
+    "category": "Java Core",
+    "question": "Чем примитивы отличаются от ссылочных?",
+    "answer": "Примитивы — значения, не null; ссылочные — ссылки на объекты, могут быть null."
+  },
+  {
+    "id": "core_03",
+    "level": "junior",
+    "category": "Java Core",
+    "question": "Autoboxing/unboxing — риски?",
+    "answer": "Лишние аллокации, NPE при unboxing null; сравнивать wrapper-ы через equals."
+  },
+  {
+    "id": "core_04",
+    "level": "junior",
+    "category": "Java Core",
+    "question": "equals/hashCode контракт?",
+    "answer": "Рефлексивность/симметрия/транзитивность; равные объекты — одинаковые hashCode."
+  },
+  {
+    "id": "core_05",
+    "level": "junior",
+    "category": "Java Core",
+    "question": "final/finally/finalize — различия?",
+    "answer": "final — модификатор; finally — блок; finalize — устаревший GC-хук."
+  },
+  {
+    "id": "core_06",
+    "level": "middle",
+    "category": "Java Core",
+    "question": "Immutable класс — как?",
+    "answer": "final класс, private final поля, защитные копии, без сеттеров."
+  },
+  {
+    "id": "core_07",
+    "level": "middle",
+    "category": "Java Core",
+    "question": "Record/Sealed — когда?",
+    "answer": "Record — DTO; sealed — ограничить наследование для исчерпывающих иерархий."
+  },
+  {
+    "id": "core_08",
+    "level": "senior",
+    "category": "Java Core",
+    "question": "Паттерн-матчинг для instanceof/switch — плюсы?",
+    "answer": "Меньше бойлерплейта, безопасные приведения, исчерпывающие ветки."
+  },
+  {
+    "id": "core_09",
+    "level": "senior",
+    "category": "Java Core",
+    "question": "var — когда уместен?",
+    "answer": "Когда тип очевиден; избегать в неочевидных местах."
+  },
+  {
+    "id": "jvm_01",
+    "level": "junior",
+    "category": "JVM/JMM",
+    "question": "Структура памяти JVM?",
+    "answer": "Stack (кадры), heap (объекты), metaspace (метаданные классов)."
+  },
+  {
+    "id": "jvm_02",
+    "level": "junior",
+    "category": "JVM/JMM",
+    "question": "Bytecode и classloader?",
+    "answer": "JVM исполняет байткод; загрузчики bootstrap/platform/app/custom."
+  },
+  {
+    "id": "jvm_03",
+    "level": "middle",
+    "category": "JVM/JMM",
+    "question": "JIT: C1/C2 и tiered compilation?",
+    "answer": "Смешанный режим: быстрый C1 и оптимизирующий C2 по профилю."
+  },
+  {
+    "id": "jvm_04",
+    "level": "middle",
+    "category": "JVM/JMM",
+    "question": "JMM: happens-before/volatile?",
+    "answer": "volatile — видимость и порядок; hb — согласованные гарантии между потоками."
+  },
+  {
+    "id": "jvm_05",
+    "level": "middle",
+    "category": "JVM/JMM",
+    "question": "Escape analysis/stack allocation?",
+    "answer": "Размещение на стеке и удаление синхронизации при отсутствии утечек."
+  },
+  {
+    "id": "jvm_06",
+    "level": "senior",
+    "category": "JVM/JMM",
+    "question": "GC: G1/ZGC/Shenandoah — сравнение?",
+    "answer": "G1 — регионы; ZGC/Shenandoah — ультра-низкие паузы с барьерами."
+  },
+  {
+    "id": "jvm_07",
+    "level": "senior",
+    "category": "JVM/JMM",
+    "question": "Тюнинг GC — что измерять?",
+    "answer": "Pause time/throughput/alloc rate; GC unified logging; -Xms/-Xmx."
+  },
+  {
+    "id": "jvm_08",
+    "level": "senior",
+    "category": "JVM/JMM",
+    "question": "ClassLoader leakage — причины/поиск?",
+    "answer": "Статика, кэши, ThreadLocal; анализ heap dump-ами."
+  },
+  {
+    "id": "col_01",
+    "level": "junior",
+    "category": "Collections",
+    "question": "ArrayList vs LinkedList?",
+    "answer": "ArrayList O(1) доступ; LinkedList — вставки, но хуже по кеш-локальности."
+  },
+  {
+    "id": "col_02",
+    "level": "junior",
+    "category": "Collections",
+    "question": "HashMap vs TreeMap?",
+    "answer": "HashMap — O(1) среднее; TreeMap — O(log n) и сортировка."
+  },
+  {
+    "id": "col_03",
+    "level": "middle",
+    "category": "Collections",
+    "question": "ConcurrentHashMap — особенности?",
+    "answer": "Неблокирующие чтения, локальные блокировки, слабые итерации."
+  },
+  {
+    "id": "col_04",
+    "level": "middle",
+    "category": "Collections",
+    "question": "CopyOnWriteArrayList — когда?",
+    "answer": "Частые чтения, редкие записи; дорого по памяти/записи."
+  },
+  {
+    "id": "col_05",
+    "level": "senior",
+    "category": "Collections",
+    "question": "Comparable/Comparator — тонкости?",
+    "answer": "Транзитивность, equals-совместимость, null, избегать переполнений."
+  },
+  {
+    "id": "col_06",
+    "level": "senior",
+    "category": "Collections",
+    "question": "WeakHashMap/Reference — применимость?",
+    "answer": "Кэши с жизненным циклом объекта-владельца."
+  },
+  {
+    "id": "conc_01",
+    "level": "junior",
+    "category": "Concurrency",
+    "question": "Thread vs Runnable/Callable?",
+    "answer": "Thread — поток; Runnable/Callable — задача; использовать ExecutorService."
+  },
+  {
+    "id": "conc_02",
+    "level": "junior",
+    "category": "Concurrency",
+    "question": "synchronized — как работает?",
+    "answer": "Монитор на объекте/классе; защищает критическую секцию."
+  },
+  {
+    "id": "conc_03",
+    "level": "middle",
+    "category": "Concurrency",
+    "question": "ReentrantLock vs synchronized?",
+    "answer": "tryLock/interruptible/fair; нужен unlock в finally."
+  },
+  {
+    "id": "conc_04",
+    "level": "middle",
+    "category": "Concurrency",
+    "question": "volatile vs lock — когда?",
+    "answer": "volatile для видимости одиночных операций; lock/атомики для инвариантов."
+  },
+  {
+    "id": "conc_05",
+    "level": "middle",
+    "category": "Concurrency",
+    "question": "Atomic* и LongAdder — отличие?",
+    "answer": "Atomic — CAS; LongAdder быстрее под высокой конкуренцией."
+  },
+  {
+    "id": "conc_06",
+    "level": "senior",
+    "category": "Concurrency",
+    "question": "ForkJoinPool/Parallel Streams — риски?",
+    "answer": "Общий пул, блокирующие операции вредят; кастомные executors."
+  },
+  {
+    "id": "conc_07",
+    "level": "senior",
+    "category": "Concurrency",
+    "question": "CompletableFuture — композиция/тайм-ауты?",
+    "answer": "thenCompose/thenCombine, orTimeout/completeOnTimeout, обработка исключений."
+  },
+  {
+    "id": "conc_08",
+    "level": "senior",
+    "category": "Concurrency",
+    "question": "Deadlock/livelock/starvation — диагностика?",
+    "answer": "jstack/JFR, порядок захватов, тайм-ауты."
+  },
+  {
+    "id": "io_01",
+    "level": "junior",
+    "category": "I/O",
+    "question": "Streams vs Reader/Writer?",
+    "answer": "Байты vs символы; кодировки; try-with-resources."
+  },
+  {
+    "id": "io_02",
+    "level": "middle",
+    "category": "I/O",
+    "question": "Buffered I/O — зачем?",
+    "answer": "Меньше системных вызовов, выше производительность."
+  },
+  {
+    "id": "io_03",
+    "level": "middle",
+    "category": "NIO",
+    "question": "Channels/ByteBuffer — преимущества?",
+    "answer": "Неблокирующий I/O, селекторы, прямые буферы."
+  },
+  {
+    "id": "io_04",
+    "level": "senior",
+    "category": "NIO",
+    "question": "Netty/Vert.x — зачем?",
+    "answer": "Масштабируемость, backpressure; сложнее дебаг."
+  },
+  {
+    "id": "gen_01",
+    "level": "junior",
+    "category": "Generics",
+    "question": "Type erasure — что это?",
+    "answer": "Стирание типов — generics только на compile time."
+  },
+  {
+    "id": "gen_02",
+    "level": "middle",
+    "category": "Generics",
+    "question": "PECS правило?",
+    "answer": "Producer Extends, Consumer Super."
+  },
+  {
+    "id": "gen_03",
+    "level": "middle",
+    "category": "FP",
+    "question": "Функциональные интерфейсы/лямбды?",
+    "answer": "Predicate/Function/Consumer/Supplier; ссылки на методы."
+  },
+  {
+    "id": "gen_04",
+    "level": "senior",
+    "category": "FP",
+    "question": "Stream API — подводные камни?",
+    "answer": "Ленивость, одноразовость, порядок операций, осторожно с parallel."
+  },
+  {
+    "id": "spring_01",
+    "level": "junior",
+    "category": "Spring Core",
+    "question": "DI/IoC — смысл?",
+    "answer": "Контейнер управляет зависимостями и жизненным циклом бинов."
+  },
+  {
+    "id": "spring_02",
+    "level": "junior",
+    "category": "Spring Core",
+    "question": "Scopes бинов?",
+    "answer": "singleton/prototype/request/session/application."
+  },
+  {
+    "id": "spring_03",
+    "level": "middle",
+    "category": "Spring Core",
+    "question": "Стереотипы @Component/@Service/@Repository?",
+    "answer": "Семантика; у @Repository переводчик исключений."
+  },
+  {
+    "id": "spring_04",
+    "level": "middle",
+    "category": "Spring Core",
+    "question": "Жизненный цикл бина @PostConstruct/@PreDestroy?",
+    "answer": "Инициализация после DI; освобождение ресурсов при уничтожении."
+  },
+  {
+    "id": "spring_05",
+    "level": "middle",
+    "category": "Spring Core",
+    "question": "AOP — практические кейсы?",
+    "answer": "Транзакции, кэш, логирование, метрики/аудит."
+  },
+  {
+    "id": "spring_06",
+    "level": "senior",
+    "category": "Spring Core",
+    "question": "JDK Proxy vs CGLIB?",
+    "answer": "Интерфейсы — JDK; классы — CGLIB; финальные методы не перехватываются."
+  },
+  {
+    "id": "spring_07",
+    "level": "senior",
+    "category": "Spring Core",
+    "question": "Circular dependency — решения?",
+    "answer": "Конструкторная инъекция, @Lazy, событийные шины."
+  },
+  {
+    "id": "boot_01",
+    "level": "junior",
+    "category": "Spring Boot",
+    "question": "Преимущества Boot?",
+    "answer": "Автоконфигурация, стартеры, встроенные сервера, actuator."
+  },
+  {
+    "id": "boot_02",
+    "level": "junior",
+    "category": "Spring Boot",
+    "question": "application.yml и профили?",
+    "answer": "spring.profiles, разные конфиги на среды."
+  },
+  {
+    "id": "boot_03",
+    "level": "middle",
+    "category": "Spring Boot",
+    "question": "Actuator — ключевые эндпоинты?",
+    "answer": "health, info, metrics, env, prometheus."
+  },
+  {
+    "id": "boot_04",
+    "level": "middle",
+    "category": "Spring Boot",
+    "question": "Переопределение автоконфигурации?",
+    "answer": "Исключения, свои @Configuration, @Primary/@Qualifier."
+  },
+  {
+    "id": "boot_05",
+    "level": "senior",
+    "category": "Spring Boot",
+    "question": "Секреты/конфиги по средам?",
+    "answer": "@Profile, внешние Secret Manager/Vault."
+  },
+  {
+    "id": "boot_06",
+    "level": "senior",
+    "category": "Spring Boot",
+    "question": "Модульные границы в Boot‑монолите?",
+    "answer": "Изоляция зависимостей, явные интерфейсы, пакетные слои."
+  },
+  {
+    "id": "jpa_01",
+    "level": "junior",
+    "category": "JPA/Hibernate",
+    "question": "Entity/@Id — основы?",
+    "answer": "Сущность↔таблица; @Id — PK; стратегии IDENTITY/SEQUENCE/TABLE/UUID."
+  },
+  {
+    "id": "jpa_02",
+    "level": "junior",
+    "category": "JPA/Hibernate",
+    "question": "EAGER vs LAZY?",
+    "answer": "LAZY по умолчанию, EAGER осторожно."
+  },
+  {
+    "id": "jpa_03",
+    "level": "middle",
+    "category": "JPA/Hibernate",
+    "question": "N+1 — как решать?",
+    "answer": "fetch join, EntityGraph, батчинг, DTO."
+  },
+  {
+    "id": "jpa_04",
+    "level": "middle",
+    "category": "JPA/Hibernate",
+    "question": "OneToMany/ManyToOne — владелец?",
+    "answer": "FK у владельца; mappedBy у обратной стороны."
+  },
+  {
+    "id": "jpa_05",
+    "level": "middle",
+    "category": "JPA/Hibernate",
+    "question": "Транзакции/изоляция?",
+    "answer": "@Transactional; уровни БД; оптимист/пессимист lock."
+  },
+  {
+    "id": "jpa_06",
+    "level": "senior",
+    "category": "JPA/Hibernate",
+    "question": "Кэш 2-го уровня/кэш запросов?",
+    "answer": "Для редко меняемых данных; инвалидация."
+  },
+  {
+    "id": "jpa_07",
+    "level": "senior",
+    "category": "JPA/Hibernate",
+    "question": "Наследование стратегий?",
+    "answer": "SINGLE_TABLE/JOINED/TABLE_PER_CLASS — компромиссы."
+  },
+  {
+    "id": "jpa_08",
+    "level": "senior",
+    "category": "JPA/Hibernate",
+    "question": "Batch updates/saveAll — тонкости?",
+    "answer": "jdbc batch size, flush/clear, избегать каскадов."
+  },
+  {
+    "id": "sec_01",
+    "level": "junior",
+    "category": "Spring Security",
+    "question": "Authn vs Authz?",
+    "answer": "Кто вы vs что можно; фильтры/правила доступа."
+  },
+  {
+    "id": "sec_02",
+    "level": "junior",
+    "category": "Spring Security",
+    "question": "SecurityContext — хранение?",
+    "answer": "ThreadLocal; асинхронные потоки требуют перенос контекста."
+  },
+  {
+    "id": "sec_03",
+    "level": "middle",
+    "category": "Spring Security",
+    "question": "JWT — структура/риски?",
+    "answer": "Header.Payload.Signature; риски alg=none/утечки секретов/ротация."
+  },
+  {
+    "id": "sec_04",
+    "level": "middle",
+    "category": "Spring Security",
+    "question": "CSRF в SPA/REST?",
+    "answer": "SameSite cookies, CSRF токены; Bearer stateless — часто выключают."
+  },
+  {
+    "id": "sec_05",
+    "level": "senior",
+    "category": "Spring Security",
+    "question": "@PreAuthorize — практика?",
+    "answer": "Вынос сложной логики, тесты, аудит, минимальные привилегии."
+  },
+  {
+    "id": "sec_06",
+    "level": "senior",
+    "category": "Spring Security",
+    "question": "mTLS — когда?",
+    "answer": "Межсервисная аутентификация, truststore/keystore."
+  },
+  {
+    "id": "api_01",
+    "level": "junior",
+    "category": "API",
+    "question": "PUT vs PATCH?",
+    "answer": "PUT — идемпотентная замена; PATCH — частичное обновление."
+  },
+  {
+    "id": "api_02",
+    "level": "middle",
+    "category": "API",
+    "question": "Коды HTTP — основные классы?",
+    "answer": "2xx успех, 3xx редирект, 4xx клиент, 5xx сервер; 429 — лимит."
+  },
+  {
+    "id": "api_03",
+    "level": "middle",
+    "category": "API",
+    "question": "Idempotency-Key — зачем?",
+    "answer": "Безопасные повторы POST, предотвращение дублей."
+  },
+  {
+    "id": "api_04",
+    "level": "senior",
+    "category": "API",
+    "question": "gRPC vs REST?",
+    "answer": "gRPC — бинарный/контракт/стриминг; REST — простота/совместимость."
+  },
+  {
+    "id": "api_05",
+    "level": "senior",
+    "category": "API",
+    "question": "Версионирование API — как?",
+    "answer": "Путь/заголовок, совместимость назад, депрекации."
+  },
+  {
+    "id": "msg_01",
+    "level": "junior",
+    "category": "Messaging",
+    "question": "Сущности Kafka?",
+    "answer": "Topic/partition/offset/consumer group; масштабирование по партициям."
+  },
+  {
+    "id": "msg_02",
+    "level": "middle",
+    "category": "Messaging",
+    "question": "Exactly-once/At-least-once?",
+    "answer": "Транзакционные продьюсеры/консумеры, идемпотентность, outbox/inbox."
+  },
+  {
+    "id": "msg_03",
+    "level": "senior",
+    "category": "Messaging",
+    "question": "Ключ партиционирования и порядок?",
+    "answer": "Одинаковый ключ → одна партиция; порядок внутри партиции хранится."
+  },
+  {
+    "id": "msg_04",
+    "level": "senior",
+    "category": "Messaging",
+    "question": "DLQ/ретраи — стратегия?",
+    "answer": "DLQ, экспоненциальные ретраи, poison-pill обработка."
+  },
+  {
+    "id": "db_01",
+    "level": "junior",
+    "category": "Databases",
+    "question": "Индексы B-Tree vs Hash?",
+    "answer": "B-Tree — диапазоны/сортировки; Hash — равенство."
+  },
+  {
+    "id": "db_02",
+    "level": "middle",
+    "category": "Databases",
+    "question": "Нормализация vs денормализация?",
+    "answer": "Удаление дублей vs ускорение чтения ценой обновлений."
+  },
+  {
+    "id": "db_03",
+    "level": "middle",
+    "category": "Databases",
+    "question": "Уровни изоляции?",
+    "answer": "RU/RC/RR/Serializable — выбор по аномалиям/параллелизму."
+  },
+  {
+    "id": "db_04",
+    "level": "senior",
+    "category": "Databases",
+    "question": "Шардирование/репликация — паттерны?",
+    "answer": "Master/replica, leaderless, consistent hashing, ребаланс."
+  },
+  {
+    "id": "cache_01",
+    "level": "junior",
+    "category": "Caching",
+    "question": "TTL/инвалидация — выбор?",
+    "answer": "По SLA и свежести; ручная/событийная инвалидация."
+  },
+  {
+    "id": "cache_02",
+    "level": "middle",
+    "category": "Caching",
+    "question": "LRU/LFU/ARC — различия?",
+    "answer": "LRU давность, LFU частота, ARC адаптивный гибрид."
+  },
+  {
+    "id": "cache_03",
+    "level": "senior",
+    "category": "Caching",
+    "question": "Write-through/write-back/cache-aside?",
+    "answer": "Синхрон/асинхрон/обходная запись; консистентность vs латентность."
+  },
+  {
+    "id": "test_01",
+    "level": "junior",
+    "category": "Testing",
+    "question": "Юнит/интеграция/E2E — различия?",
+    "answer": "Изолированная логика, связки компонентов, пользовательские сценарии."
+  },
+  {
+    "id": "test_02",
+    "level": "middle",
+    "category": "Testing",
+    "question": "Testcontainers — зачем?",
+    "answer": "Реальные сервисы в Docker для интеграционных тестов."
+  },
+  {
+    "id": "test_03",
+    "level": "middle",
+    "category": "Testing",
+    "question": "Mockito/Spy — когда мокать?",
+    "answer": "Моки для внешних контрактов, стабы для простых ответов."
+  },
+  {
+    "id": "test_04",
+    "level": "senior",
+    "category": "Testing",
+    "question": "Pact/контрактное тестирование — выгоды?",
+    "answer": "Гарантия совместимости провайдера/потребителя, меньше поломок."
+  },
+  {
+    "id": "test_05",
+    "level": "senior",
+    "category": "Testing",
+    "question": "Пирамида тестов в микросервисах?",
+    "answer": "Больше юнитов, достаточная интеграция, целевые E2E, быстрый CI."
+  },
+  {
+    "id": "msa_01",
+    "level": "junior",
+    "category": "Architecture",
+    "question": "Монолит vs микросервисы — trade-offs?",
+    "answer": "Монолит проще стартовать; микросервисы — автономия/масштабирование, но сложнее операционка."
+  },
+  {
+    "id": "msa_02",
+    "level": "middle",
+    "category": "Architecture",
+    "question": "Саги и компенсирующие транзакции?",
+    "answer": "Оркестрация/хореография; локальные транзакции, откаты."
+  },
+  {
+    "id": "msa_03",
+    "level": "middle",
+    "category": "Architecture",
+    "question": "API Gateway vs Service Mesh?",
+    "answer": "Gateway — вход; Mesh — межсервисный L7 с mTLS/ретраями/обсервацией."
+  },
+  {
+    "id": "msa_04",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "End-to-end идемпотентность?",
+    "answer": "Idempotency-Key, дедупликация, хранение результатов, ретраи по всей цепочке."
+  },
+  {
+    "id": "msa_05",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "Event sourcing/CQRS — когда?",
+    "answer": "Историчность/проекции; согласованность/эволюция сложнее."
+  },
+  {
+    "id": "msa_06",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "Анти‑коррупционный слой — зачем?",
+    "answer": "Изоляция доменной модели при интеграции со старыми системами."
+  },
+  {
+    "id": "perf_01",
+    "level": "middle",
+    "category": "Performance",
+    "question": "Какие профайлеры/метрики?",
+    "answer": "JFR, async-profiler, GC logs; latency/throughput/alloc rate/pauses."
+  },
+  {
+    "id": "perf_02",
+    "level": "middle",
+    "category": "Performance",
+    "question": "Как снижать аллокации?",
+    "answer": "Меньше временных объектов, примитивы/буферы, профилировать горячие места."
+  },
+  {
+    "id": "perf_03",
+    "level": "senior",
+    "category": "Performance",
+    "question": "Backpressure/реактивность?",
+    "answer": "Контроль давления, Reactor/RS, избегать OOM/очередей."
+  },
+  {
+    "id": "perf_04",
+    "level": "senior",
+    "category": "Performance",
+    "question": "Тюнинг thread pool?",
+    "answer": "Размер от CPU/IO профиля, разделение задач, мониторинг очередей."
+  },
+  {
+    "id": "secx_01",
+    "level": "middle",
+    "category": "Security",
+    "question": "OWASP Top 10 — ключевые?",
+    "answer": "Injection, Broken Auth, Sensitive Data Exposure, SSRF, Misconfig."
+  },
+  {
+    "id": "secx_02",
+    "level": "senior",
+    "category": "Security",
+    "question": "CORS/CSP/mTLS — роль?",
+    "answer": "CORS для фронтов; mTLS межсервисный; CSP чаще на фронте, выставляется заголовком."
+  },
+  {
+    "id": "secx_03",
+    "level": "senior",
+    "category": "Security",
+    "question": "Секреты и ротация?",
+    "answer": "Vault/SM, KMS, least privilege, ротация и аудит."
+  }
+]

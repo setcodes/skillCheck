@@ -1,0 +1,902 @@
+[
+  {
+    "id": "devops_001_основные_команды_linux",
+    "title": "Основные команды Linux",
+    "category": "Linux",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Назовите базовые команды Linux для навигации по файловой системе.",
+    "answer": "cd, ls, pwd, cp, mv, rm, mkdir, rmdir."
+  },
+  {
+    "id": "devops_002_права_доступа",
+    "title": "Права доступа",
+    "category": "Linux",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Как работает система прав доступа в Linux?",
+    "answer": "Триадная модель: владелец, группа, остальные; права rwx; команды chmod, chown, umask."
+  },
+  {
+    "id": "devops_003_tcp_vs_udp",
+    "title": "TCP vs UDP",
+    "category": "Networking",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Чем отличается TCP от UDP?",
+    "answer": "TCP — надёжный, с установлением соединения, контроль последовательности. UDP — без соединения, быстрее, без гарантии доставки."
+  },
+  {
+    "id": "devops_004_dns",
+    "title": "DNS",
+    "category": "Networking",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Что такое DNS и как работает резолвинг?",
+    "answer": "Система доменных имён, резолвинг через рекурсивные и авторитетные сервера, кеширование."
+  },
+  {
+    "id": "devops_005_git_rebase_vs_merge",
+    "title": "Git rebase vs merge",
+    "category": "Git/CI",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Разница между git rebase и git merge?",
+    "answer": "merge сохраняет историю ветвлений, rebase переписывает историю, делает линейной."
+  },
+  {
+    "id": "devops_006_pipeline",
+    "title": "Pipeline",
+    "category": "CI/CD",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Что такое CI/CD pipeline и какие этапы он обычно содержит?",
+    "answer": "Build, test, package, deploy. CI — проверка кода, CD — автоматическая доставка/развёртывание."
+  },
+  {
+    "id": "devops_007_docker_vs_vm",
+    "title": "Docker vs VM",
+    "category": "Containers",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Чем Docker отличается от виртуальных машин?",
+    "answer": "Docker — контейнеризация на уровне ОС, лёгкие изоляции. VM — виртуализация на уровне гипервизора, тяжелее."
+  },
+  {
+    "id": "devops_008_pod_и_deployment",
+    "title": "Pod и Deployment",
+    "category": "Kubernetes",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "В чём разница между Pod и Deployment в Kubernetes?",
+    "answer": "Pod — минимальная сущность (контейнеры). Deployment управляет ReplicaSet, обеспечивает масштабирование и обновления."
+  },
+  {
+    "id": "devops_009_iam",
+    "title": "IAM",
+    "category": "Cloud",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Что такое IAM в AWS/GCP?",
+    "answer": "Identity and Access Management — система управления доступами и ролями."
+  },
+  {
+    "id": "devops_010_prometheus",
+    "title": "Prometheus",
+    "category": "Monitoring",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Как работает Prometheus и чем отличается pull-модель от push?",
+    "answer": "Prometheus тянет метрики через HTTP (pull). Push требует pushgateway. Pull упрощает автообнаружение и отказоустойчивость."
+  },
+  {
+    "id": "devops_011_extra11",
+    "title": "Вопрос DevOps 11",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №11.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_012_extra12",
+    "title": "Вопрос DevOps 12",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №12.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_013_extra13",
+    "title": "Вопрос DevOps 13",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №13.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_014_extra14",
+    "title": "Вопрос DevOps 14",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №14.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_015_extra15",
+    "title": "Вопрос DevOps 15",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №15.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_016_extra16",
+    "title": "Вопрос DevOps 16",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №16.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_017_extra17",
+    "title": "Вопрос DevOps 17",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №17.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_018_extra18",
+    "title": "Вопрос DevOps 18",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №18.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_019_extra19",
+    "title": "Вопрос DevOps 19",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №19.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_020_extra20",
+    "title": "Вопрос DevOps 20",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №20.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_021_extra21",
+    "title": "Вопрос DevOps 21",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №21.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_022_extra22",
+    "title": "Вопрос DevOps 22",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №22.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_023_extra23",
+    "title": "Вопрос DevOps 23",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №23.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_024_extra24",
+    "title": "Вопрос DevOps 24",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №24.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_025_extra25",
+    "title": "Вопрос DevOps 25",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №25.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_026_extra26",
+    "title": "Вопрос DevOps 26",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №26.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_027_extra27",
+    "title": "Вопрос DevOps 27",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №27.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_028_extra28",
+    "title": "Вопрос DevOps 28",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №28.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_029_extra29",
+    "title": "Вопрос DevOps 29",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №29.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_030_extra30",
+    "title": "Вопрос DevOps 30",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №30.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_031_extra31",
+    "title": "Вопрос DevOps 31",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №31.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_032_extra32",
+    "title": "Вопрос DevOps 32",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №32.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_033_extra33",
+    "title": "Вопрос DevOps 33",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №33.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_034_extra34",
+    "title": "Вопрос DevOps 34",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №34.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_035_extra35",
+    "title": "Вопрос DevOps 35",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №35.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_036_extra36",
+    "title": "Вопрос DevOps 36",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №36.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_037_extra37",
+    "title": "Вопрос DevOps 37",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №37.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_038_extra38",
+    "title": "Вопрос DevOps 38",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №38.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_039_extra39",
+    "title": "Вопрос DevOps 39",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №39.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_040_extra40",
+    "title": "Вопрос DevOps 40",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №40.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_041_extra41",
+    "title": "Вопрос DevOps 41",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №41.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_042_extra42",
+    "title": "Вопрос DevOps 42",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №42.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_043_extra43",
+    "title": "Вопрос DevOps 43",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №43.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_044_extra44",
+    "title": "Вопрос DevOps 44",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №44.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_045_extra45",
+    "title": "Вопрос DevOps 45",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №45.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_046_extra46",
+    "title": "Вопрос DevOps 46",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №46.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_047_extra47",
+    "title": "Вопрос DevOps 47",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №47.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_048_extra48",
+    "title": "Вопрос DevOps 48",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №48.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_049_extra49",
+    "title": "Вопрос DevOps 49",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №49.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_050_extra50",
+    "title": "Вопрос DevOps 50",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №50.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_051_extra51",
+    "title": "Вопрос DevOps 51",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №51.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_052_extra52",
+    "title": "Вопрос DevOps 52",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №52.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_053_extra53",
+    "title": "Вопрос DevOps 53",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №53.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_054_extra54",
+    "title": "Вопрос DevOps 54",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №54.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_055_extra55",
+    "title": "Вопрос DevOps 55",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №55.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_056_extra56",
+    "title": "Вопрос DevOps 56",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №56.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_057_extra57",
+    "title": "Вопрос DevOps 57",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №57.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_058_extra58",
+    "title": "Вопрос DevOps 58",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №58.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_059_extra59",
+    "title": "Вопрос DevOps 59",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №59.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_060_extra60",
+    "title": "Вопрос DevOps 60",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №60.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_061_extra61",
+    "title": "Вопрос DevOps 61",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №61.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_062_extra62",
+    "title": "Вопрос DevOps 62",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №62.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_063_extra63",
+    "title": "Вопрос DevOps 63",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №63.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_064_extra64",
+    "title": "Вопрос DevOps 64",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №64.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_065_extra65",
+    "title": "Вопрос DevOps 65",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №65.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_066_extra66",
+    "title": "Вопрос DevOps 66",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №66.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_067_extra67",
+    "title": "Вопрос DevOps 67",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №67.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_068_extra68",
+    "title": "Вопрос DevOps 68",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №68.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_069_extra69",
+    "title": "Вопрос DevOps 69",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №69.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_070_extra70",
+    "title": "Вопрос DevOps 70",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №70.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_071_extra71",
+    "title": "Вопрос DevOps 71",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №71.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_072_extra72",
+    "title": "Вопрос DevOps 72",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №72.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_073_extra73",
+    "title": "Вопрос DevOps 73",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №73.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_074_extra74",
+    "title": "Вопрос DevOps 74",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №74.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_075_extra75",
+    "title": "Вопрос DevOps 75",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №75.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_076_extra76",
+    "title": "Вопрос DevOps 76",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №76.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_077_extra77",
+    "title": "Вопрос DevOps 77",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №77.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_078_extra78",
+    "title": "Вопрос DevOps 78",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №78.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_079_extra79",
+    "title": "Вопрос DevOps 79",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №79.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_080_extra80",
+    "title": "Вопрос DevOps 80",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №80.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_081_extra81",
+    "title": "Вопрос DevOps 81",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №81.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_082_extra82",
+    "title": "Вопрос DevOps 82",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №82.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_083_extra83",
+    "title": "Вопрос DevOps 83",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №83.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_084_extra84",
+    "title": "Вопрос DevOps 84",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №84.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_085_extra85",
+    "title": "Вопрос DevOps 85",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №85.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_086_extra86",
+    "title": "Вопрос DevOps 86",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №86.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_087_extra87",
+    "title": "Вопрос DevOps 87",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №87.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_088_extra88",
+    "title": "Вопрос DevOps 88",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №88.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_089_extra89",
+    "title": "Вопрос DevOps 89",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №89.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_090_extra90",
+    "title": "Вопрос DevOps 90",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №90.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_091_extra91",
+    "title": "Вопрос DevOps 91",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №91.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_092_extra92",
+    "title": "Вопрос DevOps 92",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №92.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_093_extra93",
+    "title": "Вопрос DevOps 93",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №93.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_094_extra94",
+    "title": "Вопрос DevOps 94",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №94.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_095_extra95",
+    "title": "Вопрос DevOps 95",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №95.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_096_extra96",
+    "title": "Вопрос DevOps 96",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №96.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_097_extra97",
+    "title": "Вопрос DevOps 97",
+    "category": "Mixed",
+    "difficulty": 2,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №97.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_098_extra98",
+    "title": "Вопрос DevOps 98",
+    "category": "Mixed",
+    "difficulty": 3,
+    "bucket": "deep",
+    "prompt": "Опишите подход DevOps для задачи №98.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_099_extra99",
+    "title": "Вопрос DevOps 99",
+    "category": "Mixed",
+    "difficulty": 4,
+    "bucket": "architecture",
+    "prompt": "Опишите подход DevOps для задачи №99.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  },
+  {
+    "id": "devops_100_extra100",
+    "title": "Вопрос DevOps 100",
+    "category": "Mixed",
+    "difficulty": 1,
+    "bucket": "screening",
+    "prompt": "Опишите подход DevOps для задачи №100.",
+    "answer": "Ожидается развёрнутый ответ о DevOps-практиках: автоматизация, контейнеризация, мониторинг, IaC."
+  }
+]

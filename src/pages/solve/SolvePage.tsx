@@ -1,5 +1,7 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
-import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw } from 'lucide-react'
+import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw, ChevronDown, Clock, AlertTriangle } from 'lucide-react'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Button } from '@/shared/ui/button'
 import { Badge } from '@/shared/ui/badge'
 import { Input } from '@/shared/ui/input'
@@ -85,6 +87,63 @@ export default function Solve(){
   }
   
   const [logs, setLogs] = useState<string[]>([])
+  // Toast notifications for per-task timer (down mode)
+  const halfNotifiedRef = useRef(false)
+  const tenNotifiedRef = useRef(false)
+  const prevTaskValRef = useRef<number>(taskTimerValueSec)
+  useEffect(()=>{
+    // Reset notification flags on mode/limit change or when timer is stopped
+    halfNotifiedRef.current = false
+    tenNotifiedRef.current = false
+  }, [taskTimerMode, taskTimerLimitSec])
+  useEffect(()=>{
+    if(!taskTimerRunning){ halfNotifiedRef.current=false; tenNotifiedRef.current=false }
+  }, [taskTimerRunning])
+  useEffect(()=>{
+    if(taskTimerMode!=='down') { prevTaskValRef.current = taskTimerValueSec; return }
+    const remaining = taskTimerValueSec
+    const limit = taskTimerLimitSec
+    if(limit>0 && taskTimerRunning){
+      const half = Math.floor(limit/2)
+      const ten = Math.ceil(limit*0.10)
+      if(!halfNotifiedRef.current && remaining<=half){
+        halfNotifiedRef.current = true
+        toast({
+          title: (
+            <span className="inline-flex items-center gap-2">
+              <Clock className="h-4 w-4 text-blue-600" />
+              Половина времени по задаче
+            </span>
+          ),
+          description: `Осталось ~ ${formatSeconds(remaining)}`,
+        })
+      }
+      if(!tenNotifiedRef.current && remaining<=ten){
+        tenNotifiedRef.current = true
+        toast({
+          title: (
+            <span className="inline-flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              Меньше 10% времени по задаче
+            </span>
+          ),
+          description: `Осталось ~ ${formatSeconds(remaining)}`,
+        })
+      }
+    }
+    if(prevTaskValRef.current>0 && taskTimerValueSec===0 && taskTimerMode==='down'){
+      toast({
+        title: (
+          <span className="inline-flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            Время по задаче истекло
+          </span>
+        ),
+        description: task ? `Задача: ${task.title}` : undefined,
+      })
+    }
+    prevTaskValRef.current = taskTimerValueSec
+  }, [taskTimerMode, taskTimerRunning, taskTimerLimitSec, taskTimerValueSec, task?.title])
   const run=async()=>{
     if(!task)return; 
     
@@ -242,58 +301,79 @@ export default function Solve(){
               {/* Block 1: Timers + Tags */}
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="text-xs text-muted-foreground flex items-center gap-2">
-                  <span className="inline-flex items-center gap-1 font-medium text-foreground">
-                    <Timer className="h-4 w-4" /> Таймер задачи:
-                  </span>
-                  <span className="font-mono">{formatSeconds(taskTimerValueSec)}</span>
-                  <Button variant="outline" size="sm" className="inline-flex items-center gap-1" onClick={()=> setTaskTimerRunning(r=>!r)}>
-                    {taskTimerRunning ? (
-                      <>
-                        <Pause className="h-3 w-3" />
-                        Пауза
-                      </>
-                    ) : (
-                      <>
-                        <Play className="h-3 w-3" />
-                        Старт
-                      </>
-                    )}
-                  </Button>
-                  <Button variant="outline" size="sm" className="inline-flex items-center gap-1" onClick={()=> setTaskTimerValueSec(taskTimerMode==='down'? taskTimerLimitSec : 0)}>
-                    <RotateCcw className="h-3 w-3" />
-                    Сброс
-                  </Button>
-                  <div className="w-[130px]">
-                    <Select value={taskTimerMode} onValueChange={(m: 'up'|'down')=>{
-                      setTaskTimerMode(m)
-                      setTaskTimerRunning(false)
-                      setTaskTimerValueSec(m==='down'? taskTimerLimitSec : 0)
-                    }}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Режим" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="up">Прямой</SelectItem>
-                        <SelectItem value="down">Обратный</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {taskTimerMode==='down' && (
-                    <span className="flex items-center gap-1">
-                      <input 
-                        className="w-16 px-1 py-0.5 rounded border bg-card text-right font-mono"
-                        type="number" min={1} step={1}
-                        value={Math.floor(taskTimerLimitSec/60)}
-                        onChange={e=>{
-                          const mins = Math.max(1, Number(e.target.value)||0)
-                          const sec = mins*60
-                          setTaskTimerLimitSec(sec)
-                          if(!taskTimerRunning) setTaskTimerValueSec(sec)
-                        }}
-                      />
-                      <span className="text-muted-foreground">мин</span>
-                    </span>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="inline-flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span className="font-mono">{formatSeconds(taskTimerValueSec)}</span>
+                        <span className={cn("h-2 w-2 rounded-full", taskTimerRunning ? "bg-green-500" : "bg-muted-foreground/50")}></span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" className="w-64">
+                      <div className="px-2 py-1.5 text-xs text-muted-foreground">Таймер задачи</div>
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-1.5">
+                        <div className="text-xs mb-1">Режим</div>
+                        <Select value={taskTimerMode} onValueChange={(m: 'up'|'down')=>{
+                          setTaskTimerMode(m)
+                          setTaskTimerRunning(false)
+                          setTaskTimerValueSec(m==='down'? taskTimerLimitSec : 0)
+                        }}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Режим" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="up">Прямой</SelectItem>
+                            <SelectItem value="down">Обратный</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {taskTimerMode==='down' && (
+                        <div className="px-2 py-1.5">
+                          <div className="text-xs mb-1">Лимит (мин)</div>
+                          <input 
+                            className="w-full px-2 py-1 rounded border bg-card text-right font-mono"
+                            type="number" min={1} step={1}
+                            value={Math.floor(taskTimerLimitSec/60)}
+                            onChange={e=>{
+                              const mins = Math.max(1, Number(e.target.value)||0)
+                              const sec = mins*60
+                              setTaskTimerLimitSec(sec)
+                              if(!taskTimerRunning) setTaskTimerValueSec(sec)
+                            }}
+                          />
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {[5, 15, 30, 60].map(min => (
+                              <Button key={min} variant="outline" size="sm" onClick={()=>{
+                                const sec = min*60
+                                setTaskTimerLimitSec(sec)
+                                if(!taskTimerRunning) setTaskTimerValueSec(sec)
+                              }}>{min} мин</Button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <DropdownMenuSeparator />
+                      <div className="px-2 py-2 flex items-center gap-2">
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="inline-flex items-center gap-1"
+                          onClick={()=> setTaskTimerRunning(r=>!r)}
+                        >
+                          {taskTimerRunning ? (<><Pause className="h-3 w-3" /> Пауза</>) : (<><Play className="h-3 w-3" /> Старт</>)}
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          size="sm"
+                          className="inline-flex items-center gap-1"
+                          onClick={()=> setTaskTimerValueSec(taskTimerMode==='down'? taskTimerLimitSec : 0)}
+                        >
+                          <RotateCcw className="h-3 w-3" /> Сброс
+                        </Button>
+                      </div>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={task.level === 'junior' ? 'default' : task.level === 'middle' ? 'secondary' : 'destructive'} className="capitalize">
@@ -343,29 +423,36 @@ export default function Solve(){
                 onResetTests={resetTests}
                 consoleOutput={logs}
                 onClearConsole={()=> setLogs([])}
+                timerLabel={formatSeconds(taskTimerValueSec)}
+                timerStatus={taskTimerRunning ? 'running' : 'paused'}
               />
               
               {/* Reference Solution for Interviewer */}
               {role==='interviewer' && task.solution && (
-              <div className="mt-6">
-                <details className="border rounded-lg">
-                  <summary className="cursor-pointer p-4 bg-muted/50 hover:bg-muted/70 transition-colors">
-                    <div className="flex items-center gap-2">
-                      <Star className="h-4 w-4 text-yellow-500"/>
-                      <span className="font-medium">Эталонное решение</span>
+                <div className="mt-6">
+                  <Collapsible>
+                    <div className="border rounded-lg">
+                      <CollapsibleTrigger className="group cursor-pointer p-4 bg-muted/50 hover:bg-muted/70 transition-colors">
+                        <span className="flex items-center gap-2">
+                            <Star className="h-4 w-4 text-yellow-500" fill="currentColor" stroke="none"/>
+                          <span className="font-medium">Эталонное решение</span>
+                        </span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="p-4 border-t">
+                          <CodeEditor
+                            value={task.solution}
+                            onChange={() => {}} // Read-only
+                            language={getLanguage()}
+                            height="300px"
+                            placeholder="Эталонное решение..."
+                          />
+                        </div>
+                      </CollapsibleContent>
                     </div>
-                  </summary>
-                  <div className="p-4 border-t">
-                    <CodeEditor
-                      value={task.solution}
-                      onChange={() => {}} // Read-only
-                      language={getLanguage()}
-                      height="300px"
-                      placeholder="Эталонное решение..."
-                    />
-                  </div>
-                </details>
-              </div>
+                  </Collapsible>
+                </div>
               )}
             
             {/* Actions (без запуска тестов в обычном режиме) */}

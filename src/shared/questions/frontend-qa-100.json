@@ -1,0 +1,702 @@
+[
+  {
+    "id": "html_01",
+    "level": "junior",
+    "category": "HTML",
+    "question": "Для чего служит doctype и что будет, если его не указать?",
+    "answer": "Doctype включает стандартный режим рендеринга; без него возможен quirks mode и расхождения в бокс‑модели."
+  },
+  {
+    "id": "html_02",
+    "level": "junior",
+    "category": "HTML",
+    "question": "Разница между блочными и строчными/строчно‑блочными элементами?",
+    "answer": "Блочные занимают всю строку; inline‑block ведёт себя как inline, но допускает размеры; inline не принимает width/height."
+  },
+  {
+    "id": "html_03",
+    "level": "junior",
+    "category": "HTML",
+    "question": "Для чего нужны семантические теги header/main/article/aside/footer?",
+    "answer": "Улучшают доступность, структуру документа и SEO; помогают скринридерам и поиску."
+  },
+  {
+    "id": "html_04",
+    "level": "junior",
+    "category": "HTML",
+    "question": "Как правильно связать label и input?",
+    "answer": "<label for=id> с соответствующим id на <input> или обёртка input внутри label — для доступности."
+  },
+  {
+    "id": "html_05",
+    "level": "junior",
+    "category": "HTML",
+    "question": "Чем отличаются defer и async у <script>?",
+    "answer": "async выполняет сразу после загрузки (в непредсказуемом порядке), defer — после парсинга, в порядке вхождения."
+  },
+  {
+    "id": "html_06",
+    "level": "middle",
+    "category": "HTML",
+    "question": "Что такое Shadow DOM и зачем он нужен?",
+    "answer": "Изоляция разметки/стилей веб‑компонента, предотвращение конфликтов CSS, инкапсуляция."
+  },
+  {
+    "id": "html_07",
+    "level": "middle",
+    "category": "HTML",
+    "question": "Как сделать доступное модальное окно?",
+    "answer": "role='dialog', aria-modal='true', фокус‑ловушка, возврат фокуса, закрытие по Esc, aria-labelledby/aria-describedby."
+  },
+  {
+    "id": "html_08",
+    "level": "middle",
+    "category": "HTML",
+    "question": "Разница между type='button'|'submit'|'reset' у <button>?",
+    "answer": "submit отправляет форму; reset сбрасывает; button ничего не делает по умолчанию — явно указывайте type."
+  },
+  {
+    "id": "html_09",
+    "level": "middle",
+    "category": "HTML",
+    "question": "Когда использовать <picture>/srcset/sizes?",
+    "answer": "Для адаптивных изображений/форматов (webp/avif), улучшения LCP и экономии трафика."
+  },
+  {
+    "id": "html_10",
+    "level": "senior",
+    "category": "HTML",
+    "question": "Как организовать lazy‑loading изображений и iframes?",
+    "answer": "loading='lazy', decoding='async', fetchpriority, placeholder/skeleton, IntersectionObserver для кастомных кейсов."
+  },
+  {
+    "id": "html_11",
+    "level": "senior",
+    "category": "HTML",
+    "question": "Какие политики безопасности важны для HTML?",
+    "answer": "CSP (nonce, strict-dynamic), Trusted Types, SRI, COOP/COEP, Permissions Policy."
+  },
+  {
+    "id": "html_12",
+    "level": "senior",
+    "category": "HTML",
+    "question": "Что такое 'accessible name computation' и почему важно?",
+    "answer": "Правила вычисления доступного имени из aria/текста; влияет на озвучку и тестируемость."
+  },
+  {
+    "id": "css_01",
+    "level": "junior",
+    "category": "CSS",
+    "question": "Относительные vs абсолютные единицы (px, em, rem, %)?",
+    "answer": "px — постоянная; em — от шрифта родителя; rem — от root; % — от контекста (например, ширина контейнера)."
+  },
+  {
+    "id": "css_02",
+    "level": "junior",
+    "category": "CSS",
+    "question": "Как выровнять элементы во flex по осям?",
+    "answer": "justify-content — главная ось, align-items — поперечная; align-self — для элемента."
+  },
+  {
+    "id": "css_03",
+    "level": "junior",
+    "category": "CSS",
+    "question": "Grid: auto-fill vs auto-fit?",
+    "answer": "auto-fit сжимает пустые треки до 0 (minmax), auto-fill оставляет слоты."
+  },
+  {
+    "id": "css_04",
+    "level": "junior",
+    "category": "CSS",
+    "question": "Специфичность и порядок каскада?",
+    "answer": "!important > inline > id > class/attr/pseudo-class > element; при равенстве позже объявленное правило побеждает."
+  },
+  {
+    "id": "css_05",
+    "level": "middle",
+    "category": "CSS",
+    "question": "Как минимизировать reflow/paint?",
+    "answer": "transform/opacity вместо top/left, contain/content-visibility, умеренно will-change, избегать тяжёлых теней/фильтров."
+  },
+  {
+    "id": "css_06",
+    "level": "middle",
+    "category": "CSS",
+    "question": "Container queries — когда полезны?",
+    "answer": "Для компонентов, которые подстраиваются под размер контейнера, а не вьюпорта."
+  },
+  {
+    "id": "css_07",
+    "level": "middle",
+    "category": "CSS",
+    "question": "Что такое logical properties и зачем?",
+    "answer": "margin-inline/padding-block и т.п. — учитывают направление письма, упрощают i18n."
+  },
+  {
+    "id": "css_08",
+    "level": "middle",
+    "category": "CSS",
+    "question": "Липкий заголовок таблицы без обёрток?",
+    "answer": "position: sticky; top:0 на th/thead; фон и z-index для перекрытий."
+  },
+  {
+    "id": "css_09",
+    "level": "middle",
+    "category": "CSS",
+    "question": "CSS Modules vs CSS-in-JS — когда что?",
+    "answer": "Modules — проще/быстрее; CSS-in-JS — динамические темы/скоуп, но дороже по перфомансу."
+  },
+  {
+    "id": "css_10",
+    "level": "senior",
+    "category": "CSS",
+    "question": "Как контролировать CLS из-за изображений/шрифтов?",
+    "answer": "Размеры изображений, резерв места, font-display, preloading критичных ресурсов."
+  },
+  {
+    "id": "css_11",
+    "level": "senior",
+    "category": "CSS",
+    "question": "Grid subgrid — основные кейсы?",
+    "answer": "Единая сетка для вложенных компонентов, согласование колонок/рядов."
+  },
+  {
+    "id": "css_12",
+    "level": "senior",
+    "category": "CSS",
+    "question": ":has() vs :nth-child() — различия?",
+    "answer": "`:has()` — условный 'родительский' селектор; мощный, но потенциально затратный; :nth-child — позиционный."
+  },
+  {
+    "id": "css_13",
+    "level": "senior",
+    "category": "CSS",
+    "question": "@media print — на что обратить внимание?",
+    "answer": "Скрыть UI-хром, настроить размеры/разрывы, контраст, отключить анимации/тёмные фоны."
+  },
+  {
+    "id": "css_14",
+    "level": "senior",
+    "category": "CSS",
+    "question": "Критический CSS и загрузка шрифтов — стратегия?",
+    "answer": "Inline critical CSS, preload шрифтов, минимизация вариативных осей, кэширование."
+  },
+  {
+    "id": "css_15",
+    "level": "senior",
+    "category": "CSS",
+    "question": "Организация тем без вспышек (FART)?",
+    "answer": "prefers-color-scheme + ранний инлайн‑скрипт выбора темы + CSS custom properties."
+  },
+  {
+    "id": "js_01",
+    "level": "junior",
+    "category": "JavaScript",
+    "question": "Разница var/let/const и область видимости?",
+    "answer": "var — функциональная + hoist; let/const — блочная; const запрещает переназначение binding."
+  },
+  {
+    "id": "js_02",
+    "level": "junior",
+    "category": "JavaScript",
+    "question": "Что такое замыкание?",
+    "answer": "Функция 'помнит' окружение, доступ к переменным внешней функции после её завершения."
+  },
+  {
+    "id": "js_03",
+    "level": "junior",
+    "category": "JavaScript",
+    "question": "== vs ===?",
+    "answer": "=== без приведения типа; == выполняет неявные преобразования."
+  },
+  {
+    "id": "js_04",
+    "level": "junior",
+    "category": "JavaScript",
+    "question": "Всплытие событий и его остановка?",
+    "answer": "Событие поднимается к document; e.stopPropagation()/stopImmediatePropagation()."
+  },
+  {
+    "id": "js_05",
+    "level": "junior",
+    "category": "JavaScript",
+    "question": "Для чего 'use strict'?",
+    "answer": "Строгий режим: запрет неявных глобальных, изменения в this и пр."
+  },
+  {
+    "id": "js_06",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "Event loop: microtasks vs macrotasks — порядок?",
+    "answer": "Синхронно → microtasks (promises) → render → macrotasks; microtasks опустошаются полностью."
+  },
+  {
+    "id": "js_07",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "Что такое 'this' и bind/call/apply?",
+    "answer": "'this' определяется вызовом; bind/call/apply меняют контекст; стрелки берут из внешней области."
+  },
+  {
+    "id": "js_08",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "Shallow vs deep copy объектов?",
+    "answer": "Поверхностная копирует верхний уровень; глубокая — все вложенности (JSON.* ограничен)."
+  },
+  {
+    "id": "js_09",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "Мемоизация — зачем?",
+    "answer": "Кеширование результатов по аргументам для дорогих вычислений."
+  },
+  {
+    "id": "js_10",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "Мегаморфные коллсайты — почему плохо?",
+    "answer": "Сбивают inline caches/JIT, ухудшают перфоманс."
+  },
+  {
+    "id": "js_11",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "WeakMap/WeakSet — когда использовать?",
+    "answer": "Ключи‑объекты без препятствий GC: приватные данные, кэши."
+  },
+  {
+    "id": "js_12",
+    "level": "middle",
+    "category": "JavaScript",
+    "question": "Debounce и throttle — различия?",
+    "answer": "Debounce откладывает до паузы; throttle ограничивает частоту."
+  },
+  {
+    "id": "js_13",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "Генераторы/итераторы — применение?",
+    "answer": "Создание ленивых последовательностей, кооперативная многозадачность."
+  },
+  {
+    "id": "js_14",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "ESM vs CJS — отличия?",
+    "answer": "ESM статичен, tree‑shaking/top‑level await; CJS — динамический require."
+  },
+  {
+    "id": "js_15",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "Proxy/Reflect — зачем?",
+    "answer": "Перехват операций, построение реактивности/валидации/логов."
+  },
+  {
+    "id": "js_16",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "Почему await добавляет microtask?",
+    "answer": "Продолжение в microtasks; рендер между микрозадач и макрозадач возможен."
+  },
+  {
+    "id": "js_17",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "IEEE‑754: как работать с деньгами?",
+    "answer": "Использовать целые (в центах) или decimal/BigInt библиотеки, аккуратное округление."
+  },
+  {
+    "id": "js_18",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "Паттерны ошибок в async‑коде?",
+    "answer": "try/catch, тайм‑ауты, отмена (AbortController), централизованный логгинг/ретраи."
+  },
+  {
+    "id": "js_19",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "MessageChannel vs setTimeout(0)?",
+    "answer": "MessageChannel планирует раньше таймера; меньше дрейфа; иногда ближе к microtask checkpoint."
+  },
+  {
+    "id": "js_20",
+    "level": "senior",
+    "category": "JavaScript",
+    "question": "Intl.Segmenter — польза?",
+    "answer": "Корректная работа с графемами (эмодзи/диакритика) вместо посимвольной."
+  },
+  {
+    "id": "ts_01",
+    "level": "junior",
+    "category": "TypeScript",
+    "question": "type vs interface?",
+    "answer": "interface сливается декларативно; type — гибкие union/intersection/условные типы."
+  },
+  {
+    "id": "ts_02",
+    "level": "junior",
+    "category": "TypeScript",
+    "question": "Тип never — где нужен?",
+    "answer": "Невозможные значения; исчерпывающие switch/функции, которые не возвращают."
+  },
+  {
+    "id": "ts_03",
+    "level": "junior",
+    "category": "TypeScript",
+    "question": "Зачем generics?",
+    "answer": "Переиспользуемость и безопасность без any."
+  },
+  {
+    "id": "ts_04",
+    "level": "middle",
+    "category": "TypeScript",
+    "question": "Structural typing — что это?",
+    "answer": "Совместимость по форме, а не по имени; 'утинная' типизация."
+  },
+  {
+    "id": "ts_05",
+    "level": "middle",
+    "category": "TypeScript",
+    "question": "Partial/Required/Pick/Omit — примеры?",
+    "answer": "Partial делает поля опциональными, Required — обязательными, Pick/Omit — выбор/исключение."
+  },
+  {
+    "id": "ts_06",
+    "level": "middle",
+    "category": "TypeScript",
+    "question": "Как описать перегрузки функций?",
+    "answer": "Несколько сигнатур + одна реализация, совместимая со всеми."
+  },
+  {
+    "id": "ts_07",
+    "level": "middle",
+    "category": "TypeScript",
+    "question": "Discriminated union — сужение?",
+    "answer": "Общий дискриминатор + исчерпывающий switch/guards."
+  },
+  {
+    "id": "ts_08",
+    "level": "senior",
+    "category": "TypeScript",
+    "question": "Ковариантность/контравариантность параметров?",
+    "answer": "Возвращаемые типы ковариантны; параметры — контравариантны; важно для коллбеков."
+  },
+  {
+    "id": "ts_09",
+    "level": "senior",
+    "category": "TypeScript",
+    "question": "unknown vs any?",
+    "answer": "unknown требует сужения; any выключает проверки и небезопасен."
+  },
+  {
+    "id": "ts_10",
+    "level": "senior",
+    "category": "TypeScript",
+    "question": "Типобезопасный ответ API с ошибками?",
+    "answer": "Union {status:'ok'|'err', ...} и исчерпывающий switch без assertions."
+  },
+  {
+    "id": "ts_11",
+    "level": "senior",
+    "category": "TypeScript",
+    "question": "Template literal types — когда удобны?",
+    "answer": "Формирование строковых API (классы, ключи данных, маршруты)."
+  },
+  {
+    "id": "ts_12",
+    "level": "senior",
+    "category": "TypeScript",
+    "question": "Строгий словарь без произвольных ключей?",
+    "answer": "Record + ключи‑литералы, as const, readonly, ограничение индексной сигнатурой."
+  },
+  {
+    "id": "react_01",
+    "level": "junior",
+    "category": "React",
+    "question": "Контролируемые vs неконтролируемые формы?",
+    "answer": "Контролируемые через state; неконтролируемые — через ref/DOM."
+  },
+  {
+    "id": "react_02",
+    "level": "junior",
+    "category": "React",
+    "question": "Зачем ключи в списках?",
+    "answer": "Стабилизируют элементы для diff; ключ должен быть стабильным и уникальным."
+  },
+  {
+    "id": "react_03",
+    "level": "junior",
+    "category": "React",
+    "question": "Как избежать props drilling?",
+    "answer": "Контекст, стор, композиция."
+  },
+  {
+    "id": "react_04",
+    "level": "middle",
+    "category": "React",
+    "question": "useEffect vs useLayoutEffect?",
+    "answer": "useEffect после коммита; useLayoutEffect синхронно до покраски для измерений."
+  },
+  {
+    "id": "react_05",
+    "level": "middle",
+    "category": "React",
+    "question": "Оптимизация больших списков?",
+    "answer": "Виртуализация, memo, мемо‑селекторы, корректные ключи."
+  },
+  {
+    "id": "react_06",
+    "level": "middle",
+    "category": "React",
+    "question": "Suspense — когда уместен?",
+    "answer": "Ожидание данных/ленивых модулей; локальные границы."
+  },
+  {
+    "id": "react_07",
+    "level": "middle",
+    "category": "React",
+    "question": "Обработка ошибок в компонентах?",
+    "answer": "Error Boundaries + централизованный логгинг; try/catch в эффектах."
+  },
+  {
+    "id": "react_08",
+    "level": "middle",
+    "category": "React",
+    "question": "Как избежать stale в эффектах?",
+    "answer": "Правильные зависимости, функциональные set, refs, мемо‑коллбеки."
+  },
+  {
+    "id": "react_09",
+    "level": "senior",
+    "category": "React",
+    "question": "Concurrent Rendering и transitions — что дают?",
+    "answer": "Прерываемые обновления и плавные переходы (startTransition/useDeferredValue)."
+  },
+  {
+    "id": "react_10",
+    "level": "senior",
+    "category": "React",
+    "question": "SSR/SSG/ISR — выбор?",
+    "answer": "Баланс TTFB/динамики/кэша; SSR для динамики/SEO, SSG/ISR для статичного и редких изменений."
+  },
+  {
+    "id": "react_11",
+    "level": "senior",
+    "category": "React",
+    "question": "Модалки и фокус‑менеджмент?",
+    "answer": "Portal, focus trap, aria‑атрибуты, возврат фокуса, Esc."
+  },
+  {
+    "id": "react_12",
+    "level": "senior",
+    "category": "React",
+    "question": "Антипаттерны производительности?",
+    "answer": "Гигантские контексты, анонимные функции в рендере, тяжёлые эффекты."
+  },
+  {
+    "id": "react_13",
+    "level": "senior",
+    "category": "React",
+    "question": "Контролы с внутренним и внешним состоянием?",
+    "answer": "Режимы controlled/uncontrolled, единый источник истины, события commit."
+  },
+  {
+    "id": "react_14",
+    "level": "senior",
+    "category": "React",
+    "question": "Когда применять Portals?",
+    "answer": "Для слоёв над иерархией (модалки/тосты/тултипы)."
+  },
+  {
+    "id": "react_15",
+    "level": "senior",
+    "category": "React",
+    "question": "Оптимизация контекста от перерисовок?",
+    "answer": "Дробить контексты, мему значения, использовать селекторы/контекст‑селекторы."
+  },
+  {
+    "id": "react_16",
+    "level": "senior",
+    "category": "React",
+    "question": "React Query — ключевые практики?",
+    "answer": "Грамотные ключи, stale/cacheTime, invalidateQueries, фоновая ресинхронизация."
+  },
+  {
+    "id": "react_17",
+    "level": "senior",
+    "category": "React",
+    "question": "Hydration mismatch — как избежать?",
+    "answer": "Убрать недетерминизм до монтирования, рендерить условное позже, одинаковые данные на сервере/клиенте."
+  },
+  {
+    "id": "react_18",
+    "level": "senior",
+    "category": "React",
+    "question": "Как правильно тестировать компоненты (RTL)?",
+    "answer": "Тестировать поведение/доступность, MSW для сети, меньше снапшотов."
+  },
+  {
+    "id": "state_01",
+    "level": "junior",
+    "category": "State Management",
+    "question": "Когда достаточно локального состояния?",
+    "answer": "Если состояние не шарится широко и влияет только на локальные узлы."
+  },
+  {
+    "id": "state_02",
+    "level": "junior",
+    "category": "State Management",
+    "question": "Однонаправленный поток данных — зачем?",
+    "answer": "Упрощает рассуждения и отладку: изменения через явные события."
+  },
+  {
+    "id": "state_03",
+    "level": "middle",
+    "category": "State Management",
+    "question": "Redux Toolkit — плюсы?",
+    "answer": "Меньше бойлерплейта, Immer, полезные дефолты и сериализуемые проверки."
+  },
+  {
+    "id": "state_04",
+    "level": "middle",
+    "category": "State Management",
+    "question": "Zustand: как избежать лишних ререндеров?",
+    "answer": "Селекторы + shallow, разделение стора, вычисления вне стора."
+  },
+  {
+    "id": "state_05",
+    "level": "middle",
+    "category": "State Management",
+    "question": "React Query: cacheTime vs staleTime?",
+    "answer": "staleTime — свежесть; cacheTime — время удержания в памяти после unmount."
+  },
+  {
+    "id": "state_06",
+    "level": "senior",
+    "category": "State Management",
+    "question": "Recoil/Jotai — идея атомов/селекторов?",
+    "answer": "Атомы — минимальные части состояния; селекторы — производные."
+  },
+  {
+    "id": "state_07",
+    "level": "senior",
+    "category": "State Management",
+    "question": "Глобальный стор в микрофронтендах?",
+    "answer": "Изоляция, события/каналы, слабая связанность, контрактные API."
+  },
+  {
+    "id": "state_08",
+    "level": "senior",
+    "category": "State Management",
+    "question": "Согласованность кэша после мутаций?",
+    "answer": "Optimistic update, инвалидация, patch‑операции, фоновый refetch."
+  },
+  {
+    "id": "arch_01",
+    "level": "junior",
+    "category": "Architecture",
+    "question": "Почему модульность важна и чем плохи глобальные синглтоны?",
+    "answer": "Снижает связанность и упрощает тесты; синглтоны создают скрытые зависимости."
+  },
+  {
+    "id": "arch_02",
+    "level": "junior",
+    "category": "Architecture",
+    "question": "Что такое FSD/feature‑based структура?",
+    "answer": "Слои entities/features/widgets/pages, public API модулей, правила импортов."
+  },
+  {
+    "id": "arch_03",
+    "level": "middle",
+    "category": "Architecture",
+    "question": "Ключевые веб‑метрики (LCP/CLS/FID/TTI) и улучшения?",
+    "answer": "Оптимизация критического пути: split, lazy, preconnect, оптимизация изображений, виртуализация."
+  },
+  {
+    "id": "arch_04",
+    "level": "middle",
+    "category": "Architecture",
+    "question": "Когда оправдан микрофронтенд?",
+    "answer": "Независимые релизы/команды; цена — сложность сборки, общих зависимостей, коммуникаций."
+  },
+  {
+    "id": "arch_05",
+    "level": "middle",
+    "category": "Architecture",
+    "question": "Как организовать i18n в SPA?",
+    "answer": "Каталоги сообщений, ICU, динамическая загрузка, валидация ключей, fallbacks."
+  },
+  {
+    "id": "arch_06",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "Варианты деплоя SPA и trade‑offs?",
+    "answer": "CDN (CSR), SSR (TTFB/SEO), Edge SSR (гео/кэш); выбирать по метрикам и SLA."
+  },
+  {
+    "id": "arch_07",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "CSP/Trusted Types/SRI — основные принципы?",
+    "answer": "Nonce+strict-dynamic, политики TT, SRI на CDN, отчёты, постепенное включение."
+  },
+  {
+    "id": "arch_08",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "Стратегии кэширования (HTTP/SW) для SPA?",
+    "answer": "Stale‑while‑revalidate, versioned assets, runtime‑кэш API, аккуратная инвалидация."
+  },
+  {
+    "id": "arch_09",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "Наблюдаемость фронта — что собирать?",
+    "answer": "RUM, ошибки/трейсинг, sourcemaps, алерты по SLO, бюджеты в CI."
+  },
+  {
+    "id": "arch_10",
+    "level": "senior",
+    "category": "Architecture",
+    "question": "Подход к фича‑флагам и экспериментации?",
+    "answer": "Аудитируемые флаги, трекинг, канареечные релизы, безопасные откаты."
+  },
+  {
+    "id": "algo_01",
+    "level": "junior",
+    "category": "Algorithms",
+    "question": "Что такое сложность O(n), O(log n), O(n log n)?",
+    "answer": "Асимптотическая оценка роста времени/памяти от размера входа."
+  },
+  {
+    "id": "algo_02",
+    "level": "junior",
+    "category": "Algorithms",
+    "question": "Два указателя — где полезно?",
+    "answer": "Пары/палиндромы/слияние, линейные решения на отсортированных массивах/строках."
+  },
+  {
+    "id": "algo_03",
+    "level": "middle",
+    "category": "Algorithms",
+    "question": "BFS vs DFS — различия и применение?",
+    "answer": "BFS — кратчайшие пути в невзвешенных графах; DFS — обход/циклы/топосорт."
+  },
+  {
+    "id": "algo_04",
+    "level": "senior",
+    "category": "Algorithms",
+    "question": "Эффективная реализация LRU?",
+    "answer": "HashMap + двусвязный список: O(1) get/set; вытеснение 'старого'."
+  },
+  {
+    "id": "algo_05",
+    "level": "senior",
+    "category": "Algorithms",
+    "question": "Когда нужен heap/priority queue на фронте?",
+    "answer": "Планировщики, топ‑K, Dijkstra, merge K отсортированных."
+  }
+]

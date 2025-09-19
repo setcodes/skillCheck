@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content="0; url=/skillCheck/" />
+    <title>Redirecting…</title>
+  </head>
+  <body>
+    <p>Redirecting to <a href="/skillCheck/">/skillCheck/</a>…</p>
+    <script>
+      // SPA fallback: redirect to base preserving path if needed
+      (function(){
+        var base = '/skillCheck/';
+        if (location.pathname.indexOf(base) !== 0) {
+          location.replace(base);
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
