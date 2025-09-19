@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react'
-import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock, Sun, Moon } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Toaster } from '@/shared/ui/toaster'
 import { AppProvider, useApp } from './providers/AppProvider'
@@ -73,17 +73,41 @@ function AppContent() {
   }
   const interviewDisplay = useMemo(() => formatSeconds(intValueSec), [intValueSec])
 
+  // Theme (light/dark)
+  const [theme, setTheme] = useState<'light'|'dark'>(() => {
+    const saved = localStorage.getItem('theme') as 'light'|'dark'|null
+    if (saved) return saved
+    const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    return prefersDark ? 'dark' : 'light'
+  })
+  useEffect(() => {
+    const root = document.documentElement
+    if (theme === 'dark') root.classList.add('dark')
+    else root.classList.remove('dark')
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
   return (
     <div className="h-screen bg-background overflow-hidden flex flex-col print:h-auto print:overflow-visible">
       {/* Header */}
       <header className="border-b bg-card relative z-10 print:hidden">
-        <div className="container mx-auto px-4 py-4">
+            <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img src="/logo.svg" width="64" height="64" alt="SkillCheck"/>
               <h1 className="text-2xl font-bold text-foreground">SkillCheck</h1>
             </div>
             <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={()=> setTheme(t => t==='dark'?'light':'dark')}
+                className="flex items-center gap-2"
+                title={theme==='dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
+              >
+                {theme==='dark' ? <Sun className="h-4 w-4"/> : <Moon className="h-4 w-4"/>}
+                <span className="hidden sm:inline">{theme==='dark' ? 'Светлая' : 'Тёмная'}</span>
+              </Button>
               <Button 
                 variant={role==='interviewer'?'default':'outline'} 
                 size="sm"
