@@ -128,15 +128,39 @@ const QUESTIONS_BY_PROF: Record<Profession, TheoryQuestion[]> = {
 }
 
 export function getQuestions(prof: Profession): TheoryQuestion[] {
+  // Helper to lazily compute base (MD overrides JSON by id) and normalize
+  let baseCache: TheoryQuestion[] | null = null
+  const base = () => {
+    if (baseCache) return baseCache
+    const md = normalize(loadMdForProf(prof))
+    const jsonBase = normalize(QUESTIONS_BY_PROF[prof] || [])
+    // merge by id: json first, md overrides/adds
+    const map = new Map<string, TheoryQuestion>()
+    for (const q of jsonBase) map.set(q.id, q)
+    for (const q of md) map.set(q.id, q)
+    baseCache = Array.from(map.values())
+      .sort((a,b)=> (a.difficulty||0)-(b.difficulty||0) || String(a.title||'').localeCompare(String(b.title||'')))
+    return baseCache
+  }
   try {
     const raw = localStorage.getItem(lsKeyQuestions(prof))
     if (raw) {
       const parsed = JSON.parse(raw)
       if (Array.isArray(parsed)) {
-        // Если в локальном банке есть неполные записи — нормализуем и перезаписываем
+        // Если в локальном банке есть неполные записи — 
+        // заполняем недостающие поля из базовой поставки по id, 
+        // и финально нормализуем.
         const needsFix = parsed.some((q: any)=> !q || !q.title || !q.prompt)
         if (needsFix) {
-          const fixed = normalize(parsed)
+          const b = base()
+          const map = Object.fromEntries(b.map(q=> [q.id, q])) as Record<string, TheoryQuestion>
+          const merged = parsed.map((q: any, i: number)=>{
+            const id = String(q?.id ?? `q_${i}`)
+            const fromBase = map[id] || undefined
+            const combined = { ...(fromBase||{}), ...(q||{}) }
+            return combined
+          })
+          const fixed = normalize(merged)
           try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(fixed)) } catch {}
           return fixed
         }
@@ -145,11 +169,10 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
     }
   } catch {}
   // Prefer Markdown contributions if present, else fallback to JSON base
-  const md = loadMdForProf(prof)
-  const base = normalize(md.length ? md : (QUESTIONS_BY_PROF[prof] || []))
+  const seeded = base()
   // Auto-seed LocalStorage with base so user can edit locally, works offline too
-  try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(base)) } catch {}
-  return base
+  try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(seeded)) } catch {}
+  return seeded
 }
 
 export function putQuestions(prof: Profession, questions: TheoryQuestion[]): void {
