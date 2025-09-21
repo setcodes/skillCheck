@@ -6,6 +6,17 @@ export type UITask = {
   description: string;
   starter: string;
   tests: string;
+  language?: 'javascript'|'typescript'|'java'|'sql'|'yaml';
+  testsSql?: {
+    schema?: string[];
+    data?: string[];
+    expectedRows: any[];
+    check?: string;
+    queryVar?: string;
+  };
+  testsYaml?: {
+    rules: { path: string; equals?: any; regex?: string; exists?: boolean; length?: number }[]
+  };
   solution?: string; // Эталонное решение для интервьюера
 };
 
@@ -335,3 +346,58 @@ export const TASKS_BY_PROF = {
   "analyst": BA,
   "devops": DEVOPS
 } as const;
+
+// Add sample SQL and YAML tasks to banks (non-breaking: push into copies if needed)
+// Simple SQL task appended to BA (analyst)
+BA.push({
+  id:'ba_sql_top_customers', level:'junior', title:'TOP customers (SQL)', exportName:'SQL_TOP',
+  description:'Напишите запрос, который вернёт клиента и сумму заказов, по убыванию суммы.',
+  language:'sql',
+  starter:'-- SELECT customer, SUM(amount) AS total ...',
+  tests:'',
+  // @ts-ignore
+  testsSql:{
+    schema:["CREATE TABLE orders(id INT, customer TEXT, amount INT)"],
+    data:["INSERT INTO orders VALUES (1,'A',100),(2,'B',200),(3,'A',150)",],
+    queryVar:'SQL',
+    check:"SELECT customer, SUM(amount) AS total FROM orders GROUP BY customer ORDER BY total DESC",
+    expectedRows:[["A",250],["B",200]]
+  },
+  solution: '-- SELECT customer, SUM(amount) AS total FROM orders GROUP BY customer ORDER BY total DESC'
+})
+
+// Simple YAML task appended to DEVOPS
+DEVOPS.push({
+  id:'dv_yaml_deploy', level:'junior', title:'K8s Deployment (YAML)', exportName:'K8S_DEPLOY',
+  description:'Заполните манифест Deployment с нужными полями.',
+  language:'yaml',
+  starter:`apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: app
+          image: nginx:1.25
+`,
+  tests:'',
+  // @ts-ignore
+  testsYaml:{
+    rules:[
+      { path:'kind', equals:'Deployment' },
+      { path:'spec.template.spec.containers[0].image', regex:'^nginx:' },
+      { path:'metadata.labels.app', equals:'web' }
+    ]
+  }
+})

@@ -11,7 +11,7 @@ import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { useToast } from '@/shared/hooks/use-toast'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
-import { runModule } from '@/shared/api/runner'
+import { runModule, runSql, runYaml } from '@/shared/api/runner'
 import { getTasks } from '@/shared/api/questions'
 import type { UITask } from '@/entities/task/model/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -176,7 +176,16 @@ export default function Solve(){
     console.info = (...a:any[]) => { push('info', a); orig.info(...a) }
 
     try {
-      const res=await runModule(code,task.tests,{debug:false}); 
+      let res: {ok:boolean; message:string}[] = []
+      if (taskLanguage==='sql') {
+        // @ts-ignore
+        res = await runSql(code, (task as any).testsSql || { expectedRows: [] })
+      } else if (taskLanguage==='yaml') {
+        // @ts-ignore
+        res = await runYaml(code, (task as any).testsYaml || { rules: [] })
+      } else {
+        res = await runModule(code,task.tests,{debug:false}); 
+      }
       setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,lastResult:res}}))
       
       // Проверяем, есть ли результаты тестов

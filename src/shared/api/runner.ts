@@ -167,3 +167,92 @@ export async function runModule(
     return [{ok: false, message: error?.message || 'Unknown error'}]
   }
 }
+
+// --- SQL runner (in-browser) ---
+export async function runSql(
+  userSql: string,
+  spec: { schema?: string[]; data?: string[]; expectedRows: any[]; check?: string; queryVar?: string }
+): Promise<{ ok: boolean; message: string }[]> {
+  const results: { ok: boolean; message: string }[] = []
+  try {
+    // dynamic import to avoid heavy initial bundle if not needed
+    const alasqlMod: any = await import('alasql')
+    const alasql = (alasqlMod as any).default || alasqlMod
+    // reset database context by using a new database per run
+    alasql('CREATE DATABASE IF NOT EXISTS tmpdb')
+    alasql('USE tmpdb')
+    try {
+      for (const s of (spec.schema || [])) alasql(s)
+      for (const d of (spec.data || [])) alasql(d)
+      const query = spec.check
+        ? String(spec.check).replace(new RegExp(String(spec.queryVar || 'SQL'), 'g'), `(${userSql})`)
+        : userSql
+      const rows = alasql(query) as any[]
+      const normalized = Array.isArray(rows)
+        ? rows.map((r) => (Array.isArray(r) ? r : Object.values(r)))
+        : []
+      const exp = spec.expectedRows || []
+      const ok = JSON.stringify(normalized) === JSON.stringify(exp)
+      results.push({ ok, message: ok ? 'SQL: все проверки пройдены' : `SQL: ожидалось ${JSON.stringify(exp)}, получено ${JSON.stringify(normalized)}` })
+    } finally {
+      try { alasql('DROP DATABASE tmpdb') } catch {}
+    }
+  } catch (e: any) {
+    results.push({ ok: false, message: `SQL error: ${e?.message || e}` })
+  }
+  return results
+}
+
+// --- YAML runner (in-browser) ---
+function getByPath(obj: any, path: string): any {
+  if (!path) return undefined
+  const parts = path.replace(/\[(\d+)\]/g, '.$1').split('.')
+  let cur = obj
+  for (const p of parts) {
+    if (p === '') continue
+    if (cur && Object.prototype.hasOwnProperty.call(cur, p)) cur = cur[p]
+    else return undefined
+  }
+  return cur
+}
+
+export async function runYaml(
+  userYaml: string,
+  spec: { rules: { path: string; equals?: any; regex?: string; exists?: boolean; length?: number }[] }
+): Promise<{ ok: boolean; message: string }[]> {
+  const results: { ok: boolean; message: string }[] = []
+  try {
+    const mod: any = await import('js-yaml')
+    const yaml = (mod as any).default || mod
+    const doc = yaml.load(userYaml)
+    for (const rule of spec.rules || []) {
+      const val = getByPath(doc, rule.path)
+      if (rule.exists !== undefined) {
+        const ok = rule.exists ? typeof val !== 'undefined' : typeof val === 'undefined'
+        results.push({ ok, message: `${rule.path} ${rule.exists ? 'должен существовать' : 'не должен существовать'}` })
+        continue
+      }
+      if (typeof rule.length === 'number') {
+        const ok = Array.isArray(val) && val.length === rule.length
+        results.push({ ok, message: `${rule.path} длина == ${rule.length}` })
+        continue
+      }
+      if (rule.regex) {
+        const re = new RegExp(rule.regex)
+        const ok = typeof val === 'string' && re.test(val)
+        results.push({ ok, message: `${rule.path} =~ /${rule.regex}/` })
+        continue
+      }
+      if (Object.prototype.hasOwnProperty.call(rule, 'equals')) {
+        const ok = JSON.stringify(val) === JSON.stringify(rule.equals)
+        results.push({ ok, message: `${rule.path} == ${JSON.stringify(rule.equals)}` })
+        continue
+      }
+      results.push({ ok: false, message: `Неизвестное правило для ${rule.path}` })
+    }
+  } catch (e: any) {
+    results.push({ ok: false, message: `YAML error: ${e?.message || e}` })
+  }
+  if (results.length === 0) results.push({ ok: false, message: 'Нет правил проверки' })
+  return results
+}
