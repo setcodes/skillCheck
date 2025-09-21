@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { useToast } from '@/shared/hooks/use-toast'
+import { useToast } from '@/shared/hooks/use-sonner'
 import { getQuestions, putQuestions, getTasks, putTasks } from '@/shared/api/questions'
 import { useApp } from '@/app/providers/AppProvider'
 export default function DataHub(){
@@ -12,7 +12,7 @@ export default function DataHub(){
     const data = { questions: getQuestions(prof), tasks: getTasks(prof) }
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'})
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `bank-${prof}.json`; a.click(); URL.revokeObjectURL(url)
-    toast({title: "Экспортировано", description: `Данные ${prof} экспортированы в файл.`})
+    toast.success("Экспортировано", `Данные ${prof} экспортированы в файл.`)
   }
   const importJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]; if(!f) return
@@ -36,9 +36,9 @@ export default function DataHub(){
         // сохраняем задачи как есть (ожидается формат UITask[]) 
         putTasks(prof, maybeTasks)
       }
-      toast({title: "Импортировано", description: "Данные импортированы. Открой «Теорию»/«Решение задач»."})
+      toast.success("Импортировано", "Данные импортированы. Открой «Теорию»/«Решение задач».")
     } catch { 
-      toast({title: "Ошибка", description: "Неверный формат JSON файла.", variant: "destructive"})
+      toast.error("Ошибка", "Неверный формат JSON файла.")
     } }
     r.readAsText(f)
   }
@@ -47,7 +47,7 @@ export default function DataHub(){
     try { localStorage.removeItem(lsKeyQuestions(prof)); } catch {}
     // force re-seed by calling getQuestions
     const seeded = getQuestions(prof)
-    toast({ title: 'Сброшено', description: `Вопросы ${prof} сброшены к базе (${seeded.length})` })
+    toast.info('Сброшено', `Вопросы ${prof} сброшены к базе (${seeded.length})`)
   }
   
   function normalizeQuestions(input: any[]): any[] {

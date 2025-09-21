@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, Play, Pause, RotateCcw, Code as CodeIcon, Users, BookOpen, Import as ImportIcon, Clock, Sun, Moon, CircleCheckBig, UserCog, User, AlertTriangle } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
-import { Toaster } from '@/shared/ui/toaster'
+import { Toaster } from '@/shared/ui/sonner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
 import { AppProvider, useApp } from './providers/AppProvider'
 import { PROFESSIONS, PROFESSION_ICONS } from '@/entities/profession/model/constants'
@@ -9,7 +9,7 @@ import type { Profession } from '@/entities/profession/model/types'
 import { cn } from '@/shared/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/shared/ui/dropdown-menu'
-import { useToast } from '@/shared/hooks/use-toast'
+import { useToast } from '@/shared/hooks/use-sonner'
 
 // Импорты страниц
 import SolvePage from '@/pages/solve/SolvePage'
@@ -111,40 +111,25 @@ function AppContent() {
       const ten = Math.ceil(limit*0.10)
       if (!notifiedHalf && remaining <= half) {
         setNotifiedHalf(true)
-        toast({
-          title: (
-            <span className="inline-flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              Половина времени прошла
-            </span>
-          ),
-          description: `Осталось ~ ${formatSeconds(remaining)}`,
-        })
+        toast.info(
+          "Половина времени прошла",
+          `Осталось ~ ${formatSeconds(remaining)}`
+        )
       }
       if (!notifiedTen && remaining <= ten) {
         setNotifiedTen(true)
-        toast({
-          title: (
-            <span className="inline-flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Меньше 10% времени
-            </span>
-          ),
-          description: `Осталось ~ ${formatSeconds(remaining)}`,
-        })
+        toast.warning(
+          "Меньше 10% времени",
+          `Осталось ~ ${formatSeconds(remaining)}`
+        )
       }
     }
     // Time over
     if (prevValRef.current > 0 && intValueSec === 0 && intMode==='down') {
-      toast({
-        title: (
-          <span className="inline-flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            Время истекло
-          </span>
-        ),
-        description: 'Глобальный таймер остановлен',
-      })
+      toast.error(
+        "Время истекло",
+        "Глобальный таймер остановлен"
+      )
     }
     prevValRef.current = intValueSec
   }, [intMode, intRunning, intLimitSec, intValueSec])

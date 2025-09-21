@@ -8,7 +8,7 @@ import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
-import { useToast } from '@/shared/hooks/use-toast'
+import { useToast } from '@/shared/hooks/use-sonner'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
 import { runModule, runSql, runYaml } from '@/shared/api/runner'
@@ -85,7 +85,31 @@ export default function Solve(){
       default: return 'javascript'
     }
   }
-  const taskLanguage = useMemo(()=> (task as any)?.language || getLanguage(), [task?.id, prof])
+  
+  // Улучшенное определение языка с проверкой содержимого кода
+  const detectLanguage = (code: string) => {
+    if (code.includes('public class') || code.includes('public static') || code.includes('System.out.println')) {
+      return 'java'
+    }
+    if (code.includes('SELECT') || code.includes('FROM') || code.includes('WHERE')) {
+      return 'sql'
+    }
+    if (code.includes('apiVersion:') || code.includes('kind:') || code.includes('metadata:')) {
+      return 'yaml'
+    }
+    if (code.includes('interface ') || code.includes(': string') || code.includes(': number')) {
+      return 'typescript'
+    }
+    return 'javascript'
+  }
+  
+  const taskLanguage = useMemo(()=> {
+    const explicitLanguage = (task as any)?.language
+    if (explicitLanguage) return explicitLanguage
+    
+    const detectedLanguage = detectLanguage(code)
+    return detectedLanguage
+  }, [task?.id, code])
   
   const [logs, setLogs] = useState<string[]>([])
   // Toast notifications for per-task timer (down mode)
@@ -109,39 +133,15 @@ export default function Solve(){
       const ten = Math.ceil(limit*0.10)
       if(!halfNotifiedRef.current && remaining<=half){
         halfNotifiedRef.current = true
-        toast({
-          title: (
-            <span className="inline-flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-600" />
-              Половина времени по задаче
-            </span>
-          ),
-          description: `Осталось ~ ${formatSeconds(remaining)}`,
-        })
+        toast.info("Половина времени по задаче", `Осталось ~ ${formatSeconds(remaining)}`)
       }
       if(!tenNotifiedRef.current && remaining<=ten){
         tenNotifiedRef.current = true
-        toast({
-          title: (
-            <span className="inline-flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              Меньше 10% времени по задаче
-            </span>
-          ),
-          description: `Осталось ~ ${formatSeconds(remaining)}`,
-        })
+        toast.warning("Меньше 10% времени по задаче", `Осталось ~ ${formatSeconds(remaining)}`)
       }
     }
     if(prevTaskValRef.current>0 && taskTimerValueSec===0 && taskTimerMode==='down'){
-      toast({
-        title: (
-          <span className="inline-flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-red-600" />
-            Время по задаче истекло
-          </span>
-        ),
-        description: task ? `Задача: ${task.title}` : undefined,
-      })
+      toast.error("Время по задаче истекло", task ? `Задача: ${task.title}` : undefined)
     }
     prevTaskValRef.current = taskTimerValueSec
   }, [taskTimerMode, taskTimerRunning, taskTimerLimitSec, taskTimerValueSec, task?.title])
@@ -150,19 +150,12 @@ export default function Solve(){
     
     // Проверяем, есть ли код для тестирования
     if (!code.trim()) {
-      toast({
-        title: "⚠️ Нет кода для тестирования",
-        description: "Введите код решения перед запуском тестов",
-        variant: "default"
-      })
+      toast.warning("Нет кода для тестирования", "Введите код решения перед запуском тестов")
       return
     }
     
     // Показываем тост о начале тестирования
-    toast({
-      title: "Запуск тестов...",
-      description: "Выполняются тесты для задачи",
-    })
+    toast.info("Запуск тестов...", "Выполняются тесты для задачи")
     
     // перехватываем вывод консоли во время запуска
     const tmpLogs: string[] = []
@@ -190,11 +183,7 @@ export default function Solve(){
       
       // Проверяем, есть ли результаты тестов
       if (!res || res.length === 0) {
-        toast({
-          title: "⚠️ Нет тестов",
-          description: "Для этой задачи не найдено тестов",
-          variant: "default"
-        })
+        toast.warning("Нет тестов", "Для этой задачи не найдено тестов")
         return
       }
       
@@ -204,30 +193,29 @@ export default function Solve(){
       const totalCount = res.length
       
       if (allPassed) {
-        toast({
-          title: "✅ Все тесты пройдены!",
-          description: `Успешно выполнено ${totalCount} из ${totalCount} тестов`,
-          variant: "default"
-        })
+        toast.success("Все тесты пройдены!", `Успешно выполнено ${totalCount} из ${totalCount} тестов`)
       } else {
         // Получаем первую ошибку для показа в тосте
         const firstError = res.find(r => !r.ok)
-        const errorMessage = firstError ? firstError.message : "Неизвестная ошибка"
+        let errorMessage = firstError ? firstError.message : "Неизвестная ошибка"
         
-        toast({
-          title: "❌ Тесты не пройдены",
-          description: `Пройдено ${passedCount} из ${totalCount} тестов. ${errorMessage}`,
-          variant: "destructive"
-        })
+        // Улучшенные сообщения об ошибках
+        if (errorMessage.includes('Execution timeout')) {
+          errorMessage = "⏱️ Превышено время выполнения (5 секунд)"
+        } else if (errorMessage.includes('недопустимые конструкции')) {
+          errorMessage = "🚫 Код содержит недопустимые конструкции"
+        } else if (errorMessage.includes('No functions found')) {
+          errorMessage = "🔍 Не найдены функции для выполнения"
+        } else if (errorMessage.includes('Test execution error')) {
+          errorMessage = "💥 Ошибка выполнения тестов"
+        }
+        
+        toast.error("Тесты не пройдены", `Пройдено ${passedCount} из ${totalCount} тестов. ${errorMessage}`)
       }
     } catch (error) {
       // Обрабатываем ошибки выполнения
       const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка"
-      toast({
-        title: "💥 Ошибка выполнения",
-        description: `Не удалось запустить тесты: ${errorMessage}`,
-        variant: "destructive"
-      })
+      toast.error("Ошибка выполнения", `Не удалось запустить тесты: ${errorMessage}`)
     } finally {
       console.log = orig.log; console.error = orig.error; console.warn = orig.warn; console.info = orig.info
       setLogs(tmpLogs)
@@ -240,27 +228,19 @@ export default function Solve(){
     const bridge=JSON.parse(localStorage.getItem('bridge.taskScores.v1')||'{}'); 
     bridge[prof+':'+level+':'+task.id]=payload; 
     localStorage.setItem('bridge.taskScores.v1',JSON.stringify(bridge)); 
-    toast({
-      title: "📤 Оценка отправлена!",
-      description: "Оценка сохранена и доступна в режиме интервью",
-      variant: "default"
-    })
+    toast.success("Оценка отправлена!", "Оценка сохранена и доступна в режиме интервью")
   }
   const resetTask=()=>{
     if(!task)return; 
     setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:task.starter,lastResult:undefined}})); 
     setLogs([])
-    toast({
-      title: "🔄 Задача сброшена",
-      description: "Код возвращен к исходному состоянию",
-      variant: "default"
-    })
+    toast.info("Задача сброшена", "Код возвращен к исходному состоянию")
   }
   const resetTests=()=>{
     if(!task) return;
     setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,lastResult:undefined}}))
     setLogs([])
-    toast({ title: '🧹 Результаты очищены', description: 'Очищены результаты тестов и консоль', variant: 'default' })
+    toast.info('Результаты очищены', 'Очищены результаты тестов и консоль')
   }
   return <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
     {/* Tasks List */}
@@ -385,13 +365,18 @@ export default function Solve(){
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={task.level === 'junior' ? 'default' : task.level === 'middle' ? 'secondary' : 'destructive'} className="capitalize">
-                    {task.level}
-                  </Badge>
-                  <Badge variant="outline" className="text-xs">
-                    {getLanguage().toUpperCase()}
-                  </Badge>
+                <div className="flex flex-col gap-5 items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Badge variant={task.level === 'junior' ? 'default' : task.level === 'middle' ? 'secondary' : 'destructive'} className="capitalize">
+                      {task.level}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {getLanguage().toUpperCase()}
+                    </Badge>
+                  </div>
+                  <Button size="sm" variant="default" onClick={()=>editorRef.current?.enterFullscreen()}>
+                    Перейти к решению
+                  </Button>
                 </div>
               </div>
               {/* Block 2: Title + Description with icon */}
@@ -407,13 +392,8 @@ export default function Solve(){
             {/* Scrollable content area */}
             <div className="p-6 flex-1 overflow-y-auto">
               {/* Code Editor */}
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2">
                 <label className="text-sm font-medium">Код задачи:</label>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="default" onClick={()=>editorRef.current?.enterFullscreen()}>
-                    Перейти к решению
-                  </Button>
-                </div>
               </div>
               <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto">
                 {task.starter}

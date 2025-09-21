@@ -8,7 +8,7 @@ export interface UITask {
   description: string
   starter: string
   tests: string
-  language?: 'javascript' | 'typescript' | 'java' | 'sql' | 'yaml'
+  language?: 'javascript' | 'typescript' | 'java' | 'sql' | 'yaml' | 'python' | 'dockerfile' | 'mermaid'
   testsSql?: {
     schema?: string[]
     data?: string[]

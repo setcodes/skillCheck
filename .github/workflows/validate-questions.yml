@@ -1,0 +1,235 @@
+name: Validate Questions
+
+on:
+  pull_request:
+    paths:
+      - 'src/shared/questions/**/*.json'
+      - 'src/shared/questions/**/*.md'
+      - '.github/workflows/validate-questions.yml'
+
+jobs:
+  validate-questions:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+        
+      - name: Validate JSON questions
+        run: |
+          echo "🔍 Validating JSON question files..."
+          
+          # Check if any JSON files were modified
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E 'src/shared/questions/.*\.json$'; then
+            echo "📝 Found modified JSON files, validating..."
+            
+            # Validate each JSON file
+            for file in src/shared/questions/*.json; do
+              if [ -f "$file" ]; then
+                echo "Validating $file..."
+                
+                # Check if file is valid JSON
+                if ! jq empty "$file" 2>/dev/null; then
+                  echo "❌ Error: $file is not valid JSON"
+                  exit 1
+                fi
+                
+                # Check if file has questions array (either direct array or .questions field)
+                if jq -e 'type == "array"' "$file" > /dev/null 2>&1; then
+                  # Direct array format
+                  question_count=$(jq 'length' "$file")
+                  questions_selector=".[]"
+                elif jq -e '.questions' "$file" > /dev/null 2>&1; then
+                  # Object with questions field
+                  question_count=$(jq '.questions | length' "$file")
+                  questions_selector=".questions[]"
+                else
+                  echo "❌ Error: $file is not a valid questions file (must be array or object with 'questions' field)"
+                  exit 1
+                fi
+                echo "Found $question_count questions in $file"
+                
+                # Check for required fields in each question
+                jq -r "$questions_selector | select(.id == null or .title == null or .prompt == null or .answer == null or .category == null or .difficulty == null or .bucket == null) | \"Missing required field in question: \" + (.id // \"unknown\")" "$file"
+                
+                if [ $? -ne 0 ]; then
+                  echo "❌ Error: Some questions are missing required fields"
+                  exit 1
+                fi
+                
+                # Check for duplicate IDs
+                duplicate_ids=$(jq -r "$questions_selector | .id" "$file" | sort | uniq -d)
+                if [ -n "$duplicate_ids" ]; then
+                  echo "❌ Error: Duplicate question IDs found: $duplicate_ids"
+                  exit 1
+                fi
+                
+                echo "✅ $file is valid"
+              fi
+            done
+          else
+            echo "ℹ️ No JSON files were modified"
+          fi
+          
+      - name: Validate Markdown questions
+        run: |
+          echo "🔍 Validating Markdown question files..."
+          
+          # Check if any MD files were modified
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E 'src/shared/questions/.*\.md$'; then
+            echo "📝 Found modified Markdown files, validating..."
+            
+            # jq is already installed in previous step
+            
+            # Validate each MD file
+            for file in src/shared/questions/md/**/*.md; do
+              if [ -f "$file" ]; then
+                echo "Validating $file..."
+                
+                # Check if file has frontmatter
+                if ! head -n 1 "$file" | grep -q "^---"; then
+                  echo "❌ Error: $file does not start with frontmatter (---)"
+                  exit 1
+                fi
+                
+                # Check if file has question and answer sections
+                if ! grep -q "## Вопрос" "$file"; then
+                  echo "❌ Error: $file does not contain '## Вопрос' section"
+                  exit 1
+                fi
+                
+                if ! grep -q "## Ответ" "$file"; then
+                  echo "❌ Error: $file does not contain '## Ответ' section"
+                  exit 1
+                fi
+                
+                echo "✅ $file is valid"
+              fi
+            done
+          else
+            echo "ℹ️ No Markdown files were modified"
+          fi
+          
+      - name: Check question quality
+        run: |
+          echo "🔍 Checking question quality..."
+          
+          # Check for minimum question length
+          for file in src/shared/questions/*.json; do
+            if [ -f "$file" ]; then
+              echo "Checking quality in $file..."
+              
+              # Determine questions selector
+              if jq -e 'type == "array"' "$file" > /dev/null 2>&1; then
+                questions_selector=".[]"
+              elif jq -e '.questions' "$file" > /dev/null 2>&1; then
+                questions_selector=".questions[]"
+              else
+                echo "❌ Error: $file is not a valid questions file"
+                exit 1
+              fi
+              
+              # Check for very short answers (less than 10 characters)
+              short_answers=$(jq -r "$questions_selector | select(.answer | length < 10) | .id" "$file")
+              if [ -n "$short_answers" ]; then
+                echo "⚠️ Warning: Questions with very short answers found: $short_answers"
+              fi
+              
+              # Check for very short prompts (less than 10 characters)
+              short_prompts=$(jq -r "$questions_selector | select(.prompt | length < 10) | .id" "$file")
+              if [ -n "$short_prompts" ]; then
+                echo "⚠️ Warning: Questions with very short prompts found: $short_prompts"
+              fi
+              
+              # Check for empty answers
+              empty_answers=$(jq -r "$questions_selector | select(.answer == \"\" or .answer == null) | .id" "$file")
+              if [ -n "$empty_answers" ]; then
+                echo "❌ Error: Questions with empty answers found: $empty_answers"
+                exit 1
+              fi
+              
+              # Check for empty prompts
+              empty_prompts=$(jq -r "$questions_selector | select(.prompt == \"\" or .prompt == null) | .id" "$file")
+              if [ -n "$empty_prompts" ]; then
+                echo "❌ Error: Questions with empty prompts found: $empty_prompts"
+                exit 1
+              fi
+            fi
+          done
+          
+      - name: Generate validation report
+        run: |
+          echo "📊 Generating validation report..."
+          
+          total_questions=0
+          for file in src/shared/questions/*.json; do
+            if [ -f "$file" ]; then
+              # Determine count based on file structure
+              if jq -e 'type == "array"' "$file" > /dev/null 2>&1; then
+                count=$(jq 'length' "$file")
+              elif jq -e '.questions' "$file" > /dev/null 2>&1; then
+                count=$(jq '.questions | length' "$file")
+              else
+                count=0
+              fi
+              total_questions=$((total_questions + count))
+              echo "📁 $file: $count questions"
+            fi
+          done
+          
+          echo "📈 Total questions: $total_questions"
+          echo "✅ All validations passed!"
+          
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            let totalQuestions = 0;
+            let modifiedFiles = [];
+            
+            // Count questions in modified files
+            const questionsDir = 'src/shared/questions';
+            const files = fs.readdirSync(questionsDir);
+            
+            for (const file of files) {
+              if (file.endsWith('.json')) {
+                const filePath = path.join(questionsDir, file);
+                const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+                const count = content.questions ? content.questions.length : 0;
+                totalQuestions += count;
+                modifiedFiles.push(`${file}: ${count} questions`);
+              }
+            }
+            
+            const comment = `## 📊 Question Validation Report
+            
+            ✅ **All validations passed!**
+            
+            📈 **Statistics:**
+            ${modifiedFiles.map(f => `- ${f}`).join('\n')}
+            - **Total questions:** ${totalQuestions}
+            
+            🎉 **Ready for review!**`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

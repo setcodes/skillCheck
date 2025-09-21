@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  # Отключено для упрощения
+  # push:
+  #   branches: [ main, dev ]
+  # pull_request:
+  #   branches: [ main, dev ]
+  workflow_dispatch: # Только ручной запуск
+
+jobs:
+  test:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run TypeScript check
+      run: |
+        echo "Running TypeScript check..."
+        echo "Current directory: $(pwd)"
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        npx tsc --noEmit
+        echo "TypeScript check completed"
+
+    - name: Build project
+      run: |
+        echo "Building project..."
+        echo "Current directory: $(pwd)"
+        npm run build
+        echo "Build completed"
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: dist/
+
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run security audit
+      run: npm audit --audit-level moderate
+
+    - name: Check for vulnerabilities
+      run: npm audit --audit-level moderate
+      continue-on-error: true
