@@ -132,7 +132,16 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
     const raw = localStorage.getItem(lsKeyQuestions(prof))
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed as TheoryQuestion[]
+      if (Array.isArray(parsed)) {
+        // Если в локальном банке есть неполные записи — нормализуем и перезаписываем
+        const needsFix = parsed.some((q: any)=> !q || !q.title || !q.prompt)
+        if (needsFix) {
+          const fixed = normalize(parsed)
+          try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(fixed)) } catch {}
+          return fixed
+        }
+        return parsed as TheoryQuestion[]
+      }
     }
   } catch {}
   // Prefer Markdown contributions if present, else fallback to JSON base
