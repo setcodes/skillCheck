@@ -99,14 +99,17 @@ function loadMdForProf(prof: Profession): TheoryQuestion[] {
 function normalize(arr: any[]): TheoryQuestion[] {
   return (arr || []).map((q: any, idx: number) => {
     const id = String(q?.id ?? `q_${idx}`)
-    const title = String(q?.title ?? 'Без названия')
+    // Если нет title — берем первую строку prompt как заголовок
+    const promptRaw = String(q?.prompt ?? '')
+    const inferredTitle = promptRaw ? String(promptRaw).split(/\r?\n/)[0].trim().slice(0, 140) : ''
+    const title = String((q?.title ?? inferredTitle) || 'Без названия')
     const category = String(q?.category ?? 'Разное')
     const difficulty = Number.isFinite(q?.difficulty) ? Number(q.difficulty) : 1
     const bucket = ((): TheoryQuestion['bucket'] => {
       const b = String(q?.bucket ?? 'screening')
       return (b==='screening' || b==='deep' || b==='architecture') ? (b as any) : 'screening'
     })()
-    const prompt = String(q?.prompt ?? '')
+    const prompt = promptRaw || String(q?.prompt ?? '')
     const answer = String(q?.answer ?? '')
     return { id, title, category, difficulty, bucket, prompt, answer }
   })
@@ -129,7 +132,16 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
     const raw = localStorage.getItem(lsKeyQuestions(prof))
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed)) return parsed as TheoryQuestion[]
+      if (Array.isArray(parsed)) {
+        // Если в локальном банке есть неполные записи — нормализуем и перезаписываем
+        const needsFix = parsed.some((q: any)=> !q || !q.title || !q.prompt)
+        if (needsFix) {
+          const fixed = normalize(parsed)
+          try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(fixed)) } catch {}
+          return fixed
+        }
+        return parsed as TheoryQuestion[]
+      }
     }
   } catch {}
   // Prefer Markdown contributions if present, else fallback to JSON base
