@@ -128,12 +128,18 @@ const QUESTIONS_BY_PROF: Record<Profession, TheoryQuestion[]> = {
 }
 
 export function getQuestions(prof: Profession): TheoryQuestion[] {
-  // Helper to lazily compute base (MD > JSON) and normalize
+  // Helper to lazily compute base (MD overrides JSON by id) and normalize
   let baseCache: TheoryQuestion[] | null = null
   const base = () => {
     if (baseCache) return baseCache
-    const md = loadMdForProf(prof)
-    baseCache = normalize(md.length ? md : (QUESTIONS_BY_PROF[prof] || []))
+    const md = normalize(loadMdForProf(prof))
+    const jsonBase = normalize(QUESTIONS_BY_PROF[prof] || [])
+    // merge by id: json first, md overrides/adds
+    const map = new Map<string, TheoryQuestion>()
+    for (const q of jsonBase) map.set(q.id, q)
+    for (const q of md) map.set(q.id, q)
+    baseCache = Array.from(map.values())
+      .sort((a,b)=> (a.difficulty||0)-(b.difficulty||0) || String(a.title||'').localeCompare(String(b.title||'')))
     return baseCache
   }
   try {
