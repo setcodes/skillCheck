@@ -18,18 +18,24 @@ import { Send, CheckCircle } from 'lucide-react';
 export default function Theory() {
 	const { prof, role } = useApp();
 	const { toast } = useToast();
-	const ALL = getQuestions(prof);
-	const cats = useMemo(
-		() => ['All', ...Array.from(new Set(ALL.map((q: any) => q.category)))],
-		[prof]
-	);
+	const ALL = getQuestions(prof) || [];
+	const cats = useMemo(() => {
+		const set = new Set<string>(['All']);
+		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');
+		return Array.from(set);
+	}, [prof]);
 	const [cat, setCat] = useState('All');
-	const list = ALL.filter((q: any) =>
-		cat === 'All' ? true : q.category === cat
-	).sort(
-		(a: any, b: any) =>
-			a.difficulty - b.difficulty || a.title.localeCompare(b.title)
-	);
+	const list = (ALL || [])
+		.filter((q: any) => (cat === 'All' ? true : (q?.category || 'Разное') === cat))
+		.sort((a: any, b: any) => {
+			const ad = Number.isFinite(a?.difficulty) ? a.difficulty : 0;
+			const bd = Number.isFinite(b?.difficulty) ? b.difficulty : 0;
+			const dt = ad - bd;
+			if (dt !== 0) return dt;
+			const at = String(a?.title || '');
+			const bt = String(b?.title || '');
+			return at.localeCompare(bt);
+		});
 
 	// Right panel: select question and evaluate
 	const [curQ, setCurQ] = useState<string>(ALL[0]?.id || '');
@@ -122,7 +128,7 @@ export default function Theory() {
 								>
 									<CardHeader>
 										<div className="flex items-center justify-between">
-											<CardTitle className="text-lg">{q.title}</CardTitle>
+											<CardTitle className="text-lg">{q?.title || 'Без названия'}</CardTitle>
 											<div className="flex gap-2">
 												<Badge variant="outline">{q.category}</Badge>
 												<Badge variant="secondary">diff {q.difficulty}</Badge>
