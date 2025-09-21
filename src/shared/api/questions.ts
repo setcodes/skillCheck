@@ -156,8 +156,20 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
           const map = Object.fromEntries(b.map(q=> [q.id, q])) as Record<string, TheoryQuestion>
           const merged = parsed.map((q: any, i: number)=>{
             const id = String(q?.id ?? `q_${i}`)
-            const fromBase = map[id] || undefined
-            const combined = { ...(fromBase||{}), ...(q||{}) }
+            const baseQ = map[id]
+            const combined: any = { id }
+            // strings prefer non-empty local, else base
+            combined.title = (q && q.title) ? String(q.title) : (baseQ?.title || '')
+            combined.category = (q && q.category) ? String(q.category) : (baseQ?.category || 'Разное')
+            combined.prompt = (q && q.prompt) ? String(q.prompt) : (baseQ?.prompt || '')
+            combined.answer = (q && q.answer) ? String(q.answer) : (baseQ?.answer || '')
+            // difficulty/bucket
+            combined.difficulty = Number.isFinite(q?.difficulty) ? Number(q.difficulty) : (baseQ?.difficulty ?? 1)
+            combined.bucket = ((): any => {
+              const bLocal = q?.bucket
+              const b = (bLocal ?? baseQ?.bucket ?? 'screening') as any
+              return (b==='screening'||b==='deep'||b==='architecture') ? b : 'screening'
+            })()
             return combined
           })
           const fixed = normalize(merged)
