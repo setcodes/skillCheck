@@ -148,7 +148,7 @@ export default function Theory() {
 									</CardHeader>
 									<CardContent>
 										<p className="text-sm text-muted-foreground mb-4">
-											{q.prompt}
+											{q?.prompt || q?.title || '—'}
 										</p>
 										{/* Эталонный ответ убран из списка. Доступен в правой подсказке. */}
 									</CardContent>

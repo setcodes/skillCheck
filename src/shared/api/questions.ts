@@ -99,14 +99,17 @@ function loadMdForProf(prof: Profession): TheoryQuestion[] {
 function normalize(arr: any[]): TheoryQuestion[] {
   return (arr || []).map((q: any, idx: number) => {
     const id = String(q?.id ?? `q_${idx}`)
-    const title = String(q?.title ?? 'Без названия')
+    // Если нет title — берем первую строку prompt как заголовок
+    const promptRaw = String(q?.prompt ?? '')
+    const inferredTitle = promptRaw ? String(promptRaw).split(/\r?\n/)[0].trim().slice(0, 140) : ''
+    const title = String((q?.title ?? inferredTitle) || 'Без названия')
     const category = String(q?.category ?? 'Разное')
     const difficulty = Number.isFinite(q?.difficulty) ? Number(q.difficulty) : 1
     const bucket = ((): TheoryQuestion['bucket'] => {
       const b = String(q?.bucket ?? 'screening')
       return (b==='screening' || b==='deep' || b==='architecture') ? (b as any) : 'screening'
     })()
-    const prompt = String(q?.prompt ?? '')
+    const prompt = promptRaw || String(q?.prompt ?? '')
     const answer = String(q?.answer ?? '')
     return { id, title, category, difficulty, bucket, prompt, answer }
   })

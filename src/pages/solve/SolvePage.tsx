@@ -85,6 +85,7 @@ export default function Solve(){
       default: return 'javascript'
     }
   }
+  const taskLanguage = useMemo(()=> (task as any)?.language || getLanguage(), [task?.id, prof])
   
   const [logs, setLogs] = useState<string[]>([])
   // Toast notifications for per-task timer (down mode)
@@ -414,11 +415,11 @@ export default function Solve(){
                 ref={editorRef}
                 value={code}
                 onChange={(value) => setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:value}}))}
-                language={getLanguage()}
+                language={taskLanguage}
                 height="0px"
                 placeholder="Введите ваш код здесь..."
                 onFullscreenChange={()=>{ /* no-op */ }}
-                onRun={run}
+                onRun={taskLanguage==='java' ? undefined : run}
                 onResetTask={resetTask}
                 onResetTests={resetTests}
                 consoleOutput={logs}
@@ -426,6 +427,42 @@ export default function Solve(){
                 timerLabel={formatSeconds(taskTimerValueSec)}
                 timerStatus={taskTimerRunning ? 'running' : 'paused'}
               />
+
+              {taskLanguage==='java' && (
+                <div className="mt-4 p-3 border rounded space-y-2">
+                  <div className="text-sm text-muted-foreground">
+                    Проверка Java выполняется локально: скачайте/запустите тесты у себя (JUnit) и вставьте сюда итоговый вывод.
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button variant="outline" size="sm" onClick={()=>{
+                      const txt = `// Временный шаблон. Запустите локально JUnit и вставьте строку вида\n// Tests run: X, Failures: 0, Errors: 0\n`
+                      const blob = new Blob([txt], {type:'text/plain'})
+                      const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='java-tests-readme.txt'; a.click(); URL.revokeObjectURL(url)
+                    }}>Скачать инструкции</Button>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Вывод тестов:</label>
+                    <Textarea value={(t[task.id]?.comment || '') as any} onChange={e=> setT(a=>({...a,[task.id]:{...(a[task.id]||{}), comment:e.target.value}}))} placeholder="Пример: Tests run: 5, Failures: 0, Errors: 0" />
+                    <div className="mt-2">
+                      <Button size="sm" onClick={()=>{
+                        const log = (t[task.id]?.comment || '') as string
+                        const m = /Tests\s+run:\s*(\d+)\s*,\s*Failures:\s*(\d+)(?:\s*,\s*Errors:\s*(\d+))?/i.exec(log)
+                        let results:any[]=[]
+                        if(m){
+                          const total = Number(m[1]||0)
+                          const failures = Number(m[2]||0)
+                          const errors = Number(m[3]||0)
+                          const ok = total>0 && failures===0 && errors===0
+                          results=[{ok, message: ok? `JUnit: все ${total} тестов пройдены` : `JUnit: не пройдены (total=${total}, failures=${failures}, errors=${errors})` }]
+                        }else{
+                          results=[{ok:false, message:'Не удалось распознать вывод JUnit. Убедитесь, что вставили строку вида "Tests run: X, Failures: Y, Errors: Z"'}]
+                        }
+                        setT(a=>({...a,[task.id]:{...(a[task.id]||{}), code:a[task.id]?.code??code, lastResult:results}}))
+                      }}>Проверить результат</Button>
+                    </div>
+                  </div>
+                </div>
+              )}
               
               {/* Reference Solution for Interviewer */}
               {role==='interviewer' && task.solution && (
