@@ -12,8 +12,8 @@ import { useApp } from '@/app/providers/AppProvider'
 import { createSession, loadSession, saveSession, clearSession, mapTaskScore } from '@/shared/api/mock'
 import { getQuestions, getTasks } from '@/shared/api/questions'
 import type { MockSessionState, MockItem, MockTaskItem, MockTheoryItem } from '@/entities/mock/model/types'
-import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer } from 'lucide-react'
-import { useToast } from '@/shared/hooks/use-toast'
+import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCircle } from 'lucide-react'
+import { useToast } from '@/shared/hooks/use-sonner'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { runModule } from '@/shared/api/runner'
@@ -70,15 +70,15 @@ export default function MockPage(){
       const ten = Math.ceil(limit*0.10)
       if(!halfRef.current && remaining<=half){
         halfRef.current=true
-        toast({ title: (<span className="inline-flex items-center gap-2"><Clock className="h-4 w-4 text-blue-600"/>Половина времени Mock‑сессии</span>), description: fmt(remaining) })
+        toast.info("Половина времени Mock‑сессии", fmt(remaining))
       }
       if(!tenRef.current && remaining<=ten){
         tenRef.current=true
-        toast({ title: (<span className="inline-flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-amber-600"/>Меньше 10% времени</span>), description: fmt(remaining) })
+        toast.warning("Меньше 10% времени", fmt(remaining))
       }
     }
     if(prevValRef.current>0 && remaining===0 && s.running===false){
-      toast({ title: (<span className="inline-flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-600"/>Время истекло</span>), description: 'Сессия завершена' })
+      toast.error("Время истекло", "Сессия завершена")
       setS(prev=> prev ? { ...prev, finished: true, running: false } : prev)
     }
     prevValRef.current = remaining
@@ -114,7 +114,8 @@ export default function MockPage(){
     const item = cur as MockTaskItem
     if(!item.starter) return
     const code = (item.code ?? item.starter)
-    const tests = (await import('@/shared/api/tasks')).TASKS_BY_PROF[(s.config.profession as any)]?.find((t:any)=>t.id===item.taskId)?.tests
+    const { TASKS_BY_PROF } = await import('@/shared/api/tasks')
+    const tests = TASKS_BY_PROF[s.config.profession as keyof typeof TASKS_BY_PROF]?.find((t:any)=>t.id===item.taskId)?.tests
     if(!tests) return
     const tmpLogs: string[] = []
     const orig = { log: console.log, error: console.error, warn: console.warn, info: console.info }
@@ -123,7 +124,7 @@ export default function MockPage(){
     console.warn = (...a:any[])=>{ tmpLogs.push('[warn] '+a.map(String).join(' ')); orig.warn(...a) }
     console.info = (...a:any[])=>{ tmpLogs.push('[info] '+a.map(String).join(' ')); orig.info(...a) }
     try{
-      const res = await runModule(code, tests, (ok,msg)=> tmpLogs.push((ok?'[ok] ':'[x] ')+msg))
+      const res = await runModule(code, tests, { debug: false })
       const passed = res.filter(r=>r.ok).length
       const total = res.length
       const ratio = total? passed/total : 0
@@ -138,10 +139,10 @@ export default function MockPage(){
       })
       const allPassed = total>0 && passed===total
       if(allPassed){
-        toast({ title: (<span className="inline-flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-600"/>Все тесты пройдены</span>), description: `Пройдено ${passed}/${total}` })
+        toast.success("Все тесты пройдены", `Пройдено ${passed}/${total}`)
       } else {
         const firstFail = res.find(r=>!r.ok)
-        toast({ title: (<span className="inline-flex items-center gap-2"><AlertTriangle className="h-4 w-4 text-red-600"/>Тесты не пройдены</span>), description: `Пройдено ${passed}/${total}. ${firstFail?.message||''}` })
+        toast.error("Тесты не пройдены", `Пройдено ${passed}/${total}. ${firstFail?.message||''}`)
       }
     } finally {
       console.log = orig.log; console.error = orig.error; console.warn = orig.warn; console.info = orig.info
@@ -153,7 +154,7 @@ export default function MockPage(){
   const finish=()=> {
     setS(prev=> prev? ({...prev, finished: true, running: false}) : prev)
     setFinishOpen(false)
-    toast({ title: (<span className="inline-flex items-center gap-2"><CheckCircle className="h-4 w-4 text-green-600"/>Сессия завершена</span>), description: 'Откройте отчёт справа или распечатайте' })
+    toast.success("Сессия завершена", "Откройте отчёт справа или распечатайте")
   }
   const next=()=> setS(prev=> prev? ({...prev, currentIndex: Math.min(prev.items.length-1, prev.currentIndex+1)}) : prev)
   const prev=()=> setS(prev=> prev? ({...prev, currentIndex: Math.max(0, prev.currentIndex-1)}) : prev)
@@ -435,7 +436,7 @@ export default function MockPage(){
                     ref={editorRef}
                     value={(cur as MockTaskItem).code ?? (cur as MockTaskItem).starter}
                     onChange={(value)=> setS(prev=>{ if(!prev) return prev; const items=prev.items.map(it=> it.id===cur.id ? ({...it, code:value}) : it); const next={...prev, items}; saveSession(next); return next })}
-                    language={'javascript'}
+                    language={tMap[(cur as MockTaskItem).taskId]?.language || 'javascript'}
                     height="0px"
                     onRun={runTests}
                     consoleOutput={logs}

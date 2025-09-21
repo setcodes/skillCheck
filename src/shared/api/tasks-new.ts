@@ -1,27 +1,14 @@
 // Импорты задач по профессиям
-import { FE } from './tasks/frontend'
-import { BE } from './tasks/backend'
 import { BA } from './tasks/analyst'
-import { DEVOPS } from './tasks/devops'
 
 // Экспорт всех задач
 export const ALL_TASKS = [
-  ...FE,
-  ...BE,
   ...BA,
-  ...DEVOPS,
+  // TODO: Добавить остальные профессии
 ]
 
 // Экспорт по профессиям для удобства
-export { FE, BE, BA, DEVOPS }
-
-// Объект для быстрого доступа к задачам по профессиям
-export const TASKS_BY_PROF = {
-  frontend: FE,
-  'backend-java': BE,
-  analyst: BA,
-  devops: DEVOPS,
-} as const
+export { BA }
 
 // Типы (перенесены из entities для совместимости)
 export type UITask = {
@@ -49,14 +36,9 @@ export type UITask = {
 // Функция для получения задач по профессии
 export function getTasksByProfession(profession: string): UITask[] {
   switch (profession) {
-    case 'frontend':
-      return FE;
-    case 'backend-java':
-      return BE;
     case 'analyst':
       return BA;
-    case 'devops':
-      return DEVOPS;
+    // TODO: Добавить остальные профессии
     default:
       return [];
   }

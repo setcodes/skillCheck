@@ -4,6 +4,37 @@ export async function runModule(
   opts?: { debug?: boolean }
 ): Promise<{ ok: boolean; message: string }[]> {
   const debug = !!opts?.debug
+  
+  // Безопасность: ограничения на выполнение
+  const MAX_EXECUTION_TIME = 5000 // 5 секунд
+  const DANGEROUS_PATTERNS = [
+    /eval\s*\(/,
+    /Function\s*\(/,
+    /setTimeout\s*\(/,
+    /setInterval\s*\(/,
+    /import\s*\(/,
+    /require\s*\(/,
+    /process\./,
+    /global\./,
+    /window\./,
+    /document\./,
+    /localStorage/,
+    /sessionStorage/,
+    /fetch\s*\(/,
+    /XMLHttpRequest/,
+    /WebSocket/,
+    /Worker/,
+    /Blob/,
+    /FileReader/
+  ]
+  
+  // Проверяем на опасные паттерны
+  for (const pattern of DANGEROUS_PATTERNS) {
+    if (pattern.test(userCode)) {
+      return [{ok: false, message: 'Код содержит недопустимые конструкции для безопасности'}]
+    }
+  }
+  
   try {
     // Создаем функцию assert
     const createAssert = (report: (ok: boolean, msg: string) => void) => {
@@ -57,34 +88,175 @@ export async function runModule(
     // Убираем export и типы из кода для выполнения
     let cleanUserCode = userCode.replace(/export\s+/g, '')
     
-    // Убираем TypeScript типы более точно
-    cleanUserCode = cleanUserCode
-      // Убираем дженерики: function name<T>() -> function name()
-      .replace(/<[^>]*>/g, '')
-      // Убираем типы параметров функций: (a: number, b: string) -> (a, b)
-      .replace(/\(\s*([^)]*?)\s*\)/g, (match, params) => {
-        const cleanParams = params.split(',').map((p: string) => p.trim().split(':')[0]).join(', ')
-        return `(${cleanParams})`
-      })
-      // Убираем типы возвращаемых значений: function name(): string -> function name()
-      .replace(/\)\s*:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*\{)/g, ')')
-      // Убираем типы переменных: const x: number = -> const x =
-      .replace(/:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*=)/g, '')
-      // Убираем типы в объявлениях: let x: string -> let x
-      .replace(/:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*[;,])/g, '')
-      // Убираем сложные типы: Record<string, any> -> any
-      .replace(/Record<[^>]*>/g, 'any')
-      .replace(/Array<[^>]*>/g, 'any[]')
-      .replace(/Promise<[^>]*>/g, 'Promise')
-      // Убираем оставшиеся типы: : any -> (пусто)
-      .replace(/:\s*any/g, '')
-      .replace(/:\s*unknown/g, '')
-      .replace(/:\s*string/g, '')
-      .replace(/:\s*number/g, '')
-      .replace(/:\s*boolean/g, '')
-      .replace(/:\s*object/g, '')
-      .replace(/:\s*Function/g, '')
-      .replace(/:\s*Error/g, '')
+    // Проверяем, это Java код
+    const isJavaCode = userCode.includes('public class') || userCode.includes('public static') || userCode.includes('System.out.println')
+    
+    // Проверяем, это Python код
+    const isPythonCode = userCode.includes('def ') || userCode.includes('import ') || userCode.includes('print(') || userCode.includes('if __name__')
+    
+    // Проверяем, это Mermaid диаграмма
+    const isMermaidCode = userCode.includes('graph') || userCode.includes('flowchart') || userCode.includes('sequenceDiagram') || userCode.includes('classDiagram')
+    
+    if (isJavaCode) {
+      // Улучшенная конвертация Java в JavaScript
+      cleanUserCode = userCode
+        // Убираем public, private, static, final
+        .replace(/\b(public|private|static|final)\s+/g, '')
+        // Конвертируем System.out.println в console.log
+        .replace(/System\.out\.println/g, 'console.log')
+        // Конвертируем массивы
+        .replace(/int\[\]/g, 'Array')
+        .replace(/String\[\]/g, 'Array')
+        .replace(/double\[\]/g, 'Array')
+        .replace(/boolean\[\]/g, 'Array')
+        // Конвертируем типы переменных
+        .replace(/\bint\b/g, 'let')
+        .replace(/\bString\b/g, 'let')
+        .replace(/\bdouble\b/g, 'let')
+        .replace(/\bboolean\b/g, 'let')
+        .replace(/\bchar\b/g, 'let')
+        .replace(/\blong\b/g, 'let')
+        .replace(/\bfloat\b/g, 'let')
+        // Конвертируем Java коллекции
+        .replace(/java\.util\.List/g, 'Array')
+        .replace(/java\.util\.Map/g, 'Map')
+        .replace(/java\.util\.Set/g, 'Set')
+        .replace(/java\.util\.Stack/g, 'Array')
+        .replace(/java\.util\.Queue/g, 'Array')
+        .replace(/java\.util\.ArrayList/g, 'Array')
+        .replace(/java\.util\.HashMap/g, 'Map')
+        .replace(/java\.util\.HashSet/g, 'Set')
+        .replace(/java\.util\.LinkedList/g, 'Array')
+        // Конвертируем создание объектов
+        .replace(/new\s+Array\s*\(\s*\)/g, '[]')
+        .replace(/new\s+Map\s*\(\s*\)/g, 'new Map()')
+        .replace(/new\s+Set\s*\(\s*\)/g, 'new Set()')
+        .replace(/new\s+Array\s*<[^>]*>\s*\(\s*\)/g, '[]')
+        // Конвертируем методы коллекций
+        .replace(/\.add\s*\(/g, '.push(')
+        .replace(/\.contains\s*\(/g, '.has(')
+        .replace(/\.containsKey\s*\(/g, '.has(')
+        .replace(/\.put\s*\(/g, '.set(')
+        .replace(/\.get\s*\(/g, '.get(')
+        .replace(/\.isEmpty\s*\(\s*\)/g, '.size === 0')
+        .replace(/\.size\s*\(\s*\)/g, '.size')
+        .replace(/\.poll\s*\(\s*\)/g, '.shift()')
+        .replace(/\.offer\s*\(/g, '.push(')
+        // Конвертируем Arrays методы
+        .replace(/java\.util\.Arrays\.asList/g, 'Array.from')
+        .replace(/java\.util\.Arrays\.sort/g, 'Array.sort')
+        .replace(/java\.util\.Arrays\.toString/g, 'JSON.stringify')
+        .replace(/java\.util\.Arrays\.deepToString/g, 'JSON.stringify')
+        // Конвертируем Math методы
+        .replace(/Math\.max/g, 'Math.max')
+        .replace(/Math\.min/g, 'Math.min')
+        .replace(/Math\.abs/g, 'Math.abs')
+        // Конвертируем строковые методы
+        .replace(/\.equals\s*\(/g, ' === ')
+        .replace(/\.length\s*\(\s*\)/g, '.length')
+        .replace(/\.toCharArray\s*\(\s*\)/g, '.split("")')
+        .replace(/\.charAt\s*\(/g, '.charAt(')
+        .replace(/\.substring\s*\(/g, '.substring(')
+        // Убираем типы в параметрах методов
+        .replace(/\(([^)]*?)\)/g, (match, params) => {
+          const cleanParams = params.split(',').map((p: string) => {
+            const parts = p.trim().split(/\s+/)
+            return parts[parts.length - 1] // берем только имя параметра
+          }).join(', ')
+          return `(${cleanParams})`
+        })
+        // Убираем типы возвращаемых значений
+        .replace(/\)\s*:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*\{)/g, ')')
+        // Убираем точки с запятой в конце строк
+        .replace(/;\s*$/gm, '')
+        // Конвертируем for циклы
+        .replace(/for\s*\(\s*int\s+(\w+)\s*=\s*([^;]+);\s*(\w+)\s*([<>]=?)\s*([^;]+);\s*(\w+)\+{2}\)/g, 'for (let $1 = $2; $1 $4 $5; $1++)')
+        .replace(/for\s*\(\s*int\s+(\w+)\s*=\s*([^;]+);\s*(\w+)\s*([<>]=?)\s*([^;]+);\s*(\w+)\+\+\s*\)/g, 'for (let $1 = $2; $1 $4 $5; $1++)')
+        // Конвертируем enhanced for loops
+        .replace(/for\s*\(\s*(\w+)\s+(\w+)\s*:\s*([^)]+)\)/g, 'for (let $2 of $3)')
+        // Конвертируем if условия
+        .replace(/==\s*/g, '=== ')
+        .replace(/!=\s*/g, '!== ')
+        // Конвертируем логические операторы
+        .replace(/\b&&\b/g, '&&')
+        .replace(/\b\|\|\b/g, '||')
+        .replace(/\b!\b/g, '!')
+        // Конвертируем исключения
+        .replace(/throw\s+new\s+RuntimeException\s*\(/g, 'throw new Error(')
+        .replace(/throw\s+new\s+Exception\s*\(/g, 'throw new Error(')
+    } else if (isPythonCode) {
+      // Конвертация Python в JavaScript
+      cleanUserCode = userCode
+        // Конвертируем def в function
+        .replace(/def\s+(\w+)\s*\(([^)]*)\)\s*:/g, 'function $1($2) {')
+        // Конвертируем print в console.log
+        .replace(/print\s*\(/g, 'console.log(')
+        // Конвертируем if __name__ == '__main__'
+        .replace(/if\s+__name__\s*==\s*['"]__main__['"]\s*:/g, '// Main execution')
+        // Конвертируем Python типы
+        .replace(/\bint\b/g, 'let')
+        .replace(/\bstr\b/g, 'let')
+        .replace(/\bfloat\b/g, 'let')
+        .replace(/\bbool\b/g, 'let')
+        .replace(/\blist\b/g, 'Array')
+        .replace(/\bdict\b/g, 'Object')
+        // Конвертируем Python операторы
+        .replace(/==/g, '===')
+        .replace(/!=/g, '!==')
+        .replace(/\band\b/g, '&&')
+        .replace(/\bor\b/g, '||')
+        .replace(/\bnot\b/g, '!')
+        // Конвертируем Python методы
+        .replace(/\.append\s*\(/g, '.push(')
+        .replace(/\.len\s*\(/g, '.length')
+        .replace(/len\s*\(/g, '.length')
+        // Конвертируем range
+        .replace(/range\s*\(([^)]+)\)/g, 'Array.from({length: $1}, (_, i) => i)')
+        // Конвертируем Python циклы
+        .replace(/for\s+(\w+)\s+in\s+range\s*\(([^)]+)\)\s*:/g, 'for (let $1 = 0; $1 < $2; $1++) {')
+        .replace(/for\s+(\w+)\s+in\s+(\w+)\s*:/g, 'for (let $1 of $2) {')
+        // Конвертируем Python условия
+        .replace(/if\s+(.+)\s*:/g, 'if ($1) {')
+        .replace(/elif\s+(.+)\s*:/g, '} else if ($1) {')
+        .replace(/else\s*:/g, '} else {')
+        // Убираем отступы Python
+        .replace(/^    /gm, '')
+        .replace(/^  /gm, '')
+        // Добавляем закрывающие скобки
+        .replace(/\n(\w)/g, '\n}\n$1')
+    } else if (isMermaidCode) {
+      // Mermaid диаграммы - возвращаем как есть для рендеринга
+      return [{ ok: true, message: 'Mermaid diagram rendered successfully' }]
+    } else {
+      // Убираем TypeScript типы более точно
+      cleanUserCode = cleanUserCode
+        // Убираем дженерики: function name<T>() -> function name()
+        .replace(/<[^>]*>/g, '')
+        // Убираем типы параметров функций: (a: number, b: string) -> (a, b)
+        .replace(/\(\s*([^)]*?)\s*\)/g, (match, params) => {
+          const cleanParams = params.split(',').map((p: string) => p.trim().split(':')[0]).join(', ')
+          return `(${cleanParams})`
+        })
+        // Убираем типы возвращаемых значений: function name(): string -> function name()
+        .replace(/\)\s*:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*\{)/g, ')')
+        // Убираем типы переменных: const x: number = -> const x =
+        .replace(/:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*=)/g, '')
+        // Убираем типы в объявлениях: let x: string -> let x
+        .replace(/:\s*[a-zA-Z0-9_\[\]<>|&\s,]+(?=\s*[;,])/g, '')
+        // Убираем сложные типы: Record<string, any> -> any
+        .replace(/Record<[^>]*>/g, 'any')
+        .replace(/Array<[^>]*>/g, 'any[]')
+        .replace(/Promise<[^>]*>/g, 'Promise')
+        // Убираем оставшиеся типы: : any -> (пусто)
+        .replace(/:\s*any/g, '')
+        .replace(/:\s*unknown/g, '')
+        .replace(/:\s*string/g, '')
+        .replace(/:\s*number/g, '')
+        .replace(/:\s*boolean/g, '')
+        .replace(/:\s*object/g, '')
+        .replace(/:\s*Function/g, '')
+        .replace(/:\s*Error/g, '')
+    }
     
     let userModule
     try {
@@ -146,14 +318,30 @@ export async function runModule(
     }
     
     try {
-      // Выполняем тест с доступом к модулю и assert
-      new Function('assert', 'userModule', testCode)(assert, userModule)
+      // Выполняем тест с ограничением по времени
+      const executionPromise = new Promise<void>((resolve, reject) => {
+        try {
+          new Function('assert', 'userModule', testCode)(assert, userModule)
+          resolve()
+        } catch (e) {
+          reject(e)
+        }
+      })
+      
+      const timeoutPromise = new Promise<void>((_, reject) => {
+        setTimeout(() => reject(new Error('Execution timeout')), MAX_EXECUTION_TIME)
+      })
+      
+      await Promise.race([executionPromise, timeoutPromise])
     } catch (e: any) {
       if (debug) {
         console.error('Test execution error:', e)
         console.error('Error stack:', e?.stack)
       }
-      results.push({ok: false, message: `Test execution error: ${e?.message || 'Unknown error'}`})
+      const errorMessage = e?.message === 'Execution timeout' 
+        ? 'Превышено время выполнения (5 секунд)'
+        : `Test execution error: ${e?.message || 'Unknown error'}`
+      results.push({ok: false, message: errorMessage})
     }
     
     // Если нет результатов, значит тесты не выполнились

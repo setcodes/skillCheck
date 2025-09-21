@@ -10,9 +10,11 @@ import {
 	CardHeader,
 	CardTitle,
 } from '@/shared/ui/card';
+import { TagFilter } from '@/shared/ui/tag-filter';
+import { QuestionTags } from '@/shared/ui/question-tags';
 import { useApp } from '@/app/providers/AppProvider';
 import { getQuestions } from '@/shared/api/questions';
-import { useToast } from '@/shared/hooks/use-toast';
+import { useToast } from '@/shared/hooks/use-sonner';
 import { Send, CheckCircle } from 'lucide-react';
 
 export default function Theory() {
@@ -20,22 +22,34 @@ export default function Theory() {
 	const { toast } = useToast();
 	const ALL = getQuestions(prof) || [];
 	const cats = useMemo(() => {
-		const set = new Set<string>(['All']);
+		const set = new Set<string>();
 		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');
-		return Array.from(set);
+		return Array.from(set).sort();
 	}, [prof, ALL]);
-	const [cat, setCat] = useState('All');
-	const list = (ALL || [])
-		.filter((q: any) => (cat === 'All' ? true : (q?.category || 'Разное') === cat))
-		.sort((a: any, b: any) => {
-			const ad = Number.isFinite(a?.difficulty) ? a.difficulty : 0;
-			const bd = Number.isFinite(b?.difficulty) ? b.difficulty : 0;
-			const dt = ad - bd;
-			if (dt !== 0) return dt;
-			const at = String(a?.title || '');
-			const bt = String(b?.title || '');
-			return at.localeCompare(bt);
-		});
+	
+	const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+	
+	// Отладочная информация
+	useEffect(() => {
+		console.log('Selected categories changed:', selectedCategories);
+	}, [selectedCategories]);
+	
+	const list = useMemo(() => {
+		return (ALL || [])
+			.filter((q: any) => {
+				if (selectedCategories.length === 0) return true;
+				return selectedCategories.includes((q?.category as string) || 'Разное');
+			})
+			.sort((a: any, b: any) => {
+				const ad = Number.isFinite(a?.difficulty) ? a.difficulty : 0;
+				const bd = Number.isFinite(b?.difficulty) ? b.difficulty : 0;
+				const dt = ad - bd;
+				if (dt !== 0) return dt;
+				const at = String(a?.title || '');
+				const bt = String(b?.title || '');
+				return at.localeCompare(bt);
+			});
+	}, [ALL, selectedCategories]);
 
 	// Right panel: select question and evaluate
 	const [curQ, setCurQ] = useState<string>(ALL[0]?.id || '');
@@ -87,15 +101,7 @@ export default function Theory() {
 		>;
 		bridge[prof + ':' + cur.id] = payload;
 		localStorage.setItem(key, JSON.stringify(bridge));
-		toast({
-			title: (
-				<span className="inline-flex items-center gap-2">
-					<CheckCircle className="h-4 w-4 text-green-600" />
-					Оценка сохранена
-				</span>
-			),
-			description: 'Оценка по теории добавлена в отчёт.',
-		});
+		toast.success("Оценка сохранена", "Оценка по теории добавлена в отчёт.");
 	};
 
 	return (
@@ -105,18 +111,12 @@ export default function Theory() {
 				<Card className="h-full flex flex-col">
 					<CardHeader>
 						<CardTitle>Теория — {prof}</CardTitle>
-						<div className="flex flex-wrap gap-2">
-							{cats.map((c) => (
-								<Button
-									key={c}
-									variant={cat === c ? 'default' : 'outline'}
-									size="sm"
-									onClick={() => setCat(c)}
-								>
-									{c}
-								</Button>
-							))}
-						</div>
+						<TagFilter
+							categories={cats}
+							selectedCategories={selectedCategories}
+							onCategoriesChange={setSelectedCategories}
+							questionCount={list.length}
+						/>
 					</CardHeader>
 					<CardContent className="flex-1 overflow-hidden">
 						<div className="h-full overflow-y-auto space-y-4 pr-1">
@@ -127,23 +127,13 @@ export default function Theory() {
 									onClick={() => setCurQ(q.id)}
 								>
 									<CardHeader>
-										<div className="flex items-center justify-between">
-											<CardTitle className="text-lg">{q?.title || 'Без названия'}</CardTitle>
-											<div className="flex gap-2">
-												<Badge variant="outline">{q.category}</Badge>
-												<Badge variant="secondary">diff {q.difficulty}</Badge>
-												<Badge
-													variant={
-														q.bucket === 'screening'
-															? 'default'
-															: q.bucket === 'deep'
-																? 'secondary'
-																: 'destructive'
-													}
-												>
-													{q.bucket || 'deep'}
-												</Badge>
-											</div>
+										<div className="flex items-start justify-between gap-4">
+											<CardTitle className="text-lg flex-1">{q?.title || 'Без названия'}</CardTitle>
+											<QuestionTags
+												category={q.category || 'Mixed'}
+												difficulty={q.difficulty || 1}
+												className="flex-shrink-0"
+											/>
 										</div>
 									</CardHeader>
 									<CardContent>
@@ -232,15 +222,17 @@ export default function Theory() {
 				</Card>
 
 				{/* Hint block */}
-				<Card className="h-fit">
-					<CardHeader>
+				<Card className="h-96 flex flex-col">
+					<CardHeader className="flex-shrink-0">
 						<CardTitle>Подсказка</CardTitle>
 						{cur && <CardDescription>{cur.title}</CardDescription>}
 					</CardHeader>
-					<CardContent>
+					<CardContent className="flex-1 overflow-hidden">
 						{cur && role === 'interviewer' ? (
-							<div className="mt-1 p-3 bg-muted rounded-lg">
-								<pre className="text-sm whitespace-pre-wrap">{cur.answer}</pre>
+							<div className="h-full overflow-y-auto">
+								<div className="p-3 bg-muted rounded-lg">
+									<pre className="text-sm whitespace-pre-wrap">{cur.answer}</pre>
+								</div>
 							</div>
 						) : (
 							<p className="text-sm text-muted-foreground">

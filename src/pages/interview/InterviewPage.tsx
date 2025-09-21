@@ -4,7 +4,7 @@ import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
-import { useToast } from '@/shared/hooks/use-toast'
+import { useToast } from '@/shared/hooks/use-sonner'
 import { useApp } from '@/app/providers/AppProvider'
 import { Save, Printer, Trash2, Info, CheckCircle } from 'lucide-react'
 type Row={prof:string;level:string;taskId:string;title:string;score:number;comment:string}
@@ -33,15 +33,7 @@ export default function Interview(){
     localStorage.setItem("cand.date",date);
     localStorage.setItem("cand.timeSpent",timeSpent);
     localStorage.setItem("cand.interviewers",JSON.stringify(interviewers));
-    toast({
-      title: (
-        <span className="inline-flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          Сохранено
-        </span>
-      ),
-      description: "Данные кандидата сохранены.",
-    })
+    toast.success("Сохранено", "Данные кандидата сохранены.")
   }
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 print:grid-cols-1 gap-6">

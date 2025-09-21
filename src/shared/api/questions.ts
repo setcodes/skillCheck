@@ -1,7 +1,6 @@
 import type { TheoryQuestion } from '@/entities/question/model/types'
 import type { Profession } from '@/entities/profession/model/types'
 import type { UITask } from '@/entities/task/model/types'
-import type { Profession } from '@/entities/profession/model/types'
 import { TASKS_BY_PROF } from './tasks'
 
 // Импорт базовых пулов вопросов из JSON
@@ -32,7 +31,7 @@ import DEVOPS_QA from '@/shared/questions/devops-qa-100.json'
 // Объясните замыкание...\n
 // ## Ответ\n
 // Замыкание — ...
-const MD_GLOB: Record<string, any> = import.meta.glob('@/shared/questions/md/**/*.{md,MD}', { query: '?raw', import: 'default', eager: true as any })
+const MD_GLOB: Record<string, any> = {}
 
 function parseMd(raw: string): Omit<TheoryQuestion, 'id'|'title'|'category'|'difficulty'|'bucket'|'prompt'|'answer'> & Partial<TheoryQuestion> {
   const res: any = {}
@@ -153,26 +152,46 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
         const needsFix = parsed.some((q: any)=> !q || !q.title || !q.prompt)
         if (needsFix) {
           const b = base()
-          const map = Object.fromEntries(b.map(q=> [q.id, q])) as Record<string, TheoryQuestion>
+          const byId = Object.fromEntries(b.map(q=> [q.id, q])) as Record<string, TheoryQuestion>
+          const normKey = (s: string) => String(s||'').trim().toLowerCase()
+          const firstLine = (s: string) => normKey(String(s||'').split(/\r?\n/)[0])
+          const byTitle = new Map<string, TheoryQuestion>()
+          const byPrompt = new Map<string, TheoryQuestion>()
+          for (const q of b) {
+            if (q.title) byTitle.set(normKey(q.title), q)
+            if (q.prompt) byPrompt.set(firstLine(q.prompt), q)
+          }
           const merged = parsed.map((q: any, i: number)=>{
             const id = String(q?.id ?? `q_${i}`)
-            const baseQ = map[id]
+            let baseQ: TheoryQuestion | undefined = byId[id]
+            if (!baseQ) {
+              const kTitle = normKey(q?.title||'')
+              const kPrompt = firstLine(q?.prompt||'')
+              const baseQFromTitle = kTitle ? byTitle.get(kTitle) : undefined
+              const baseQFromPrompt = kPrompt ? byPrompt.get(kPrompt) : undefined
+              baseQ = baseQFromTitle || baseQFromPrompt
+            }
             const combined: any = { id }
             // strings prefer non-empty local, else base
-            combined.title = (q && q.title) ? String(q.title) : (baseQ?.title || '')
-            combined.category = (q && q.category) ? String(q.category) : (baseQ?.category || 'Разное')
-            combined.prompt = (q && q.prompt) ? String(q.prompt) : (baseQ?.prompt || '')
-            combined.answer = (q && q.answer) ? String(q.answer) : (baseQ?.answer || '')
+            combined.title = (q && q.title && String(q.title).trim()) ? String(q.title) : (baseQ?.title || '')
+            combined.category = (q && q.category && String(q.category).trim()) ? String(q.category) : (baseQ?.category || 'Разное')
+            combined.prompt = (q && q.prompt && String(q.prompt).trim()) ? String(q.prompt) : (baseQ?.prompt || '')
+            combined.answer = (q && q.answer && String(q.answer).trim()) ? String(q.answer) : (baseQ?.answer || '')
             // difficulty/bucket
             combined.difficulty = Number.isFinite(q?.difficulty) ? Number(q.difficulty) : (baseQ?.difficulty ?? 1)
             combined.bucket = ((): any => {
               const bLocal = q?.bucket
-              const b = (bLocal ?? baseQ?.bucket ?? 'screening') as any
-              return (b==='screening'||b==='deep'||b==='architecture') ? b : 'screening'
+              const bval = (bLocal ?? baseQ?.bucket ?? 'screening') as any
+              return (bval==='screening'||bval==='deep'||bval==='architecture') ? bval : 'screening'
             })()
             return combined
           })
-          const fixed = normalize(merged)
+          let fixed = normalize(merged)
+          // If still too many blanks, fall back entirely to base
+          const okTitles = fixed.filter(q=> q.title && q.title!=='Без названия').length
+          if (okTitles < Math.max(1, Math.floor(b.length*0.6))) {
+            fixed = b
+          }
           try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(fixed)) } catch {}
           return fixed
         }
