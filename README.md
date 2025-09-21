@@ -1,8 +1,31 @@
-# SkillCheck - Платформа для технических интервью
+# SkillCheck - Open Source Interview Platform
 
-## 🎯 Описание
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)](https://vitejs.dev/)
 
-**SkillCheck** — это современная веб-платформа для проведения технических интервью и оценки навыков разработчиков. Платформа предоставляет комплексное решение для HR-специалистов, технических интервьюеров и кандидатов на позиции в IT-сфере.
+## 🎯 Description
+
+**SkillCheck** is a modern web platform for conducting technical interviews and assessing developer skills. The platform provides a comprehensive solution for HR specialists, technical interviewers, and candidates for IT positions.
+
+## 🌟 Features
+
+### 🔧 Working Modes
+- **Candidate Mode** — solving practical tasks and taking tests
+- **Interviewer Mode** — evaluating solutions, viewing reference answers, scoring
+- **Mock Interview** — practice real interviews: random questions and tasks, general timer, report and level recommendation
+
+### 💻 Supported Professions
+- **Frontend** — JavaScript, React, web development
+- **Backend (Java)** — server-side development in Java
+- **Business Analyst** — system analysis, SQL, business analysis
+- **DevOps** — infrastructure, automation, CI/CD
+
+### 🎓 Difficulty Levels
+- **Junior** — basic tasks for beginners
+- **Middle** — intermediate level tasks
+- **Senior** — complex tasks for experienced developers
 
 ## ✨ Основные возможности
 
@@ -179,17 +202,36 @@ src/
 - [ ] Мобильная версия
 - [ ] Поддержка дополнительных языков программирования
 
-## 🤝 Вклад в проект
+## 🤝 Contributing
 
-Мы приветствуем вклад в развитие платформы! Если у вас есть идеи по улучшению или вы нашли ошибку, создайте issue или pull request.
+We welcome contributions to the platform! If you have ideas for improvements or found a bug, please create an issue or pull request.
 
-## 📄 Лицензия
+### Development Setup
 
-Этот проект распространяется под лицензией MIT. Подробности в файле [LICENSE](LICENSE).
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/your-username/skillCheck.git`
+3. Install dependencies: `npm install`
+4. Start development server: `npm run dev`
+5. Create a feature branch: `git checkout -b feature/amazing-feature`
+6. Make your changes and commit: `git commit -m 'Add amazing feature'`
+7. Push to your branch: `git push origin feature/amazing-feature`
+8. Open a Pull Request
 
-## 📞 Поддержка
+### Adding Questions
 
-Если у вас возникли вопросы или проблемы, создайте issue в репозитории или свяжитесь с командой разработки.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on adding new questions and tasks.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Support
+
+If you have questions or issues, please create an issue in the repository or contact the development team.
+
+## 🌍 Internationalization
+
+The platform currently supports Russian and English interfaces. We welcome contributions for additional language support.
 
 ---
 
