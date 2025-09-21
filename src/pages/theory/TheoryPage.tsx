@@ -23,7 +23,7 @@ export default function Theory() {
 		const set = new Set<string>(['All']);
 		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');
 		return Array.from(set);
-	}, [prof]);
+	}, [prof, ALL]);
 	const [cat, setCat] = useState('All');
 	const list = (ALL || [])
 		.filter((q: any) => (cat === 'All' ? true : (q?.category || 'Разное') === cat))
