@@ -24,6 +24,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+        
       - name: Validate JSON questions
         run: |
           echo "🔍 Validating JSON question files..."
@@ -43,18 +46,23 @@ jobs:
                   exit 1
                 fi
                 
-                # Check if file has questions array
-                if ! jq -e '.questions' "$file" > /dev/null 2>&1; then
-                  echo "❌ Error: $file does not contain 'questions' array"
+                # Check if file has questions array (either direct array or .questions field)
+                if jq -e 'type == "array"' "$file" > /dev/null 2>&1; then
+                  # Direct array format
+                  question_count=$(jq 'length' "$file")
+                  questions_selector=".[]"
+                elif jq -e '.questions' "$file" > /dev/null 2>&1; then
+                  # Object with questions field
+                  question_count=$(jq '.questions | length' "$file")
+                  questions_selector=".questions[]"
+                else
+                  echo "❌ Error: $file is not a valid questions file (must be array or object with 'questions' field)"
                   exit 1
                 fi
-                
-                # Validate each question
-                question_count=$(jq '.questions | length' "$file")
                 echo "Found $question_count questions in $file"
                 
                 # Check for required fields in each question
-                jq -r '.questions[] | select(.id == null or .title == null or .prompt == null or .answer == null or .category == null or .difficulty == null or .bucket == null) | "Missing required field in question: " + (.id // "unknown")' "$file"
+                jq -r "$questions_selector | select(.id == null or .title == null or .prompt == null or .answer == null or .category == null or .difficulty == null or .bucket == null) | \"Missing required field in question: \" + (.id // \"unknown\")" "$file"
                 
                 if [ $? -ne 0 ]; then
                   echo "❌ Error: Some questions are missing required fields"
@@ -62,7 +70,7 @@ jobs:
                 fi
                 
                 # Check for duplicate IDs
-                duplicate_ids=$(jq -r '.questions[].id' "$file" | sort | uniq -d)
+                duplicate_ids=$(jq -r "$questions_selector | .id" "$file" | sort | uniq -d)
                 if [ -n "$duplicate_ids" ]; then
                   echo "❌ Error: Duplicate question IDs found: $duplicate_ids"
                   exit 1
@@ -83,11 +91,7 @@ jobs:
           if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -E 'src/shared/questions/.*\.md$'; then
             echo "📝 Found modified Markdown files, validating..."
             
-            # Check if jq is available for validation
-            if ! command -v jq &> /dev/null; then
-              echo "Installing jq..."
-              sudo apt-get update && sudo apt-get install -y jq
-            fi
+            # jq is already installed in previous step
             
             # Validate each MD file
             for file in src/shared/questions/md/**/*.md; do
@@ -127,27 +131,37 @@ jobs:
             if [ -f "$file" ]; then
               echo "Checking quality in $file..."
               
+              # Determine questions selector
+              if jq -e 'type == "array"' "$file" > /dev/null 2>&1; then
+                questions_selector=".[]"
+              elif jq -e '.questions' "$file" > /dev/null 2>&1; then
+                questions_selector=".questions[]"
+              else
+                echo "❌ Error: $file is not a valid questions file"
+                exit 1
+              fi
+              
               # Check for very short answers (less than 10 characters)
-              short_answers=$(jq -r '.questions[] | select(.answer | length < 10) | .id' "$file")
+              short_answers=$(jq -r "$questions_selector | select(.answer | length < 10) | .id" "$file")
               if [ -n "$short_answers" ]; then
                 echo "⚠️ Warning: Questions with very short answers found: $short_answers"
               fi
               
               # Check for very short prompts (less than 10 characters)
-              short_prompts=$(jq -r '.questions[] | select(.prompt | length < 10) | .id' "$file")
+              short_prompts=$(jq -r "$questions_selector | select(.prompt | length < 10) | .id" "$file")
               if [ -n "$short_prompts" ]; then
                 echo "⚠️ Warning: Questions with very short prompts found: $short_prompts"
               fi
               
               # Check for empty answers
-              empty_answers=$(jq -r '.questions[] | select(.answer == "" or .answer == null) | .id' "$file")
+              empty_answers=$(jq -r "$questions_selector | select(.answer == \"\" or .answer == null) | .id" "$file")
               if [ -n "$empty_answers" ]; then
                 echo "❌ Error: Questions with empty answers found: $empty_answers"
                 exit 1
               fi
               
               # Check for empty prompts
-              empty_prompts=$(jq -r '.questions[] | select(.prompt == "" or .prompt == null) | .id' "$file")
+              empty_prompts=$(jq -r "$questions_selector | select(.prompt == \"\" or .prompt == null) | .id" "$file")
               if [ -n "$empty_prompts" ]; then
                 echo "❌ Error: Questions with empty prompts found: $empty_prompts"
                 exit 1
@@ -162,7 +176,14 @@ jobs:
           total_questions=0
           for file in src/shared/questions/*.json; do
             if [ -f "$file" ]; then
-              count=$(jq '.questions | length' "$file")
+              # Determine count based on file structure
+              if jq -e 'type == "array"' "$file" > /dev/null 2>&1; then
+                count=$(jq 'length' "$file")
+              elif jq -e '.questions' "$file" > /dev/null 2>&1; then
+                count=$(jq '.questions | length' "$file")
+              else
+                count=0
+              fi
               total_questions=$((total_questions + count))
               echo "📁 $file: $count questions"
             fi
