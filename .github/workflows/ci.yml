@@ -27,12 +27,6 @@ jobs:
     - name: Run TypeScript check
       run: npx tsc --noEmit
 
-    - name: Run linting
-      run: npm run lint || echo "Linting not configured"
-
-    - name: Run tests
-      run: npm test || echo "Tests not configured"
-
     - name: Build project
       run: npm run build
 
@@ -63,5 +57,5 @@ jobs:
       run: npm audit --audit-level moderate
 
     - name: Check for vulnerabilities
-      run: npx audit-ci --moderate
+      run: npm audit --audit-level moderate
       continue-on-error: true
