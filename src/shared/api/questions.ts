@@ -96,6 +96,22 @@ function loadMdForProf(prof: Profession): TheoryQuestion[] {
   return out.sort((a,b)=> a.difficulty-b.difficulty || a.title.localeCompare(b.title))
 }
 
+function normalize(arr: any[]): TheoryQuestion[] {
+  return (arr || []).map((q: any, idx: number) => {
+    const id = String(q?.id ?? `q_${idx}`)
+    const title = String(q?.title ?? 'Без названия')
+    const category = String(q?.category ?? 'Разное')
+    const difficulty = Number.isFinite(q?.difficulty) ? Number(q.difficulty) : 1
+    const bucket = ((): TheoryQuestion['bucket'] => {
+      const b = String(q?.bucket ?? 'screening')
+      return (b==='screening' || b==='deep' || b==='architecture') ? (b as any) : 'screening'
+    })()
+    const prompt = String(q?.prompt ?? '')
+    const answer = String(q?.answer ?? '')
+    return { id, title, category, difficulty, bucket, prompt, answer }
+  })
+}
+
 const QUESTIONS_FRONTEND: TheoryQuestion[] = (FRONTEND_QA as TheoryQuestion[]) || []
 const QUESTIONS_BACKEND_JAVA: TheoryQuestion[] = (BACKEND_JAVA_QA as TheoryQuestion[]) || []
 const QUESTIONS_ANALYST: TheoryQuestion[] = (ANALYST_QA as TheoryQuestion[]) || []
@@ -118,7 +134,7 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
   } catch {}
   // Prefer Markdown contributions if present, else fallback to JSON base
   const md = loadMdForProf(prof)
-  const base = md.length ? md : (QUESTIONS_BY_PROF[prof] || [])
+  const base = normalize(md.length ? md : (QUESTIONS_BY_PROF[prof] || []))
   // Auto-seed LocalStorage with base so user can edit locally, works offline too
   try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(base)) } catch {}
   return base

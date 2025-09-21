@@ -19,10 +19,11 @@ export default function Theory() {
 	const { prof, role } = useApp();
 	const { toast } = useToast();
 	const ALL = getQuestions(prof) || [];
-	const cats = useMemo(
-		() => ['All', ...Array.from(new Set((ALL || []).map((q: any) => (q?.category || 'Разное'))))],
-		[prof]
-	);
+	const cats = useMemo(() => {
+		const set = new Set<string>(['All']);
+		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');
+		return Array.from(set);
+	}, [prof]);
 	const [cat, setCat] = useState('All');
 	const list = (ALL || [])
 		.filter((q: any) => (cat === 'All' ? true : (q?.category || 'Разное') === cat))
@@ -127,7 +128,7 @@ export default function Theory() {
 								>
 									<CardHeader>
 										<div className="flex items-center justify-between">
-											<CardTitle className="text-lg">{q.title}</CardTitle>
+											<CardTitle className="text-lg">{q?.title || 'Без названия'}</CardTitle>
 											<div className="flex gap-2">
 												<Badge variant="outline">{q.category}</Badge>
 												<Badge variant="secondary">diff {q.difficulty}</Badge>
