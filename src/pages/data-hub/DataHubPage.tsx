@@ -7,6 +7,7 @@ import { useApp } from '@/app/providers/AppProvider'
 export default function DataHub(){
   const { prof } = useApp()
   const {toast} = useToast()
+  const lsKeyQuestions = (p:string)=> `bank:${p}:questions`
   const exportJSON = () => {
     const data = { questions: getQuestions(prof), tasks: getTasks(prof) }
     const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'})
@@ -40,6 +41,13 @@ export default function DataHub(){
       toast({title: "Ошибка", description: "Неверный формат JSON файла.", variant: "destructive"})
     } }
     r.readAsText(f)
+  }
+
+  const resetToDefaults = () => {
+    try { localStorage.removeItem(lsKeyQuestions(prof)); } catch {}
+    // force re-seed by calling getQuestions
+    const seeded = getQuestions(prof)
+    toast({ title: 'Сброшено', description: `Вопросы ${prof} сброшены к базе (${seeded.length})` })
   }
   
   function normalizeQuestions(input: any[]): any[] {
@@ -99,6 +107,9 @@ export default function DataHub(){
                 />
                 Импортировать
               </label>
+            </Button>
+            <Button variant="destructive" onClick={resetToDefaults}>
+              Сбросить к базе
             </Button>
           </div>
           
