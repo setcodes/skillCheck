@@ -32,7 +32,7 @@ import DEVOPS_QA from '@/shared/questions/devops-qa-100.json'
 // Объясните замыкание...\n
 // ## Ответ\n
 // Замыкание — ...
-const MD_GLOB: Record<string, any> = import.meta.glob('@/shared/questions/md/**/*.{md,MD}', { as: 'raw', eager: true })
+const MD_GLOB: Record<string, any> = import.meta.glob('@/shared/questions/md/**/*.{md,MD}', { query: '?raw', import: 'default', eager: true as any })
 
 function parseMd(raw: string): Omit<TheoryQuestion, 'id'|'title'|'category'|'difficulty'|'bucket'|'prompt'|'answer'> & Partial<TheoryQuestion> {
   const res: any = {}
@@ -118,8 +118,10 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
   } catch {}
   // Prefer Markdown contributions if present, else fallback to JSON base
   const md = loadMdForProf(prof)
-  if (md.length) return md
-  return QUESTIONS_BY_PROF[prof] || []
+  const base = md.length ? md : (QUESTIONS_BY_PROF[prof] || [])
+  // Auto-seed LocalStorage with base so user can edit locally, works offline too
+  try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(base)) } catch {}
+  return base
 }
 
 export function putQuestions(prof: Profession, questions: TheoryQuestion[]): void {
