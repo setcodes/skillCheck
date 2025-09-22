@@ -135,7 +135,7 @@ function AppContent() {
   }, [intMode, intRunning, intLimitSec, intValueSec])
 
   return (
-    <div className="h-screen bg-background overflow-hidden flex flex-col print:h-auto print:overflow-visible">
+    <div className="h-screen bg-background overflow-hidden flex flex-col justify-between print:h-auto print:overflow-visible">
       {/* Header */}
       <header className="border-b bg-card relative z-10 print:hidden">
             <div className="container mx-auto px-4 py-4">
@@ -209,51 +209,59 @@ function AppContent() {
               })}
             </div>
             {/* О платформе */}
-            <div className="max-w-6xl mx-auto mt-10">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-brand uppercase tracking-wide text-2xl">SkillCheck</CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground space-y-4">
-                  <p>
-                    SkillCheck — веб‑платформа для проведения технических интервью, отработки навыков и подготовки к реальным собеседованиям. 
-                    Она объединяет теорию, задачи и удобный отчёт по итогам.
-                  </p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded bg-primary/10 text-primary"><CodeIcon className="h-4 w-4"/></div>
-                      <div>
-                        <div className="text-foreground font-medium">Задачи с автопроверкой</div>
-                        <div>Пишите код и запускайте тесты — моментальная обратная связь по решению.</div>
-                      </div>
+            <div className="max-w-6xl mx-auto mt-16">
+              <div className="text-center mb-12">
+                {/* <h2 className="text-4xl font-bold text-foreground mb-4">
+                  Современная платформа для технических интервью
+                </h2> */}
+                <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                  SkillCheck объединяет теорию, практику и оценку в едином инструменте для эффективной подготовки к собеседованиям
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-blue-50/60 to-blue-100/60 dark:from-blue-950/20 dark:to-blue-900/20">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <CodeIcon className="h-8 w-8 text-blue-600 dark:text-blue-400"/>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded bg-primary/10 text-primary"><BookOpen className="h-4 w-4"/></div>
-                      <div>
-                        <div className="text-foreground font-medium">Теоретические вопросы</div>
-                        <div>Банк вопросов по профессиям; эталонные ответы доступны в отчёте.</div>
-                      </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Практические задачи</h3>
+                    <p className="text-sm text-muted-foreground">Решайте задачи с автопроверкой и получайте мгновенную обратную связь</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-green-50/60 to-green-100/60 dark:from-green-950/20 dark:to-green-900/20">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <BookOpen className="h-8 w-8 text-green-600 dark:text-green-400"/>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded bg-primary/10 text-primary"><Clock className="h-4 w-4"/></div>
-                      <div>
-                        <div className="text-foreground font-medium">Мок‑интервью</div>
-                        <div>Случайные вопросы и задачи, общий таймер, сводный отчёт и рекомендация по уровню.</div>
-                      </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Теоретическая база</h3>
+                    <p className="text-sm text-muted-foreground">Обширная коллекция вопросов с эталонными ответами по каждой профессии</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-purple-50/60 to-purple-100/60 dark:from-purple-950/20 dark:to-purple-900/20">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Clock className="h-8 w-8 text-purple-600 dark:text-purple-400"/>
                     </div>
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded bg-primary/10 text-primary"><Users className="h-4 w-4"/></div>
-                      <div>
-                        <div className="text-foreground font-medium">Режим интервьюера</div>
-                        <div>Выставляйте оценки, оставляйте комментарии и печатайте итоговый отчёт.</div>
-                      </div>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Мок-интервью</h3>
+                    <p className="text-sm text-muted-foreground">Симуляция реального собеседования с таймером и итоговой оценкой</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-gradient-to-br from-orange-50/60 to-orange-100/60 dark:from-orange-950/20 dark:to-orange-900/20">
+                  <CardContent className="p-6 text-center">
+                    <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-orange-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Users className="h-8 w-8 text-orange-600 dark:text-orange-400"/>
                     </div>
-                  </div>
-                  <p>
-                    Начните с выбора профессии выше, затем переходите к теории, задачам или запустите «Мок‑интервью», чтобы максимально приблизиться к формату реального технического собеседования.
-                  </p>
-                </CardContent>
-              </Card>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">Режим интервьюера</h3>
+                    <p className="text-sm text-muted-foreground">Проводите интервью, выставляйте оценки и создавайте детальные отчёты</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+             
             </div>
           </div>
         </section>
@@ -422,6 +430,17 @@ function AppContent() {
           </main>
         </>
       )}
+      
+      {/* Footer */}
+      <footer className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 py-3">
+          <div className="flex items-center justify-center space-y-2 text-sm text-muted-foreground">
+            <p>&copy; {new Date().getFullYear()} SkillCheck. Все права защищены.</p>
+            {/* <p className="text-xs">Инструмент для проведения технических интервью</p> */}
+          </div>
+        </div>
+      </footer>
+      
       <Toaster />
     </div>
   )

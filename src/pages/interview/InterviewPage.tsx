@@ -4,9 +4,14 @@ import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Badge } from '@/shared/ui/badge'
+import { DatePicker } from '@/shared/ui/date-picker'
+import { Calendar } from '@/shared/ui/calendar'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Label } from '@/shared/ui/label'
 import { useToast } from '@/shared/hooks/use-sonner'
 import { useApp } from '@/app/providers/AppProvider'
 import { Save, Printer, Trash2, Info, CheckCircle } from 'lucide-react'
+import { PROFESSIONS } from '@/entities/profession/model/constants'
 type Row={prof:string;level:string;taskId:string;title:string;score:number;comment:string}
 type TheoryRow={prof:string;questionId:string;title:string;category:string;difficulty:number;score:number;comment:string}
 export default function Interview(){
@@ -80,19 +85,32 @@ export default function Interview(){
           </CardHeader>
           <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto print:max-h-none print:overflow-visible">
             {/* Meta: Date, Time, Interviewers */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Дата интервью:</label>
-                <Input type="date" value={date} onChange={e=>setDate(e.target.value)} />
+                <DatePicker 
+                  value={date} 
+                  onChange={setDate}
+                  placeholder="Выберите дату интервью"
+                />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Затраченное время (чч:мм):</label>
-                <Input placeholder="Например, 01:30" value={timeSpent} onChange={e=>setTimeSpent(e.target.value)} />
+                <Label htmlFor="time-picker" className="px-1">
+                  Время (чч:мм)
+                </Label>
+                <Input 
+                  id="time-picker"
+                  type="time" 
+                  value={timeSpent} 
+                  onChange={e => setTimeSpent(e.target.value)}
+                  step="1"
+                  className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
+                />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium">Интервьюеры:</label>
                 <div className="flex gap-2">
-                  <Input placeholder="Имя" value={newInterviewer} onChange={e=>setNewInterviewer(e.target.value)} />
+                  <Input placeholder="Имя интервьюера" value={newInterviewer} onChange={e=>setNewInterviewer(e.target.value)} className="flex-1" />
                   <Button type="button" onClick={()=>{ const v=newInterviewer.trim(); if(!v) return; setInterviewers(a=>Array.from(new Set([...a, v]))); setNewInterviewer("") }}>Добавить</Button>
                 </div>
                 {interviewers.length>0 && (
@@ -119,11 +137,25 @@ export default function Interview(){
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Позиция:</label>
-                <Input 
-                  value={pos} 
-                  onChange={e=>setPos(e.target.value)}
-                  placeholder="Позиция"
-                />
+                <Select value={pos} onValueChange={setPos}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Выберите позицию" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROFESSIONS.map((profession) => (
+                      <SelectItem key={profession.id} value={profession.id}>
+                        <div className="flex items-center gap-2">
+                          <span className={profession.color}>
+                            {profession.title}
+                          </span>
+                          <span className="text-muted-foreground text-sm">
+                            {profession.subtitle}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
