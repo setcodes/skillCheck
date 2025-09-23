@@ -81,6 +81,17 @@ export async function runModule(
       functionNames = exportedFunctions
     }
     
+    // Для Java кода ищем статические методы
+    if (isJavaCode && functionNames.length === 0) {
+      const javaMethodMatches = userCode.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/g)
+      if (javaMethodMatches) {
+        functionNames = javaMethodMatches.map(f => {
+          const match = f.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/)
+          return match ? match[1] : ''
+        }).filter(name => name)
+      }
+    }
+    
     if (functionNames.length === 0) {
       return [{ok: false, message: 'No functions found in user code'}]
     }
@@ -184,6 +195,13 @@ export async function runModule(
         // Конвертируем исключения
         .replace(/throw\s+new\s+RuntimeException\s*\(/g, 'throw new Error(')
         .replace(/throw\s+new\s+Exception\s*\(/g, 'throw new Error(')
+        // Убираем классы и оставляем только функции
+        .replace(/class\s+\w+\s*\{[^}]*\}/g, '')
+        .replace(/public\s+class\s+\w+\s*\{[^}]*\}/g, '')
+        // Убираем main методы
+        .replace(/main\s*\([^)]*\)\s*\{[^}]*\}/g, '')
+        // Убираем пустые строки
+        .replace(/\n\s*\n/g, '\n')
     } else if (isPythonCode) {
       // Конвертация Python в JavaScript
       cleanUserCode = userCode
@@ -260,12 +278,77 @@ export async function runModule(
     
     let userModule
     try {
-      userModule = new Function(`
-        ${cleanUserCode}
-        return {
-          ${functionNames.join(', ')}
+      if (isJavaCode) {
+        // Для Java кода создаем модуль по-другому
+        const javaFunctions: any = {}
+        
+        // Извлекаем функции из Java кода
+        for (const funcName of functionNames) {
+          const funcRegex = new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{([^}]+(?:\\{[^}]*\\}[^}]*)*)\\}`)
+          const match = userCode.match(funcRegex)
+          if (match) {
+            let funcBody = match[1]
+            // Конвертируем тело функции
+            funcBody = funcBody
+              .replace(/\b(public|private|static|final)\s+/g, '')
+              .replace(/System\.out\.println/g, 'console.log')
+              .replace(/int\[\]/g, 'Array')
+              .replace(/String\[\]/g, 'Array')
+              .replace(/double\[\]/g, 'Array')
+              .replace(/boolean\[\]/g, 'Array')
+              .replace(/\bint\b/g, 'let')
+              .replace(/\bString\b/g, 'let')
+              .replace(/\bdouble\b/g, 'let')
+              .replace(/\bboolean\b/g, 'let')
+              .replace(/\bchar\b/g, 'let')
+              .replace(/\blong\b/g, 'let')
+              .replace(/\bfloat\b/g, 'let')
+              .replace(/java\.util\.List/g, 'Array')
+              .replace(/java\.util\.Map/g, 'Map')
+              .replace(/java\.util\.Set/g, 'Set')
+              .replace(/java\.util\.ArrayList/g, 'Array')
+              .replace(/java\.util\.HashMap/g, 'Map')
+              .replace(/java\.util\.HashSet/g, 'Set')
+              .replace(/\.add\s*\(/g, '.push(')
+              .replace(/\.contains\s*\(/g, '.has(')
+              .replace(/\.containsKey\s*\(/g, '.has(')
+              .replace(/\.put\s*\(/g, '.set(')
+              .replace(/\.get\s*\(/g, '.get(')
+              .replace(/\.isEmpty\s*\(\s*\)/g, '.size === 0')
+              .replace(/\.size\s*\(\s*\)/g, '.size')
+              .replace(/\.equals\s*\(/g, ' === ')
+              .replace(/\.length\s*\(\s*\)/g, '.length')
+              .replace(/==\s*/g, '=== ')
+              .replace(/!=\s*/g, '!== ')
+              .replace(/;\s*$/gm, '')
+            
+            // Извлекаем параметры функции
+            const paramMatch = userCode.match(new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\(([^)]*)\\)`))
+            let params = ''
+            if (paramMatch) {
+              params = paramMatch[1]
+                .split(',')
+                .map((p: string) => {
+                  const parts = p.trim().split(/\s+/)
+                  return parts[parts.length - 1] // берем только имя параметра
+                })
+                .join(', ')
+            }
+            
+            // Создаем функцию
+            javaFunctions[funcName] = new Function(params, funcBody)
+          }
         }
-      `)()
+        
+        userModule = javaFunctions
+      } else {
+        userModule = new Function(`
+          ${cleanUserCode}
+          return {
+            ${functionNames.join(', ')}
+          }
+        `)()
+      }
     } catch (e: any) {
       console.error('Error creating user module:', e)
       return [{ok: false, message: `Error creating user module: ${e?.message || 'Unknown error'}`}]
