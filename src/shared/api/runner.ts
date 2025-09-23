@@ -419,7 +419,15 @@ export async function runModule(
           }
         }
         
-        userModule = javaFunctions
+        // Создаем userModule с правильной структурой для деструктуризации
+        userModule = {
+          ...javaFunctions,
+          // Добавляем функции как свойства для совместимости
+          ...Object.keys(javaFunctions).reduce((acc: any, key) => {
+            acc[key] = javaFunctions[key]
+            return acc
+          }, {})
+        }
         if (debug) {
           console.log('Created userModule for Java:', userModule)
           console.log('Available functions:', Object.keys(userModule))
