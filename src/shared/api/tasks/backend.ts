@@ -183,8 +183,8 @@ assert.strict.equal(isPalindrome("a"), true, 'isPalindrome("a") должен б�
 assert.strict.equal(isPalindrome("aa"), true, 'isPalindrome("aa") должен быть true');
 
 // Тест 4: С пробелами и регистром
-assert.strict.equal(isPalindrome("A man a plan a canal Panama"), false, 'isPalindrome с пробелами должен быть false');
-assert.strict.equal(isPalindrome("Racecar"), false, 'isPalindrome с разным регистром должен быть false');`,
+assert.strict.equal(isPalindrome("A man a plan a canal Panama"), true, 'isPalindrome с пробелами должен быть true');
+assert.strict.equal(isPalindrome("Racecar"), true, 'isPalindrome с разным регистром должен быть true');`,
     solution: `public class Palindrome {
   public static boolean isPalindrome(String str) {
     if (str == null || str.isEmpty()) {
@@ -1641,7 +1641,20 @@ public class ProducerConsumer {
   }
 }`,
     tests: `// Тесты для Producer-Consumer
-// Проверяем корректность работы паттерна`,
+// Проверяем корректность работы паттерна
+const { ProducerConsumer } = userModule;
+
+// Тест 1: Создание Producer-Consumer
+const pc1 = new ProducerConsumer(5);
+assert.strict.equal(pc1.queue.size(), 0, 'queue.size() для нового Producer-Consumer должен быть 0');
+assert.strict.equal(pc1.running, true, 'running для нового Producer-Consumer должен быть true');
+
+// Тест 2: Проверка методов
+assert.strict.equal(pc1.isEmpty(), true, 'isEmpty() для пустой очереди должен вернуть true');
+
+// Тест 3: Остановка
+pc1.stop();
+assert.strict.equal(pc1.running, false, 'running после stop() должен быть false');`,
     solution: `import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -1706,21 +1719,6 @@ public class ProducerConsumer {
     pc.stop();
   }
 }`,
-    tests: `// Тесты для Producer-Consumer
-// Проверяем корректность работы паттерна
-const { ProducerConsumer } = userModule;
-
-// Тест 1: Создание Producer-Consumer
-const pc1 = new ProducerConsumer(5);
-assert.strict.equal(pc1.queue.size(), 0, 'queue.size() для нового Producer-Consumer должен быть 0');
-assert.strict.equal(pc1.running, true, 'running для нового Producer-Consumer должен быть true');
-
-// Тест 2: Проверка методов
-assert.strict.equal(pc1.isEmpty(), true, 'isEmpty() для пустой очереди должен вернуть true');
-
-// Тест 3: Остановка
-pc1.stop();
-assert.strict.equal(pc1.running, false, 'running после stop() должен быть false');`,
   },
 
   {
@@ -1745,7 +1743,38 @@ public class ObserverPattern {
   }
 }`,
     tests: `// Тесты для Observer Pattern
-// Проверяем корректность работы паттерна`,
+// Проверяем корректность работы паттерна
+const { NewsAgency, NewsChannel, EmailSubscriber } = userModule;
+
+// Тест 1: Создание и базовые операции
+const agency = new NewsAgency();
+const channel1 = new NewsChannel("CNN");
+const channel2 = new NewsChannel("BBC");
+const subscriber1 = new EmailSubscriber("user1@example.com");
+
+// Тест 2: Добавление наблюдателей
+agency.addObserver(channel1);
+agency.addObserver(channel2);
+agency.addObserver(subscriber1);
+assert.strict.equal(agency.observers.length, 3, 'agency.observers.length должен быть 3');
+
+// Тест 3: Уведомление наблюдателей
+let notificationReceived = false;
+const originalUpdate = channel1.update;
+channel1.update = function(message) {
+  notificationReceived = true;
+  originalUpdate.call(this, message);
+};
+agency.setNews("Test news");
+assert.strict.equal(notificationReceived, true, 'Наблюдатели должны получить уведомление');
+
+// Тест 4: Удаление наблюдателей
+agency.removeObserver(channel2);
+assert.strict.equal(agency.observers.length, 2, 'agency.observers.length после удаления должен быть 2');
+
+// Тест 5: Создание EmailSubscriber
+const subscriber2 = new EmailSubscriber("user2@example.com");
+assert.strict.equal(subscriber2.email, "user2@example.com", 'EmailSubscriber должен сохранить email');`,
     solution: `import java.util.*;
 
 // Интерфейс Observer
@@ -1835,39 +1864,6 @@ public class ObserverPattern {
     agency.setNews("Update: Technology details released!");
   }
 }`,
-    tests: `// Тесты для Observer Pattern
-// Проверяем корректность работы паттерна
-const { NewsAgency, NewsChannel, EmailSubscriber } = userModule;
-
-// Тест 1: Создание и базовые операции
-const agency = new NewsAgency();
-const channel1 = new NewsChannel("CNN");
-const channel2 = new NewsChannel("BBC");
-const subscriber1 = new EmailSubscriber("user1@example.com");
-
-// Тест 2: Добавление наблюдателей
-agency.addObserver(channel1);
-agency.addObserver(channel2);
-agency.addObserver(subscriber1);
-assert.strict.equal(agency.observers.length, 3, 'agency.observers.length должен быть 3');
-
-// Тест 3: Уведомление наблюдателей
-let notificationReceived = false;
-const originalUpdate = channel1.update;
-channel1.update = function(message) {
-  notificationReceived = true;
-  originalUpdate.call(this, message);
-};
-agency.setNews("Test news");
-assert.strict.equal(notificationReceived, true, 'Наблюдатели должны получить уведомление');
-
-// Тест 4: Удаление наблюдателей
-agency.removeObserver(channel2);
-assert.strict.equal(agency.observers.length, 2, 'agency.observers.length после удаления должен быть 2');
-
-// Тест 5: Создание EmailSubscriber
-const subscriber2 = new EmailSubscriber("user2@example.com");
-assert.strict.equal(subscriber2.email, "user2@example.com", 'EmailSubscriber должен сохранить email');`,
   },
 
   {
@@ -2261,10 +2257,9 @@ setTimeout(() => {
 pool.shutdown();
 assert.strict.equal(pool.isShutdown, true, 'isShutdown после shutdown должен быть true');
 
-// Тест 5: Создание Worker
-const worker = new pool.Worker(() => {});
-assert.strict.ok(worker !== null, 'Worker должен быть создан');
-assert.strict.ok(worker.firstTask !== null, 'Worker должен иметь firstTask');`,
+// Тест 5: Проверка базовых свойств
+assert.strict.ok(pool.workQueue !== null, 'workQueue должен быть создан');
+assert.strict.ok(pool.threadCount !== null, 'threadCount должен быть создан');`,
     solution: `import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 

@@ -12,7 +12,7 @@ import { useApp } from '@/app/providers/AppProvider'
 import { createSession, loadSession, saveSession, clearSession, mapTaskScore } from '@/shared/api/mock'
 import { getQuestions, getTasks } from '@/shared/api/questions'
 import type { MockSessionState, MockItem, MockTaskItem, MockTheoryItem } from '@/entities/mock/model/types'
-import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCircle } from 'lucide-react'
+import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCircle, Copy } from 'lucide-react'
 import { useToast } from '@/shared/hooks/use-sonner'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
@@ -38,6 +38,23 @@ export default function MockPage(){
   useEffect(()=>{ try{ localStorage.setItem('mock.showExtraProps', showExtra ? '1':'0') }catch{} }, [showExtra])
   const { toast } = useToast()
   const [reveal, setReveal] = useState<Record<string, boolean>>({})
+
+  const copySolution = async (solution: string) => {
+    if (!solution || solution === '-') return
+    try {
+      await navigator.clipboard.writeText(solution)
+      toast.success('Решение скопировано', 'Эталонное решение скопировано в буфер обмена')
+    } catch (e) {
+      // Fallback для старых браузеров
+      const textArea = document.createElement('textarea')
+      textArea.value = solution
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      toast.success('Решение скопировано', 'Эталонное решение скопировано в буфер обмена')
+    }
+  }
 
   // Timer
   useEffect(()=>{ if(s) saveSession(s) }, [s])
@@ -477,7 +494,20 @@ export default function MockPage(){
                       <div className="text-xs mt-2">Результаты тестов: {typeof (it as MockTaskItem).passedCount==='number' ? `${(it as MockTaskItem).passedCount}/${(it as MockTaskItem).totalCount}` : '-'}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-muted-foreground">Эталонное решение</div>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-xs text-muted-foreground">Эталонное решение</div>
+                        {tMap[(it as MockTaskItem).taskId]?.solution && tMap[(it as MockTaskItem).taskId]?.solution !== '-' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copySolution(tMap[(it as MockTaskItem).taskId]?.solution || '')}
+                            className="h-6 px-2 text-xs"
+                          >
+                            <Copy className="h-3 w-3 mr-1" />
+                            Копировать
+                          </Button>
+                        )}
+                      </div>
                       <pre className={reveal[it.id] ?
                         "p-2 bg-muted rounded text-xs whitespace-pre-wrap overflow-x-auto" :
                         "p-2 bg-muted rounded text-xs whitespace-pre-wrap overflow-x-auto hidden print:block"

@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
-import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw, ChevronDown, Clock, AlertTriangle, Trash2 } from 'lucide-react'
+import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw, ChevronDown, Clock, AlertTriangle, Trash2, Copy } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Button } from '@/shared/ui/button'
@@ -242,6 +242,23 @@ export default function Solve(){
     setLogs([])
     toast.info('Результаты очищены', 'Очищены результаты тестов и консоль')
   }
+
+  const copySolution=async()=>{
+    if(!task?.solution) return;
+    try {
+      await navigator.clipboard.writeText(task.solution)
+      toast.success('Решение скопировано', 'Эталонное решение скопировано в буфер обмена')
+    } catch (e) {
+      // Fallback для старых браузеров
+      const textArea = document.createElement('textarea')
+      textArea.value = task.solution
+      document.body.appendChild(textArea)
+      textArea.select()
+      document.execCommand('copy')
+      document.body.removeChild(textArea)
+      toast.success('Решение скопировано', 'Эталонное решение скопировано в буфер обмена')
+    }
+  }
   return <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
     {/* Tasks List */}
     <div className="lg:col-span-1 h-full min-h-0">
@@ -426,14 +443,13 @@ export default function Solve(){
               <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto">
                 {task.starter}
               </pre>
-              {/* Скрытый редактор: используется только для полноэкранного режима */}
+              {/* Редактор кода */}
               <CodeEditor
-                className="hidden"
                 ref={editorRef}
                 value={code}
                 onChange={(value) => setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:value}}))}
                 language={taskLanguage}
-                height="0px"
+                height="300px"
                 placeholder="Введите ваш код здесь..."
                 onFullscreenChange={()=>{ /* no-op */ }}
                 onRun={run}
@@ -451,15 +467,36 @@ export default function Solve(){
                 <div className="mt-6">
                   <Collapsible>
                     <div className="border rounded-lg">
-                      <CollapsibleTrigger className="group cursor-pointer p-4 bg-muted/50 hover:bg-muted/70 transition-colors">
-                        <span className="flex items-center gap-2">
-                            <Star className="h-4 w-4 text-yellow-500" fill="currentColor" stroke="none"/>
+                      <div className="flex items-center justify-between p-4 bg-muted/50">
+                        <CollapsibleTrigger className="group cursor-pointer flex items-center gap-2 hover:bg-muted/70 transition-colors rounded px-2 py-1">
+                          <Star className="h-4 w-4 text-yellow-500" fill="currentColor" stroke="none"/>
                           <span className="font-medium">Эталонное решение</span>
-                        </span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-                      </CollapsibleTrigger>
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                        </CollapsibleTrigger>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={copySolution}
+                          className="h-8 px-2 text-muted-foreground hover:text-foreground"
+                        >
+                          <Copy className="h-3 w-3 mr-1" />
+                          Копировать
+                        </Button>
+                      </div>
                       <CollapsibleContent>
                         <div className="p-4 border-t">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-muted-foreground">Эталонное решение для копирования</span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={copySolution}
+                              className="h-8 px-3"
+                            >
+                              <Copy className="h-3 w-3 mr-1" />
+                              Копировать решение
+                            </Button>
+                          </div>
                           <CodeEditor
                             value={task.solution}
                             onChange={() => {}} // Read-only
