@@ -118,6 +118,9 @@ export async function runModule(
       cleanUserCode = userCode
         // Убираем public, private, static, final
         .replace(/\b(public|private|static|final)\s+/g, '')
+        .replace(/\bMap\s+(\w+)\s*=/g, 'let $1 =')
+        .replace(/\bSet\s+(\w+)\s*=/g, 'let $1 =')
+        .replace(/\bArray\s+(\w+)\s*=/g, 'let $1 =')
         // Конвертируем System.out.println в console.log
         .replace(/System\.out\.println/g, 'console.log')
         // Конвертируем массивы
@@ -324,6 +327,9 @@ export async function runModule(
               // Конвертируем тело функции
               funcBody = funcBody
                 .replace(/\b(public|private|static|final)\s+/g, '')
+              .replace(/\bMap\s+(\w+)\s*=/g, 'let $1 =')
+              .replace(/\bSet\s+(\w+)\s*=/g, 'let $1 =')
+              .replace(/\bArray\s+(\w+)\s*=/g, 'let $1 =')
                 .replace(/System\.out\.println/g, 'console.log')
                 .replace(/int\[\]/g, 'Array')
                 .replace(/String\[\]/g, 'Array')
@@ -336,15 +342,19 @@ export async function runModule(
                 .replace(/\bchar\b/g, 'let')
                 .replace(/\blong\b/g, 'let')
                 .replace(/\bfloat\b/g, 'let')
-                .replace(/java\.util\.List/g, 'Array')
-                .replace(/java\.util\.Map/g, 'Map')
-                .replace(/java\.util\.Set/g, 'Set')
-                .replace(/java\.util\.ArrayList/g, 'Array')
-                .replace(/java\.util\.HashMap/g, 'Map')
-                .replace(/java\.util\.HashSet/g, 'Set')
+        .replace(/java\.util\.List/g, 'Array')
+        .replace(/java\.util\.Map/g, 'Map')
+        .replace(/java\.util\.Set/g, 'Set')
+        .replace(/java\.util\.ArrayList/g, 'Array')
+        .replace(/java\.util\.HashMap/g, 'Map')
+        .replace(/java\.util\.HashSet/g, 'Set')
+        .replace(/Map<[^>]+>/g, 'Map')
+        .replace(/Set<[^>]+>/g, 'Set')
+        .replace(/List<[^>]+>/g, 'Array')
                 .replace(/new\s+Array\s*\{([^}]+)\}/g, '[$1]')
                 .replace(/new\s+int\[\]\s*\{([^}]+)\}/g, '[$1]')
                 .replace(/new\s+String\[\]\s*\{([^}]+)\}/g, '[$1]')
+                .replace(/new\s+Array\{\s*\}/g, '[]')
                 .replace(/\.add\s*\(/g, '.push(')
                 .replace(/\.contains\s*\(/g, '.has(')
                 .replace(/\.containsKey\s*\(/g, '.has(')
@@ -410,6 +420,10 @@ export async function runModule(
         }
         
         userModule = javaFunctions
+        if (debug) {
+          console.log('Created userModule for Java:', userModule)
+          console.log('Available functions:', Object.keys(userModule))
+        }
       } else {
         try {
           userModule = new Function(`
