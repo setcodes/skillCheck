@@ -372,6 +372,10 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
                 cursorBlinking: 'blink',
                 cursorSmoothCaretAnimation: 'on',
                 smoothScrolling: true,
+                selectOnLineNumbers: true,
+                selectionClipboard: true,
+                readOnly: false,
+                domReadOnly: false,
               }}
             />
           </div>
@@ -469,6 +473,10 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
           cursorBlinking: 'blink',
           cursorSmoothCaretAnimation: 'on',
           smoothScrolling: true,
+          selectOnLineNumbers: true,
+          selectionClipboard: true,
+          readOnly: false,
+          domReadOnly: false,
         }}
       />
     </div>
