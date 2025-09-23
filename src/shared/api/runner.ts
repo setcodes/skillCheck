@@ -97,7 +97,7 @@ export async function runModule(
       }
       if (javaMethodMatches) {
         functionNames = javaMethodMatches.map(f => {
-          const match = f.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/)
+          const match = f.match(/(?:public\s+)?static\s+[\w\[\]]+\s+(\w+)\s*\(/)
           return match ? match[1] : ''
         }).filter(name => name && name !== 'main') // Исключаем main, оставляем только рабочие функции
         if (debug) {
