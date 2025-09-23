@@ -3,7 +3,7 @@ export async function runModule(
   tests: string,
   opts?: { debug?: boolean }
 ): Promise<{ ok: boolean; message: string }[]> {
-  const debug = !!opts?.debug
+  const debug = !!opts?.debug || userCode.includes('public class') || userCode.includes('public static')
   
   // Безопасность: ограничения на выполнение
   const MAX_EXECUTION_TIME = 5000 // 5 секунд
@@ -280,8 +280,9 @@ export async function runModule(
         
         // Извлекаем функции из Java кода
         for (const funcName of functionNames) {
-          const funcRegex = new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{([^}]+(?:\\{[^}]*\\}[^}]*)*)\\}`)
-          const match = userCode.match(funcRegex)
+          // Более простое регулярное выражение для извлечения тела функции
+          const funcRegex = new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\}(?=\\s*(?:public\\s+)?static|\\s*\\})`, 'g')
+          const match = funcRegex.exec(userCode)
           if (match) {
             let funcBody = match[1]
             // Конвертируем тело функции
@@ -332,18 +333,47 @@ export async function runModule(
             }
             
             // Создаем функцию
-            javaFunctions[funcName] = new Function(params, funcBody)
+            try {
+              javaFunctions[funcName] = new Function(params, funcBody)
+              if (debug) {
+                console.log(`Created function ${funcName} with params: ${params}`)
+                console.log(`Function body: ${funcBody}`)
+              }
+            } catch (e: any) {
+              console.error(`Error creating function ${funcName}:`, e)
+              console.error(`Params: ${params}`)
+              console.error(`Body: ${funcBody}`)
+              // Создаем заглушку функции
+              javaFunctions[funcName] = function() {
+                throw new Error(`Function ${funcName} could not be created: ${e?.message || 'Unknown error'}`)
+              }
+            }
+          } else {
+            if (debug) {
+              console.warn(`Function ${funcName} not found in Java code`)
+            }
+            // Создаем заглушку функции
+            javaFunctions[funcName] = function() {
+              throw new Error(`Function ${funcName} not found in Java code`)
+            }
           }
         }
         
         userModule = javaFunctions
       } else {
-        userModule = new Function(`
-          ${cleanUserCode}
-          return {
-            ${functionNames.join(', ')}
-          }
-        `)()
+        try {
+          userModule = new Function(`
+            ${cleanUserCode}
+            return {
+              ${functionNames.join(', ')}
+            }
+          `)()
+        } catch (e: any) {
+          console.error('Error creating JavaScript module:', e)
+          console.error('Clean user code:', cleanUserCode)
+          console.error('Function names:', functionNames)
+          throw e
+        }
       }
     } catch (e: any) {
       console.error('Error creating user module:', e)
@@ -373,6 +403,9 @@ export async function runModule(
       console.log('Original user code:', userCode)
       console.log('Clean user code:', cleanUserCode)
       console.log('Function names:', functionNames)
+      console.log('Is Java code:', isJavaCode)
+      console.log('Is Python code:', isPythonCode)
+      console.log('Is Mermaid code:', isMermaidCode)
       console.log('Original test code:', tests)
       console.log('Processed test code:', testCode)
       console.log('User module:', userModule)
