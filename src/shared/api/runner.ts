@@ -86,14 +86,14 @@ export async function runModule(
       functionNames = exportedFunctions
     }
     
-    // Для Java кода ищем статические методы
+    // Для Java кода ищем статические методы (исключаем main)
     if (isJavaCode && functionNames.length === 0) {
       const javaMethodMatches = userCode.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/g)
       if (javaMethodMatches) {
         functionNames = javaMethodMatches.map(f => {
           const match = f.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/)
           return match ? match[1] : ''
-        }).filter(name => name)
+        }).filter(name => name && name !== 'main') // Исключаем main функцию
       }
     }
     
@@ -139,6 +139,10 @@ export async function runModule(
         .replace(/new\s+Map\s*\(\s*\)/g, 'new Map()')
         .replace(/new\s+Set\s*\(\s*\)/g, 'new Set()')
         .replace(/new\s+Array\s*<[^>]*>\s*\(\s*\)/g, '[]')
+        // Конвертируем создание массивов с элементами
+        .replace(/new\s+Array\s*\{([^}]+)\}/g, '[$1]')
+        .replace(/new\s+int\[\]\s*\{([^}]+)\}/g, '[$1]')
+        .replace(/new\s+String\[\]\s*\{([^}]+)\}/g, '[$1]')
         // Конвертируем методы коллекций
         .replace(/\.add\s*\(/g, '.push(')
         .replace(/\.contains\s*\(/g, '.has(')
@@ -154,6 +158,8 @@ export async function runModule(
         .replace(/java\.util\.Arrays\.sort/g, 'Array.sort')
         .replace(/java\.util\.Arrays\.toString/g, 'JSON.stringify')
         .replace(/java\.util\.Arrays\.deepToString/g, 'JSON.stringify')
+        // Конвертируем Arrays.toString без java.util
+        .replace(/Arrays\.toString/g, 'JSON.stringify')
         // Конвертируем Math методы
         .replace(/Math\.max/g, 'Math.max')
         .replace(/Math\.min/g, 'Math.min')
@@ -306,6 +312,9 @@ export async function runModule(
               .replace(/java\.util\.ArrayList/g, 'Array')
               .replace(/java\.util\.HashMap/g, 'Map')
               .replace(/java\.util\.HashSet/g, 'Set')
+              .replace(/new\s+Array\s*\{([^}]+)\}/g, '[$1]')
+              .replace(/new\s+int\[\]\s*\{([^}]+)\}/g, '[$1]')
+              .replace(/new\s+String\[\]\s*\{([^}]+)\}/g, '[$1]')
               .replace(/\.add\s*\(/g, '.push(')
               .replace(/\.contains\s*\(/g, '.has(')
               .replace(/\.containsKey\s*\(/g, '.has(')
@@ -315,6 +324,8 @@ export async function runModule(
               .replace(/\.size\s*\(\s*\)/g, '.size')
               .replace(/\.equals\s*\(/g, ' === ')
               .replace(/\.length\s*\(\s*\)/g, '.length')
+              .replace(/java\.util\.Arrays\.toString/g, 'JSON.stringify')
+              .replace(/Arrays\.toString/g, 'JSON.stringify')
               .replace(/==\s*/g, '=== ')
               .replace(/!=\s*/g, '!== ')
               .replace(/;\s*$/gm, '')
