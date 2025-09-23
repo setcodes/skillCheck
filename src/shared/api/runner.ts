@@ -88,7 +88,10 @@ export async function runModule(
     
     // Для Java кода ищем статические методы (исключаем main)
     if (isJavaCode && functionNames.length === 0) {
-      const javaMethodMatches = userCode.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/g)
+      const javaMethodMatches = userCode.match(/(?:public\s+)?static\s+[\w\[\]]+\s+(\w+)\s*\(/g)
+      if (debug) {
+        console.log('Full user code:', userCode)
+      }
       if (debug) {
         console.log('Java method matches:', javaMethodMatches)
       }
@@ -96,7 +99,7 @@ export async function runModule(
         functionNames = javaMethodMatches.map(f => {
           const match = f.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/)
           return match ? match[1] : ''
-        }).filter(name => name && name !== 'main') // Исключаем main функцию
+        }).filter(name => name && name !== 'main') // Исключаем main, оставляем только рабочие функции
         if (debug) {
           console.log('Found Java functions:', functionNames)
         }
@@ -293,7 +296,7 @@ export async function runModule(
         // Извлекаем функции из Java кода
         for (const funcName of functionNames) {
           // Ищем функцию по имени с более простым подходом
-          const funcStartRegex = new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`)
+          const funcStartRegex = new RegExp(`(?:public\\s+)?static\\s+[\\w\\[\\]]+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`)
           const funcStartMatch = userCode.match(funcStartRegex)
           
           if (funcStartMatch) {
@@ -358,7 +361,7 @@ export async function runModule(
                 .replace(/;\s*$/gm, '')
               
               // Извлекаем параметры функции
-              const paramMatch = userCode.match(new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\(([^)]*)\\)`))
+              const paramMatch = userCode.match(new RegExp(`(?:public\\s+)?static\\s+[\\w\\[\\]]+\\s+${funcName}\\s*\\(([^)]*)\\)`))
               let params = ''
               if (paramMatch) {
                 params = paramMatch[1]
