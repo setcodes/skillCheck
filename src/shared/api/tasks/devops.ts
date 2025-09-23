@@ -26,7 +26,23 @@ COPY . .
 EXPOSE 3000
 CMD ["npm", "start"]`,
     tests: `# Тесты для Dockerfile
-# Проверяем, что образ собирается и запускается`,
+# Проверяем, что образ собирается и запускается
+# Проверяем основные инструкции Dockerfile
+assert 'FROM' in userCode, 'Dockerfile должен содержать инструкцию FROM'
+assert 'WORKDIR' in userCode, 'Dockerfile должен содержать инструкцию WORKDIR'
+assert 'COPY' in userCode, 'Dockerfile должен содержать инструкцию COPY'
+assert 'RUN' in userCode, 'Dockerfile должен содержать инструкцию RUN'
+assert 'EXPOSE' in userCode, 'Dockerfile должен содержать инструкцию EXPOSE'
+assert 'CMD' in userCode, 'Dockerfile должен содержать инструкцию CMD'
+
+# Проверяем, что используется Node.js образ
+assert 'node:' in userCode, 'Должен использоваться Node.js образ'
+
+# Проверяем, что открыт порт 3000
+assert '3000' in userCode, 'Должен быть открыт порт 3000'
+
+# Проверяем, что есть установка зависимостей
+assert 'npm install' in userCode or 'npm ci' in userCode, 'Должна быть установка зависимостей npm'`,
     solution: `FROM node:18-alpine
 
 # Устанавливаем рабочую директорию
@@ -71,7 +87,25 @@ version: '3.8'
 services:
   # TODO: Добавьте сервисы`,
     tests: `# Тесты для Docker Compose
-# Проверяем корректность конфигурации`,
+# Проверяем корректность конфигурации
+# Проверяем основные секции docker-compose.yml
+assert 'version:' in userCode, 'Docker Compose должен содержать версию'
+assert 'services:' in userCode, 'Docker Compose должен содержать секцию services'
+
+# Проверяем, что есть веб-приложение
+assert 'web:' in userCode or 'app:' in userCode, 'Должен быть сервис веб-приложения'
+
+# Проверяем, что есть база данных
+assert 'db:' in userCode or 'database:' in userCode or 'postgres:' in userCode, 'Должен быть сервис базы данных'
+
+# Проверяем, что есть Redis
+assert 'redis:' in userCode, 'Должен быть сервис Redis'
+
+# Проверяем, что есть порты
+assert 'ports:' in userCode, 'Должны быть настроены порты'
+
+# Проверяем, что есть переменные окружения
+assert 'environment:' in userCode, 'Должны быть переменные окружения'`,
     solution: `version: '3.8'
 
 services:
@@ -138,7 +172,27 @@ metadata:
 spec:
   # TODO: Добавьте спецификацию`,
     tests: `# Тесты для Kubernetes Deployment
-# Проверяем корректность конфигурации`,
+# Проверяем корректность конфигурации
+# Проверяем основные поля Kubernetes Deployment
+assert 'apiVersion: apps/v1' in userCode, 'Должен быть правильный apiVersion'
+assert 'kind: Deployment' in userCode, 'Должен быть kind Deployment'
+assert 'metadata:' in userCode, 'Должна быть секция metadata'
+assert 'spec:' in userCode, 'Должна быть секция spec'
+
+# Проверяем, что есть реплики
+assert 'replicas:' in userCode, 'Должны быть настроены реплики'
+
+# Проверяем, что есть селектор
+assert 'selector:' in userCode, 'Должен быть селектор'
+
+# Проверяем, что есть шаблон подов
+assert 'template:' in userCode, 'Должен быть шаблон подов'
+
+# Проверяем, что есть контейнеры
+assert 'containers:' in userCode, 'Должны быть контейнеры'
+
+# Проверяем, что есть ресурсы
+assert 'resources:' in userCode, 'Должны быть настроены ресурсы'`,
     solution: `apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -209,7 +263,24 @@ metadata:
 spec:
   # TODO: Добавьте спецификацию`,
     tests: `# Тесты для Kubernetes Service
-# Проверяем корректность конфигурации`,
+# Проверяем корректность конфигурации
+# Проверяем основные поля Kubernetes Service
+assert 'apiVersion: v1' in userCode, 'Должен быть правильный apiVersion'
+assert 'kind: Service' in userCode, 'Должен быть kind Service'
+assert 'metadata:' in userCode, 'Должна быть секция metadata'
+assert 'spec:' in userCode, 'Должна быть секция spec'
+
+# Проверяем, что есть тип сервиса
+assert 'type:' in userCode, 'Должен быть тип сервиса'
+
+# Проверяем, что есть порты
+assert 'ports:' in userCode, 'Должны быть настроены порты'
+
+# Проверяем, что есть селектор
+assert 'selector:' in userCode, 'Должен быть селектор'
+
+# Проверяем, что есть targetPort
+assert 'targetPort:' in userCode, 'Должен быть targetPort'`,
     solution: `apiVersion: v1
 kind: Service
 metadata:
@@ -264,7 +335,25 @@ name: CI/CD Pipeline
 on:
   # TODO: Добавьте триггеры`,
     tests: `# Тесты для GitHub Actions
-# Проверяем корректность workflow`,
+# Проверяем корректность workflow
+# Проверяем основные поля GitHub Actions workflow
+assert 'name:' in userCode, 'Workflow должен иметь имя'
+assert 'on:' in userCode, 'Workflow должен иметь триггеры'
+
+# Проверяем, что есть триггеры
+assert 'push:' in userCode or 'pull_request:' in userCode, 'Должны быть триггеры push или pull_request'
+
+# Проверяем, что есть jobs
+assert 'jobs:' in userCode, 'Должны быть jobs'
+
+# Проверяем, что есть steps
+assert 'steps:' in userCode, 'Должны быть steps'
+
+# Проверяем, что есть установка Node.js
+assert 'actions/setup-node' in userCode or 'setup-node' in userCode, 'Должна быть установка Node.js'
+
+# Проверяем, что есть запуск тестов
+assert 'npm test' in userCode or 'npm run test' in userCode, 'Должны быть запущены тесты'`,
     solution: `name: CI/CD Pipeline
 
 on:
@@ -366,7 +455,21 @@ appVersion: "1.0.0"
 
 # TODO: Добавьте остальные файлы`,
     tests: `# Тесты для Helm Chart
-# Проверяем корректность шаблонов`,
+# Проверяем корректность шаблонов
+# Проверяем основные поля Helm Chart
+assert 'apiVersion: v2' in userCode, 'Должен быть правильный apiVersion'
+assert 'name:' in userCode, 'Chart должен иметь имя'
+assert 'version:' in userCode, 'Chart должен иметь версию'
+assert 'appVersion:' in userCode, 'Chart должен иметь appVersion'
+
+# Проверяем, что есть шаблоны
+assert 'templates/' in userCode or 'deployment.yaml' in userCode, 'Должны быть шаблоны'
+
+# Проверяем, что есть values
+assert 'values:' in userCode or 'values.yaml' in userCode, 'Должны быть values'
+
+# Проверяем, что есть Helm функции
+assert '{{' in userCode and '}}' in userCode, 'Должны быть Helm шаблоны'`,
     solution: `# Chart.yaml
 apiVersion: v2
 name: myapp
@@ -462,7 +565,22 @@ global:
 scrape_configs:
   # TODO: Добавьте конфигурацию`,
     tests: `# Тесты для Prometheus конфигурации
-# Проверяем корректность настроек`,
+# Проверяем корректность настроек
+# Проверяем основные поля Prometheus конфигурации
+assert 'global:' in userCode, 'Должна быть секция global'
+assert 'scrape_configs:' in userCode, 'Должны быть scrape_configs'
+
+# Проверяем, что есть scrape_interval
+assert 'scrape_interval:' in userCode, 'Должен быть scrape_interval'
+
+# Проверяем, что есть job для приложения
+assert 'job_name:' in userCode, 'Должен быть job_name'
+
+# Проверяем, что есть targets
+assert 'targets:' in userCode or 'static_configs:' in userCode, 'Должны быть targets'
+
+# Проверяем, что есть порт 9090 (стандартный порт Prometheus)
+assert '9090' in userCode, 'Должен быть порт 9090'`,
     solution: `# prometheus.yml
 global:
   scrape_interval: 15s
@@ -559,7 +677,21 @@ version: '3.8'
 services:
   # TODO: Добавьте сервисы`,
     tests: `# Тесты для ELK Stack
-# Проверяем корректность конфигурации`,
+# Проверяем корректность конфигурации
+# Проверяем основные компоненты ELK Stack
+assert 'elasticsearch:' in userCode, 'Должен быть сервис Elasticsearch'
+assert 'logstash:' in userCode, 'Должен быть сервис Logstash'
+assert 'kibana:' in userCode, 'Должен быть сервис Kibana'
+
+# Проверяем, что есть порты
+assert '9200' in userCode, 'Должен быть порт 9200 для Elasticsearch'
+assert '5601' in userCode, 'Должен быть порт 5601 для Kibana'
+
+# Проверяем, что есть переменные окружения
+assert 'environment:' in userCode, 'Должны быть переменные окружения'
+
+# Проверяем, что есть volumes
+assert 'volumes:' in userCode, 'Должны быть volumes'`,
     solution: `# docker-compose.yml для ELK
 version: '3.8'
 
@@ -711,7 +843,22 @@ spec:
               key: APP_NAME
         # TODO: Добавьте остальные переменные`,
     tests: `# Тесты для ConfigMap и Secret
-# Проверяем корректность конфигурации`,
+# Проверяем корректность конфигурации
+# Проверяем основные поля ConfigMap
+assert 'kind: ConfigMap' in userCode, 'Должен быть ConfigMap'
+assert 'metadata:' in userCode, 'Должна быть секция metadata'
+assert 'data:' in userCode, 'Должна быть секция data'
+
+# Проверяем основные поля Secret
+assert 'kind: Secret' in userCode, 'Должен быть Secret'
+assert 'type: Opaque' in userCode, 'Secret должен быть типа Opaque'
+
+# Проверяем, что есть переменные окружения
+assert 'APP_NAME' in userCode or 'LOG_LEVEL' in userCode, 'Должны быть переменные окружения'
+
+# Проверяем, что есть использование в Deployment
+assert 'configMapKeyRef:' in userCode, 'Должно быть использование ConfigMap в Deployment'
+assert 'secretKeyRef:' in userCode, 'Должно быть использование Secret в Deployment'`,
     solution: `# configmap.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -829,7 +976,25 @@ provider "aws" {
 
 # TODO: Добавьте ресурсы AWS`,
     tests: `# Тесты для Terraform конфигурации
-# Проверяем корректность инфраструктуры`,
+# Проверяем корректность инфраструктуры
+# Проверяем основные поля Terraform конфигурации
+assert 'terraform {' in userCode, 'Должен быть блок terraform'
+assert 'provider "aws"' in userCode, 'Должен быть AWS provider'
+
+# Проверяем, что есть VPC
+assert 'aws_vpc' in userCode, 'Должна быть VPC'
+
+# Проверяем, что есть Security Groups
+assert 'aws_security_group' in userCode, 'Должны быть Security Groups'
+
+# Проверяем, что есть RDS
+assert 'aws_db_instance' in userCode, 'Должна быть RDS база данных'
+
+# Проверяем, что есть Load Balancer
+assert 'aws_lb' in userCode, 'Должен быть Load Balancer'
+
+# Проверяем, что есть Auto Scaling
+assert 'aws_autoscaling_group' in userCode, 'Должна быть Auto Scaling Group'`,
     solution: `# main.tf
 terraform {
   required_version = ">= 1.0"
@@ -1046,7 +1211,28 @@ version: '3.8'
 services:
   # TODO: Добавьте все сервисы`,
     tests: `# Тесты для микросервисной архитектуры
-# Проверяем корректность конфигурации`,
+# Проверяем корректность конфигурации
+# Проверяем основные компоненты микросервисной архитектуры
+assert 'version: \'3.8\'' in userCode, 'Должен быть правильный формат docker-compose'
+
+# Проверяем, что есть API Gateway
+assert 'kong:' in userCode or 'nginx:' in userCode or 'api-gateway:' in userCode, 'Должен быть API Gateway'
+
+# Проверяем, что есть микросервисы
+assert 'user-service:' in userCode or 'order-service:' in userCode or 'payment-service:' in userCode, 'Должны быть микросервисы'
+
+# Проверяем, что есть мониторинг
+assert 'prometheus:' in userCode, 'Должен быть Prometheus'
+assert 'grafana:' in userCode, 'Должна быть Grafana'
+
+# Проверяем, что есть логирование
+assert 'elasticsearch:' in userCode or 'kibana:' in userCode, 'Должен быть ELK Stack'
+
+# Проверяем, что есть Message Queue
+assert 'kafka:' in userCode or 'rabbitmq:' in userCode, 'Должна быть Message Queue'
+
+# Проверяем, что есть Service Mesh
+assert 'istio:' in userCode or 'linkerd:' in userCode, 'Должен быть Service Mesh'`,
     solution: `# docker-compose.yml
 version: '3.8'
 

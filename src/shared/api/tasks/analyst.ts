@@ -24,7 +24,26 @@ SELECT
 FROM orders
 -- TODO: Добавьте группировку и сортировку`,
     tests: `-- Тесты для SQL запроса
--- Проверяем корректность анализа выручки`,
+-- Проверяем корректность анализа выручки
+-- Создаем тестовые данные
+CREATE TABLE orders (
+  id INTEGER,
+  date DATE,
+  amount DECIMAL(10,2),
+  customer_id INTEGER
+);
+
+INSERT INTO orders VALUES 
+  (1, '2024-01-15', 100.00, 1),
+  (1, '2024-01-20', 150.00, 2),
+  (1, '2024-02-10', 200.00, 1),
+  (1, '2024-02-15', 75.00, 3),
+  (1, '2024-03-05', 300.00, 2);
+
+-- Выполняем запрос пользователя
+-- Проверяем, что результат содержит нужные колонки
+-- Проверяем, что данные сгруппированы по месяцам
+-- Проверяем, что есть агрегация выручки`,
     solution: `SELECT 
   DATE_TRUNC('month', date) as month,
   SUM(amount) as total_revenue,
@@ -77,7 +96,32 @@ if __name__ == "__main__":
     print("\\nОчищенные данные:")
     print(cleaned_df)`,
     tests: `# Тесты для Python скрипта
-# Проверяем корректность очистки данных`,
+# Проверяем корректность очистки данных
+import pandas as pd
+import numpy as np
+
+# Создаем тестовые данные
+data = {
+    'name': ['John', 'Jane', 'John', 'Bob', None],
+    'age': [25, 30, 25, 35, 40],
+    'city': ['New York', 'London', 'New York', 'Paris', 'Tokyo'],
+    'salary': [50000, 60000, 50000, 70000, None]
+}
+df = pd.DataFrame(data)
+
+# Тестируем функцию очистки
+cleaned_df = clean_data(df)
+
+# Проверяем, что дубликаты удалены
+assert len(cleaned_df) == 4, 'Дубликаты должны быть удалены'
+
+# Проверяем, что пропущенные значения заполнены
+assert cleaned_df['name'].isna().sum() == 0, 'Пропущенные значения в name должны быть заполнены'
+assert cleaned_df['salary'].isna().sum() == 0, 'Пропущенные значения в salary должны быть заполнены'
+
+# Проверяем, что возраст в разумных пределах
+assert (cleaned_df['age'] >= 18).all(), 'Возраст должен быть >= 18'
+assert (cleaned_df['age'] <= 100).all(), 'Возраст должен быть <= 100'`,
     solution: `import pandas as pd
 import numpy as np
 
@@ -180,7 +224,45 @@ if __name__ == "__main__":
     for key, value in metrics.items():
         print(f"{key}: {value}")`,
     tests: `# Тесты для расчета метрик
-# Проверяем корректность расчетов`,
+# Проверяем корректность расчетов
+import pandas as pd
+from datetime import datetime, timedelta
+
+# Создаем тестовые данные
+users_data = {
+    'user_id': [1, 2, 3, 4, 5],
+    'registration_date': ['2024-01-01', '2024-01-02', '2024-01-03', '2024-01-04', '2024-01-05']
+}
+users_df = pd.DataFrame(users_data)
+
+sessions_data = {
+    'user_id': [1, 1, 2, 2, 3, 4, 5],
+    'session_start': ['2024-01-01 10:00:00', '2024-01-02 11:00:00', '2024-01-02 12:00:00', '2024-01-03 13:00:00', '2024-01-03 14:00:00', '2024-01-04 15:00:00', '2024-01-05 16:00:00'],
+    'session_end': ['2024-01-01 10:30:00', '2024-01-02 11:45:00', '2024-01-02 12:30:00', '2024-01-03 13:45:00', '2024-01-03 14:30:00', '2024-01-04 15:45:00', '2024-01-05 16:30:00']
+}
+sessions_df = pd.DataFrame(sessions_data)
+
+orders_data = {
+    'user_id': [1, 2, 3],
+    'order_date': ['2024-01-01', '2024-01-02', '2024-01-03'],
+    'amount': [100, 200, 150]
+}
+orders_df = pd.DataFrame(orders_data)
+
+# Тестируем функцию расчета метрик
+metrics = calculate_metrics(users_df, sessions_df, orders_df)
+
+# Проверяем, что все метрики рассчитаны
+assert 'dau' in metrics, 'DAU должна быть рассчитана'
+assert 'retention_rate' in metrics, 'Retention Rate должна быть рассчитана'
+assert 'avg_session_duration' in metrics, 'Average Session Duration должна быть рассчитана'
+assert 'conversion_rate' in metrics, 'Conversion Rate должна быть рассчитана'
+
+# Проверяем, что метрики имеют разумные значения
+assert metrics['dau'] > 0, 'DAU должна быть больше 0'
+assert 0 <= metrics['retention_rate'] <= 100, 'Retention Rate должна быть в процентах'
+assert metrics['avg_session_duration'] > 0, 'Average Session Duration должна быть больше 0'
+assert 0 <= metrics['conversion_rate'] <= 100, 'Conversion Rate должна быть в процентах'`,
     solution: `import pandas as pd
 from datetime import datetime, timedelta
 
@@ -265,7 +347,13 @@ if __name__ == "__main__":
     A[Пользователь] --> B[API Gateway]
     %% TODO: Добавьте остальные компоненты`,
     tests: `# Тесты для Mermaid диаграммы
-# Проверяем корректность архитектуры`,
+# Проверяем корректность архитектуры
+# Проверяем, что диаграмма содержит основные компоненты
+assert 'graph' in userCode.lower(), 'Диаграмма должна начинаться с graph'
+assert 'api gateway' in userCode.lower() or 'apigateway' in userCode.lower(), 'Должен быть API Gateway'
+assert 'database' in userCode.lower() or 'db' in userCode.lower(), 'Должна быть база данных'
+assert 'user' in userCode.lower(), 'Должен быть пользователь'
+assert 'service' in userCode.lower(), 'Должны быть сервисы'`,
     solution: `graph TD
     A[Пользователь] --> B[API Gateway]
     B --> C[Auth Service]
@@ -345,7 +433,35 @@ if __name__ == "__main__":
     
     analyze_ab_test(df)`,
     tests: `# Тесты для A/B тестирования
-# Проверяем корректность статистического анализа`,
+# Проверяем корректность статистического анализа
+import pandas as pd
+import numpy as np
+
+# Создаем тестовые данные A/B теста
+data = {
+    'group': ['A', 'B'] * 100,
+    'conversion': [0, 1, 0, 1, 0, 1, 0, 1, 0, 1] * 20,
+    'revenue': np.random.normal([100, 110], 20, 200)
+}
+df = pd.DataFrame(data)
+
+# Тестируем функцию анализа A/B теста
+results = analyze_ab_test(df)
+
+# Проверяем, что функция возвращает результаты
+assert isinstance(results, dict), 'Функция должна возвращать словарь с результатами'
+
+# Проверяем, что есть основные метрики
+assert 'conversion_a' in results, 'Должна быть конверсия группы A'
+assert 'conversion_b' in results, 'Должна быть конверсия группы B'
+assert 'p_value_conversion' in results, 'Должен быть p-value для конверсии'
+assert 'p_value_revenue' in results, 'Должен быть p-value для выручки'
+
+# Проверяем, что значения в разумных пределах
+assert 0 <= results['conversion_a'] <= 1, 'Конверсия группы A должна быть от 0 до 1'
+assert 0 <= results['conversion_b'] <= 1, 'Конверсия группы B должна быть от 0 до 1'
+assert 0 <= results['p_value_conversion'] <= 1, 'P-value для конверсии должен быть от 0 до 1'
+assert 0 <= results['p_value_revenue'] <= 1, 'P-value для выручки должен быть от 0 до 1'`,
     solution: `import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -464,7 +580,44 @@ if __name__ == "__main__":
     
     cohort_analysis(users, orders)`,
     tests: `# Тесты для когортного анализа
-# Проверяем корректность расчетов`,
+# Проверяем корректность расчетов
+import pandas as pd
+import numpy as np
+
+# Создаем тестовые данные
+users_data = {
+    'user_id': range(1, 101),
+    'registration_date': pd.date_range('2023-01-01', periods=100, freq='D')
+}
+users_df = pd.DataFrame(users_data)
+
+orders_data = {
+    'user_id': np.random.randint(1, 101, 200),
+    'order_date': pd.date_range('2023-01-01', periods=200, freq='D')
+}
+orders_df = pd.DataFrame(orders_data)
+
+# Тестируем функцию когортного анализа
+cohort_table = cohort_analysis(users_df, orders_df)
+
+# Проверяем, что функция возвращает результат
+assert cohort_table is not None, 'Функция должна возвращать когортную таблицу'
+
+# Проверяем, что это DataFrame
+assert isinstance(cohort_table, pd.DataFrame), 'Результат должен быть DataFrame'
+
+# Проверяем, что есть колонки с месяцами
+assert len(cohort_table.columns) > 0, 'Должны быть колонки с месяцами'
+
+# Проверяем, что есть строки с когортами
+assert len(cohort_table.index) > 0, 'Должны быть строки с когортами'
+
+# Проверяем, что значения в разумных пределах (0-100 для retention rate)
+for col in cohort_table.columns:
+    for idx in cohort_table.index:
+        value = cohort_table.loc[idx, col]
+        if pd.notna(value):
+            assert 0 <= value <= 100, f'Retention rate должен быть от 0 до 100, получен {value}'`,
     solution: `import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -577,7 +730,37 @@ if __name__ == "__main__":
     
     create_ml_pipeline()`,
     tests: `# Тесты для ML pipeline
-# Проверяем корректность модели`,
+# Проверяем корректность модели
+import pandas as pd
+import numpy as np
+
+# Создаем тестовые данные
+data = {
+    'age': np.random.randint(18, 80, 100),
+    'income': np.random.normal(50000, 15000, 100),
+    'tenure': np.random.randint(0, 60, 100),
+    'satisfaction': np.random.uniform(1, 5, 100),
+    'churned': np.random.binomial(1, 0.2, 100)
+}
+df = pd.DataFrame(data)
+
+# Тестируем функцию создания ML pipeline
+pipeline = create_ml_pipeline()
+
+# Проверяем, что функция возвращает pipeline
+assert pipeline is not None, 'Функция должна возвращать pipeline'
+
+# Проверяем, что это sklearn Pipeline
+from sklearn.pipeline import Pipeline
+assert isinstance(pipeline, Pipeline), 'Результат должен быть sklearn Pipeline'
+
+# Проверяем, что pipeline имеет шаги
+assert len(pipeline.steps) > 0, 'Pipeline должен иметь шаги'
+
+# Проверяем, что есть шаги для предобработки и модели
+step_names = [step[0] for step in pipeline.steps]
+assert any('scaler' in name.lower() or 'preprocess' in name.lower() for name in step_names), 'Должен быть шаг предобработки'
+assert any('model' in name.lower() or 'classifier' in name.lower() for name in step_names), 'Должен быть шаг модели'`,
     solution: `import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split, cross_val_score

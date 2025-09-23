@@ -71,3 +71,245 @@
     color: #f9fafb !important;
   }
 }
+
+/* Print/PDF styles */
+@media print {
+  * {
+    color: #000000 !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+  
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --muted: 0 0% 95%;
+    --muted-foreground: 0 0% 20%;
+    --border: 0 0% 80%;
+  }
+  
+  /* Ensure content fits on page */
+  .print\\:h-auto {
+    height: auto !important;
+  }
+  
+  .print\\:overflow-visible {
+    overflow: visible !important;
+  }
+  
+  /* Hide elements that shouldn't be printed */
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Hide header and footer completely */
+  header, footer {
+    display: none !important;
+  }
+  
+  /* Ensure text is dark and readable */
+  h1, h2, h3, h4, h5, h6, p, span, div, td, th {
+    color: #000000 !important;
+  }
+  
+  /* Card backgrounds should be white */
+  .bg-card, .bg-background, .bg-muted {
+    background-color: #ffffff !important;
+  }
+  
+  /* Borders should be visible */
+  .border, .border-t, .border-b, .border-l, .border-r {
+    border-color: #000000 !important;
+  }
+  
+  /* Page layout */
+  @page {
+    margin: 0.75in;
+    size: A4;
+    @top-left { content: ""; }
+    @top-right { content: ""; }
+    @bottom-left { content: ""; }
+    @bottom-right { content: ""; }
+    @bottom-center { content: counter(page) " / " counter(pages); }
+  }
+  
+  /* Ensure content doesn't overflow */
+  .container {
+    max-width: none !important;
+    width: 100% !important;
+  }
+  
+  /* Remove shadows and effects for print */
+  .shadow, .shadow-lg, .shadow-md, .shadow-sm {
+    box-shadow: none !important;
+  }
+  
+  /* Ensure proper spacing */
+  .space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+  
+  .space-y-2 > * + * {
+    margin-top: 0.5rem !important;
+  }
+  
+  /* Make sure cards are properly sized */
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  /* Hide form elements in print mode */
+  .print\\:hidden {
+    display: none !important;
+  }
+  
+  /* Show text-only content in print mode */
+  .print\\:block {
+    display: block !important;
+  }
+  
+  /* Text styling for print */
+  .print\\:text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+  
+  .print\\:whitespace-pre-wrap {
+    white-space: pre-wrap !important;
+  }
+  
+  .print\\:min-h-\\[100px\\] {
+    min-height: 100px !important;
+  }
+  
+  .print\\:border {
+    border: 1px solid #000000 !important;
+  }
+  
+  .print\\:border-gray-300 {
+    border-color: #d1d5db !important;
+  }
+  
+  .print\\:p-2 {
+    padding: 0.5rem !important;
+  }
+  
+  /* Clear input values for print */
+  input[type="date"] {
+    color: transparent !important;
+    text-shadow: 0 0 0 #000000 !important;
+  }
+  
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    display: none !important;
+  }
+  
+  /* Hide input borders and backgrounds for print */
+  .print\\:bg-transparent {
+    background: transparent !important;
+  }
+  
+  .print\\:border-none {
+    border: none !important;
+  }
+  
+  .print\\:shadow-none {
+    box-shadow: none !important;
+  }
+  
+  /* Show only text content in form fields */
+  .print\\:text-only {
+    border: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  .print\\:text-only:before {
+    content: attr(data-value);
+    display: block !important;
+    color: #000000 !important;
+  }
+}
+
+/* Print mode styles for PDF generation */
+.print-mode {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.print-mode * {
+  color: #000000 !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+.print-mode .print\\:hidden {
+  display: none !important;
+}
+
+.print-mode .print\\:block {
+  display: block !important;
+}
+
+.print-mode .print\\:text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.print-mode .print\\:whitespace-pre-wrap {
+  white-space: pre-wrap !important;
+}
+
+.print-mode .print\\:min-h-\\[100px\\] {
+  min-height: 100px !important;
+}
+
+.print-mode .print\\:border {
+  border: 1px solid #000000 !important;
+}
+
+.print-mode .print\\:border-gray-300 {
+  border-color: #d1d5db !important;
+}
+
+.print-mode .print\\:p-2 {
+  padding: 0.5rem !important;
+}
+
+.print-mode .card {
+  border: 1px solid #000000 !important;
+  border-radius: 0.5rem !important;
+  background: #ffffff !important;
+}
+
+.print-mode .card-header {
+  padding: 1rem 1rem 0 !important;
+}
+
+.print-mode .card-title {
+  font-size: 1.25rem !important;
+  font-weight: 600 !important;
+  color: #000000 !important;
+  margin: 0 !important;
+}
+
+.print-mode .card-content {
+  padding: 1rem !important;
+}
+
+.print-mode .bg-muted {
+  background-color: #f5f5f5 !important;
+}
+
+.print-mode .text-muted-foreground {
+  color: #6b7280 !important;
+}

@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react'
-import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw, ChevronDown, Clock, AlertTriangle } from 'lucide-react'
+import { CheckCircle, XCircle, Star, Send, Timer, FileText, Play, Pause, RotateCcw, ChevronDown, Clock, AlertTriangle, Trash2 } from 'lucide-react'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Button } from '@/shared/ui/button'
@@ -246,7 +246,35 @@ export default function Solve(){
     {/* Tasks List */}
     <div className="lg:col-span-1 h-full min-h-0">
       <div className="bg-card border rounded-lg p-6 h-full flex flex-col min-h-0">
-        <h2 className="text-xl font-semibold mb-4">Задачи — {prof}</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-semibold">Задачи — {prof}</h2>
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={()=>{
+              // Очищаем все данные об оценках
+              localStorage.removeItem("bridge.taskScores.v1"); // Оценки задач
+              localStorage.removeItem("bridge.theoryScores.v1"); // Оценки теории
+              localStorage.removeItem("solutions.v4"); // Решения задач
+              
+              // Очищаем черновики теории для всех профессий
+              const professions = ['frontend', 'backend-java', 'analyst', 'devops'];
+              professions.forEach(prof => {
+                localStorage.removeItem(`theory.drafts.v1.${prof}`);
+              });
+              
+              // Показываем уведомление
+              toast.success("Все оценки сброшены", "Очищены оценки задач, теории и решения");
+              
+              // Перезагружаем страницу
+              setTimeout(() => location.reload(), 1000);
+            }}
+            className="inline-flex items-center gap-2"
+          >
+            <Trash2 className="h-4 w-4" />
+            Сброс оценок
+          </Button>
+        </div>
         
         {/* Level Filter */}
         <div className="flex flex-wrap gap-2 mb-4">
@@ -408,7 +436,7 @@ export default function Solve(){
                 height="0px"
                 placeholder="Введите ваш код здесь..."
                 onFullscreenChange={()=>{ /* no-op */ }}
-                onRun={taskLanguage==='java' ? undefined : run}
+                onRun={run}
                 onResetTask={resetTask}
                 onResetTests={resetTests}
                 consoleOutput={logs}
@@ -417,41 +445,6 @@ export default function Solve(){
                 timerStatus={taskTimerRunning ? 'running' : 'paused'}
               />
 
-              {taskLanguage==='java' && (
-                <div className="mt-4 p-3 border rounded space-y-2">
-                  <div className="text-sm text-muted-foreground">
-                    Проверка Java выполняется локально: скачайте/запустите тесты у себя (JUnit) и вставьте сюда итоговый вывод.
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button variant="outline" size="sm" onClick={()=>{
-                      const txt = `// Временный шаблон. Запустите локально JUnit и вставьте строку вида\n// Tests run: X, Failures: 0, Errors: 0\n`
-                      const blob = new Blob([txt], {type:'text/plain'})
-                      const url = URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download='java-tests-readme.txt'; a.click(); URL.revokeObjectURL(url)
-                    }}>Скачать инструкции</Button>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Вывод тестов:</label>
-                    <Textarea value={(t[task.id]?.comment || '') as any} onChange={e=> setT(a=>({...a,[task.id]:{...(a[task.id]||{}), comment:e.target.value}}))} placeholder="Пример: Tests run: 5, Failures: 0, Errors: 0" />
-                    <div className="mt-2">
-                      <Button size="sm" onClick={()=>{
-                        const log = (t[task.id]?.comment || '') as string
-                        const m = /Tests\s+run:\s*(\d+)\s*,\s*Failures:\s*(\d+)(?:\s*,\s*Errors:\s*(\d+))?/i.exec(log)
-                        let results:any[]=[]
-                        if(m){
-                          const total = Number(m[1]||0)
-                          const failures = Number(m[2]||0)
-                          const errors = Number(m[3]||0)
-                          const ok = total>0 && failures===0 && errors===0
-                          results=[{ok, message: ok? `JUnit: все ${total} тестов пройдены` : `JUnit: не пройдены (total=${total}, failures=${failures}, errors=${errors})` }]
-                        }else{
-                          results=[{ok:false, message:'Не удалось распознать вывод JUnit. Убедитесь, что вставили строку вида "Tests run: X, Failures: Y, Errors: Z"'}]
-                        }
-                        setT(a=>({...a,[task.id]:{...(a[task.id]||{}), code:a[task.id]?.code??code, lastResult:results}}))
-                      }}>Проверить результат</Button>
-                    </div>
-                  </div>
-                </div>
-              )}
               
               {/* Reference Solution for Interviewer */}
               {role==='interviewer' && task.solution && (

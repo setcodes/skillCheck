@@ -156,8 +156,6 @@ export default function MockPage(){
     setFinishOpen(false)
     toast.success("Сессия завершена", "Откройте отчёт справа или распечатайте")
   }
-  const next=()=> setS(prev=> prev? ({...prev, currentIndex: Math.min(prev.items.length-1, prev.currentIndex+1)}) : prev)
-  const prev=()=> setS(prev=> prev? ({...prev, currentIndex: Math.max(0, prev.currentIndex-1)}) : prev)
 
   if(!s){
     return (
@@ -278,7 +276,7 @@ export default function MockPage(){
               </Popover>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="flex-1 flex flex-col space-y-3 min-h-0">
             {/* Timer dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -315,7 +313,7 @@ export default function MockPage(){
             </DropdownMenu>
 
             {/* Items */}
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+            <div className="space-y-2 flex-1 min-h-0 overflow-y-auto pr-1">
               {s.items.map((it,idx)=>{
                 const active = idx===s.currentIndex
                 const done = it.type==='task' ? (it as MockTaskItem).autoScore!=null : (it as MockTheoryItem).answerDraft!=null
@@ -355,20 +353,13 @@ export default function MockPage(){
               })}
             </div>
 
-            {/* Actions */}
-            {!isReview && (
-              <div className="flex flex-wrap gap-2 pt-2">
-                <Button variant="outline" onClick={prev} disabled={s.currentIndex===0}>Назад</Button>
-                <Button variant="outline" onClick={next} disabled={s.currentIndex===s.items.length-1}>Далее</Button>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Main */}
-      <div className="lg:col-span-2 h-full min-h-0">
-        <Card className="h-full flex flex-col">
+      <div className="lg:col-span-2 h-full min-h-0 flex flex-col">
+        <Card className="flex-1 flex flex-col min-h-0">
           <CardHeader>
             {isReview && (
               (()=>{

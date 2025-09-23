@@ -16,6 +16,7 @@ type Row={prof:string;level:string;taskId:string;title:string;score:number;comme
 type TheoryRow={prof:string;questionId:string;title:string;category:string;difficulty:number;score:number;comment:string}
 export default function Interview(){
   const {prof}=useApp()
+  const {toast} = useToast()
   const[name,setName]=useState(localStorage.getItem("cand.name")||"")
   const[pos,setPos]=useState(localStorage.getItem("cand.pos")||"")
   const[note,setNote]=useState(localStorage.getItem("cand.note")||"")
@@ -24,13 +25,13 @@ export default function Interview(){
   const[timeSpent,setTimeSpent]=useState(localStorage.getItem("cand.timeSpent")||"")
   const[interviewers,setInterviewers]=useState<string[]>(()=>{ try { const v=localStorage.getItem("cand.interviewers"); if(!v) return []; const p=JSON.parse(v); return Array.isArray(p)? p.filter(x=>typeof x==='string'): [] } catch { return [] } })
   const[newInterviewer,setNewInterviewer]=useState("")
+  
   const bridge=JSON.parse(localStorage.getItem("bridge.taskScores.v1")||"{}") as Record<string,Row>
   const rows=useMemo(()=>Object.values(bridge).filter(r=>r.prof===prof),[prof,bridge])
   const tBridge=JSON.parse(localStorage.getItem("bridge.theoryScores.v1")||"{}") as Record<string,TheoryRow>
   const tRows=useMemo(()=>Object.values(tBridge).filter(r=>r.prof===prof),[prof,tBridge])
   const final=rows.length? (rows.reduce((s,r)=>s+(r.score||0),0)/(rows.length*5))*100:0
   const level=final>=85?"Senior":final>=65?"Middle":"Junior-"
-  const {toast}=useToast()
   const persist=()=>{
     localStorage.setItem("cand.name",name);
     localStorage.setItem("cand.pos",pos);
@@ -40,6 +41,7 @@ export default function Interview(){
     localStorage.setItem("cand.interviewers",JSON.stringify(interviewers));
     toast.success("Сохранено", "Данные кандидата сохранены.")
   }
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 print:grid-cols-1 gap-6">
       {/* Instructions */}
@@ -55,22 +57,39 @@ export default function Interview(){
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col md:flex-row md:flex-nowrap gap-3">
-              <Button variant="outline" onClick={persist} className="inline-flex items-center gap-2 w-full md:w-auto">
+            <div className="flex flex-col gap-3">
+              <Button variant="outline" onClick={persist} className="inline-flex items-center gap-2 w-full">
                 <Save className="h-4 w-4" />
                 Сохранить
               </Button>
-              <Button variant="outline" onClick={()=>window.print()} className="inline-flex items-center gap-2 w-full md:w-auto">
+              <Button variant="outline" onClick={()=>window.print()} className="inline-flex items-center gap-2 w-full">
                 <Printer className="h-4 w-4" />
-                Печать / PDF
+                Печать
               </Button>
               <Button 
                 variant="outline" 
-                onClick={()=>{localStorage.removeItem("bridge.taskScores.v1"); localStorage.removeItem("bridge.theoryScores.v1"); location.reload()}}
-                className="inline-flex items-center gap-2 w-full md:w-auto"
+                onClick={()=>{
+                  // Очищаем все данные об оценках
+                  localStorage.removeItem("bridge.taskScores.v1"); // Оценки задач
+                  localStorage.removeItem("bridge.theoryScores.v1"); // Оценки теории
+                  localStorage.removeItem("solutions.v4"); // Решения задач
+                  
+                  // Очищаем черновики теории для всех профессий
+                  const professions = ['frontend', 'backend-java', 'analyst', 'devops'];
+                  professions.forEach(prof => {
+                    localStorage.removeItem(`theory.drafts.v1.${prof}`);
+                  });
+                  
+                  // Показываем уведомление
+                  toast.success("Все оценки сброшены", "Очищены оценки задач, теории и решения");
+                  
+                  // Перезагружаем страницу
+                  setTimeout(() => location.reload(), 1000);
+                }}
+                className="inline-flex items-center gap-2 w-full"
               >
                 <Trash2 className="h-4 w-4" />
-                Сброс оценок
+                Сброс всех оценок
               </Button>
             </div>
           </CardContent>
@@ -81,92 +100,123 @@ export default function Interview(){
       <div className="lg:col-span-2 print:col-span-1">
         <Card>
           <CardHeader>
-            <CardTitle>Отчёт</CardTitle>
+            <CardTitle>Отчет по результатам собеседования</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto print:max-h-none print:overflow-visible">
             {/* Meta: Date, Time, Interviewers */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Дата интервью:</label>
-                <DatePicker 
-                  value={date} 
-                  onChange={setDate}
-                  placeholder="Выберите дату интервью"
-                />
+                <div className="print:hidden">
+                  <Input 
+                    type="date" 
+                    value={date} 
+                    onChange={e=>setDate(e.target.value)}
+                    placeholder="Выберите дату интервью"
+                  />
+                </div>
+                <div className="hidden print:block print:text-sm" data-value={date || "Не указано"}>
+                  {date || "Не указано"}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="time-picker" className="px-1">
                   Время (чч:мм)
                 </Label>
-                <Input 
-                  id="time-picker"
-                  type="time" 
-                  value={timeSpent} 
-                  onChange={e => setTimeSpent(e.target.value)}
-                  step="1"
-                  className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
-                />
+                <div className="print:hidden">
+                  <Input 
+                    id="time-picker"
+                    type="time" 
+                    value={timeSpent} 
+                    onChange={e => setTimeSpent(e.target.value)}
+                    step="1"
+                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
+                  />
+                </div>
+                <div className="hidden print:block print:text-sm" data-value={timeSpent || "Не указано"}>
+                  {timeSpent || "Не указано"}
+                </div>
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium">Интервьюеры:</label>
-                <div className="flex gap-2">
-                  <Input placeholder="Имя интервьюера" value={newInterviewer} onChange={e=>setNewInterviewer(e.target.value)} className="flex-1" />
-                  <Button type="button" onClick={()=>{ const v=newInterviewer.trim(); if(!v) return; setInterviewers(a=>Array.from(new Set([...a, v]))); setNewInterviewer("") }}>Добавить</Button>
-                </div>
-                {interviewers.length>0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {interviewers.map((p,i)=>(
-                      <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded border text-sm">
-                        {p}
-                        <button className="text-muted-foreground hover:text-foreground" onClick={()=> setInterviewers(arr=>arr.filter((_,idx)=>idx!==i))}>×</button>
-                      </span>
-                    ))}
+                <div className="print:hidden">
+                  <div className="flex gap-2">
+                    <Input placeholder="Имя интервьюера" value={newInterviewer} onChange={e=>setNewInterviewer(e.target.value)} className="flex-1" />
+                    <Button type="button" onClick={()=>{ const v=newInterviewer.trim(); if(!v) return; setInterviewers(a=>Array.from(new Set([...a, v]))); setNewInterviewer("") }}>Добавить</Button>
                   </div>
-                )}
+                  {interviewers.length>0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {interviewers.map((p,i)=>(
+                        <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded border text-sm">
+                          {p}
+                          <button className="text-muted-foreground hover:text-foreground" onClick={()=> setInterviewers(arr=>arr.filter((_,idx)=>idx!==i))}>×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="hidden print:block print:text-sm" data-value={interviewers.length > 0 ? interviewers.join(", ") : "Не указано"}>
+                  {interviewers.length > 0 ? interviewers.join(", ") : "Не указано"}
+                </div>
               </div>
             </div>
             {/* Candidate Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Кандидат:</label>
-                <Input 
-                  value={name} 
-                  onChange={e=>setName(e.target.value)}
-                  placeholder="Имя кандидата"
-                />
+                <div className="print:hidden">
+                  <Input 
+                    value={name} 
+                    onChange={e=>setName(e.target.value)}
+                    placeholder="Имя кандидата"
+                  />
+                </div>
+                <div className="hidden print:block print:text-sm" data-value={name || "Не указано"}>
+                  {name || "Не указано"}
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Позиция:</label>
-                <Select value={pos} onValueChange={setPos}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Выберите позицию" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROFESSIONS.map((profession) => (
-                      <SelectItem key={profession.id} value={profession.id}>
-                        <div className="flex items-center gap-2">
-                          <span className={profession.color}>
-                            {profession.title}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            {profession.subtitle}
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="print:hidden">
+                  <Select value={pos} onValueChange={setPos}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Выберите позицию" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PROFESSIONS.map((profession) => (
+                        <SelectItem key={profession.id} value={profession.id}>
+                          <div className="flex items-center gap-2">
+                            <span className={profession.color}>
+                              {profession.title}
+                            </span>
+                            <span className="text-muted-foreground text-sm">
+                              {profession.subtitle}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="hidden print:block print:text-sm" data-value={pos ? PROFESSIONS.find(p => p.id === pos)?.title || pos : "Не указано"}>
+                  {pos ? PROFESSIONS.find(p => p.id === pos)?.title || pos : "Не указано"}
+                </div>
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium">Общая обратная связь:</label>
-              <Textarea 
-                value={note} 
-                onChange={e=>setNote(e.target.value)}
-                placeholder="Общие комментарии по кандидату..."
-                className="min-h-[100px]"
-              />
+              <div className="print:hidden">
+                <Textarea 
+                  value={note} 
+                  onChange={e=>setNote(e.target.value)}
+                  placeholder="Общие комментарии по кандидату..."
+                  className="min-h-[100px]"
+                />
+              </div>
+              <div className="hidden print:block print:text-sm print:whitespace-pre-wrap print:min-h-[100px] print:border print:border-gray-300 print:p-2" data-value={note || "Не указано"}>
+                {note || "Не указано"}
+              </div>
             </div>
 
             {/* Results Summary */}
