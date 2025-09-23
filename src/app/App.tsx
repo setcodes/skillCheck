@@ -135,7 +135,7 @@ function AppContent() {
   }, [intMode, intRunning, intLimitSec, intValueSec])
 
   return (
-    <div className="h-screen bg-background overflow-hidden flex flex-col justify-between print:h-auto print:overflow-visible">
+    <div className="h-screen bg-background flex flex-col justify-between print:h-auto print:overflow-visible">
       {/* Header */}
       <header className="border-b bg-card relative z-10 print:hidden">
             <div className="container mx-auto px-4 py-4">
@@ -420,7 +420,7 @@ function AppContent() {
 
           {/* Content */}
           <main className="py-8 flex-1 overflow-hidden">
-            <div className="container mx-auto px-4 h-full">
+            <div className="container mx-auto px-4 h-full min-h-0">
               {tab==='solve' && <SolvePage />}
               {tab==='interview' && role==='interviewer' && <InterviewPage />}
               {tab==='theory' && <TheoryPage />}

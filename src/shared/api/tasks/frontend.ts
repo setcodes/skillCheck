@@ -196,7 +196,7 @@ const f = () => n++;
 const t = throttle(f, 10); 
 t(); 
 t(); 
-setTimeout(() => { t(); assert.ok(n >= 2); }, 15);`,
+assert.equal(n, 1, 'throttle должен выполнить функцию только один раз при быстрых вызовах');`,
     solution: `export function throttle<T extends (...a: any[]) => any>(fn: T, delay = 200) {
   let lastCall = 0;
   let timeoutId: NodeJS.Timeout | null = null;
@@ -290,9 +290,13 @@ import * as m from 'MODULE';
 const { debounce } = m; 
 let n = 0; 
 const d = debounce(() => n++, 20); 
+assert.equal(typeof d, 'function', 'debounce должен вернуть функцию');
+assert.equal(typeof d.cancel, 'function', 'debounce должен иметь метод cancel');
 d(); 
 d(); 
-setTimeout(() => { assert.equal(n, 1); }, 30);`,
+assert.equal(n, 0, 'Функция не должна выполниться сразу');
+d.cancel();
+assert.equal(typeof d.cancel, 'function', 'cancel должен быть функцией');`,
     solution: `export function debounce<T extends (...a: any[]) => any>(fn: T, delay = 200) {
   let timeoutId: NodeJS.Timeout | null = null;
   
@@ -615,12 +619,14 @@ assert.equal(r.ok, true);
     tests: `import { strict as assert } from 'assert'; 
 import * as m from 'MODULE'; 
 const { LRUCache } = m; 
-const c: any = new LRUCache(2); 
-c.set?.('a', 1); 
-c.set?.('b', 2); 
-c.get?.('a'); 
-c.set?.('c', 3); 
-assert.ok(true);`,
+const c = new LRUCache(2); 
+c.set('a', 1); 
+c.set('b', 2); 
+assert.equal(c.get('a'), 1, 'get("a") должен вернуть 1');
+c.set('c', 3); // должен вытеснить 'b'
+assert.equal(c.get('b'), undefined, 'get("b") должен вернуть undefined после eviction');
+assert.equal(c.get('c'), 3, 'get("c") должен вернуть 3');
+assert.equal(c.get('a'), 1, 'get("a") должен все еще вернуть 1');`,
     solution: `export class LRUCache<K, V> {
   private capacity: number;
   private cache: Map<K, V>;

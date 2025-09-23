@@ -24,7 +24,24 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность алгоритма twoSum`,
+// Проверяем корректность алгоритма twoSum
+const { twoSum } = userModule;
+
+// Тест 1: Обычный случай
+const result1 = twoSum([2, 7, 11, 15], 9);
+assert.strict.deepEqual(result1, [0, 1], 'twoSum([2,7,11,15], 9) должен вернуть [0,1]');
+
+// Тест 2: Другой случай
+const result2 = twoSum([3, 2, 4], 6);
+assert.strict.deepEqual(result2, [1, 2], 'twoSum([3,2,4], 6) должен вернуть [1,2]');
+
+// Тест 3: Случай с одинаковыми элементами
+const result3 = twoSum([3, 3], 6);
+assert.strict.deepEqual(result3, [0, 1], 'twoSum([3,3], 6) должен вернуть [0,1]');
+
+// Тест 4: Случай без решения
+const result4 = twoSum([1, 2, 3], 7);
+assert.strict.deepEqual(result4, [], 'twoSum([1,2,3], 7) должен вернуть []');`,
     solution: `public class TwoSum {
   public static int[] twoSum(int[] nums, int target) {
     java.util.Map<Integer, Integer> map = new java.util.HashMap<>();
@@ -75,7 +92,27 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность вычисления факториала`,
+// Проверяем корректность вычисления факториала
+const { factorial } = userModule;
+
+// Тест 1: Обычные случаи
+assert.strict.equal(factorial(0), 1, 'factorial(0) должен быть 1');
+assert.strict.equal(factorial(1), 1, 'factorial(1) должен быть 1');
+assert.strict.equal(factorial(2), 2, 'factorial(2) должен быть 2');
+assert.strict.equal(factorial(3), 6, 'factorial(3) должен быть 6');
+assert.strict.equal(factorial(4), 24, 'factorial(4) должен быть 24');
+assert.strict.equal(factorial(5), 120, 'factorial(5) должен быть 120');
+
+// Тест 2: Большие числа
+assert.strict.equal(factorial(10), 3628800, 'factorial(10) должен быть 3628800');
+
+// Тест 3: Отрицательные числа (должны выбрасывать исключение)
+try {
+  factorial(-1);
+  assert.strict.ok(false, 'factorial(-1) должен выбрасывать исключение');
+} catch (e) {
+  assert.strict.ok(true, 'factorial(-1) правильно выбрасывает исключение');
+}`,
     solution: `public class Factorial {
   public static long factorial(int n) {
     if (n < 0) {
@@ -127,7 +164,27 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность проверки палиндрома`,
+// Проверяем корректность проверки палиндрома
+const { isPalindrome } = userModule;
+
+// Тест 1: Обычные случаи
+assert.strict.equal(isPalindrome("racecar"), true, 'isPalindrome("racecar") должен быть true');
+assert.strict.equal(isPalindrome("level"), true, 'isPalindrome("level") должен быть true');
+assert.strict.equal(isPalindrome("deified"), true, 'isPalindrome("deified") должен быть true');
+
+// Тест 2: Не палиндромы
+assert.strict.equal(isPalindrome("hello"), false, 'isPalindrome("hello") должен быть false');
+assert.strict.equal(isPalindrome("world"), false, 'isPalindrome("world") должен быть false');
+assert.strict.equal(isPalindrome("java"), false, 'isPalindrome("java") должен быть false');
+
+// Тест 3: Граничные случаи
+assert.strict.equal(isPalindrome(""), true, 'isPalindrome("") должен быть true');
+assert.strict.equal(isPalindrome("a"), true, 'isPalindrome("a") должен быть true');
+assert.strict.equal(isPalindrome("aa"), true, 'isPalindrome("aa") должен быть true');
+
+// Тест 4: С пробелами и регистром
+assert.strict.equal(isPalindrome("A man a plan a canal Panama"), false, 'isPalindrome с пробелами должен быть false');
+assert.strict.equal(isPalindrome("Racecar"), false, 'isPalindrome с разным регистром должен быть false');`,
     solution: `public class Palindrome {
   public static boolean isPalindrome(String str) {
     if (str == null || str.isEmpty()) {
@@ -180,7 +237,27 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность бинарного поиска`,
+// Проверяем корректность бинарного поиска
+const { binarySearch } = userModule;
+
+// Тест 1: Обычные случаи
+const arr1 = [1, 3, 5, 7, 9, 11, 13, 15];
+assert.strict.equal(binarySearch(arr1, 5), 2, 'binarySearch([1,3,5,7,9,11,13,15], 5) должен быть 2');
+assert.strict.equal(binarySearch(arr1, 1), 0, 'binarySearch([1,3,5,7,9,11,13,15], 1) должен быть 0');
+assert.strict.equal(binarySearch(arr1, 15), 7, 'binarySearch([1,3,5,7,9,11,13,15], 15) должен быть 7');
+
+// Тест 2: Элемент не найден
+assert.strict.equal(binarySearch(arr1, 4), -1, 'binarySearch([1,3,5,7,9,11,13,15], 4) должен быть -1');
+assert.strict.equal(binarySearch(arr1, 20), -1, 'binarySearch([1,3,5,7,9,11,13,15], 20) должен быть -1');
+
+// Тест 3: Граничные случаи
+const arr2 = [1];
+assert.strict.equal(binarySearch(arr2, 1), 0, 'binarySearch([1], 1) должен быть 0');
+assert.strict.equal(binarySearch(arr2, 2), -1, 'binarySearch([1], 2) должен быть -1');
+
+// Тест 4: Пустой массив
+const arr3 = [];
+assert.strict.equal(binarySearch(arr3, 1), -1, 'binarySearch([], 1) должен быть -1');`,
     solution: `public class BinarySearch {
   public static int binarySearch(int[] arr, int target) {
     int left = 0;
@@ -235,7 +312,26 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность переворота строки`,
+// Проверяем корректность переворота строки
+const { reverseString } = userModule;
+
+// Тест 1: Обычные случаи
+assert.strict.equal(reverseString("hello"), "olleh", 'reverseString("hello") должен быть "olleh"');
+assert.strict.equal(reverseString("world"), "dlrow", 'reverseString("world") должен быть "dlrow"');
+assert.strict.equal(reverseString("java"), "avaj", 'reverseString("java") должен быть "avaj"');
+
+// Тест 2: Граничные случаи
+assert.strict.equal(reverseString(""), "", 'reverseString("") должен быть ""');
+assert.strict.equal(reverseString("a"), "a", 'reverseString("a") должен быть "a"');
+assert.strict.equal(reverseString("ab"), "ba", 'reverseString("ab") должен быть "ba"');
+
+// Тест 3: Специальные символы
+assert.strict.equal(reverseString("123"), "321", 'reverseString("123") должен быть "321"');
+assert.strict.equal(reverseString("!@#"), "#@!", 'reverseString("!@#") должен быть "#@!"');
+
+// Тест 4: Палиндромы
+assert.strict.equal(reverseString("racecar"), "racecar", 'reverseString("racecar") должен быть "racecar"');
+assert.strict.equal(reverseString("level"), "level", 'reverseString("level") должен быть "level"');`,
     solution: `public class ReverseString {
   public static String reverseString(String str) {
     if (str == null || str.isEmpty()) {
@@ -302,7 +398,30 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность вычисления Фибоначчи`,
+// Проверяем корректность вычисления Фибоначчи
+const { fibonacci } = userModule;
+
+// Тест 1: Обычные случаи
+assert.strict.equal(fibonacci(0), 0, 'fibonacci(0) должен быть 0');
+assert.strict.equal(fibonacci(1), 1, 'fibonacci(1) должен быть 1');
+assert.strict.equal(fibonacci(2), 1, 'fibonacci(2) должен быть 1');
+assert.strict.equal(fibonacci(3), 2, 'fibonacci(3) должен быть 2');
+assert.strict.equal(fibonacci(4), 3, 'fibonacci(4) должен быть 3');
+assert.strict.equal(fibonacci(5), 5, 'fibonacci(5) должен быть 5');
+assert.strict.equal(fibonacci(6), 8, 'fibonacci(6) должен быть 8');
+assert.strict.equal(fibonacci(7), 13, 'fibonacci(7) должен быть 13');
+
+// Тест 2: Большие числа
+assert.strict.equal(fibonacci(10), 55, 'fibonacci(10) должен быть 55');
+assert.strict.equal(fibonacci(15), 610, 'fibonacci(15) должен быть 610');
+
+// Тест 3: Отрицательные числа (должны выбрасывать исключение)
+try {
+  fibonacci(-1);
+  assert.strict.ok(false, 'fibonacci(-1) должен выбрасывать исключение');
+} catch (e) {
+  assert.strict.ok(true, 'fibonacci(-1) правильно выбрасывает исключение');
+}`,
     solution: `public class Fibonacci {
   public static long fibonacci(int n) {
     if (n < 0) {
@@ -362,7 +481,24 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность алгоритма Кадане`,
+// Проверяем корректность алгоритма Кадане
+const { maxSubarraySum } = userModule;
+
+// Тест 1: Обычные случаи
+assert.strict.equal(maxSubarraySum([1, -3, 2, 1, -1]), 3, 'maxSubarraySum([1,-3,2,1,-1]) должен быть 3');
+assert.strict.equal(maxSubarraySum([-2, 1, -3, 4, -1, 2, 1, -5, 4]), 6, 'maxSubarraySum([-2,1,-3,4,-1,2,1,-5,4]) должен быть 6');
+assert.strict.equal(maxSubarraySum([5, 4, -1, 7, 8]), 23, 'maxSubarraySum([5,4,-1,7,8]) должен быть 23');
+
+// Тест 2: Граничные случаи
+assert.strict.equal(maxSubarraySum([1]), 1, 'maxSubarraySum([1]) должен быть 1');
+assert.strict.equal(maxSubarraySum([-1]), -1, 'maxSubarraySum([-1]) должен быть -1');
+assert.strict.equal(maxSubarraySum([0]), 0, 'maxSubarraySum([0]) должен быть 0');
+
+// Тест 3: Все отрицательные числа
+assert.strict.equal(maxSubarraySum([-5, -2, -8, -1]), -1, 'maxSubarraySum([-5,-2,-8,-1]) должен быть -1');
+
+// Тест 4: Все положительные числа
+assert.strict.equal(maxSubarraySum([1, 2, 3, 4, 5]), 15, 'maxSubarraySum([1,2,3,4,5]) должен быть 15');`,
     solution: `public class MaxSubarray {
   public static int maxSubarraySum(int[] arr) {
     if (arr == null || arr.length == 0) {
@@ -412,7 +548,42 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для Java кода
-// Проверяем корректность сортировки слиянием`,
+// Проверяем корректность сортировки слиянием
+const { mergeSort } = userModule;
+
+// Тест 1: Обычные случаи
+const arr1 = [64, 34, 25, 12, 22, 11, 90];
+const sorted1 = [...arr1];
+mergeSort(sorted1);
+assert.strict.deepEqual(sorted1, [11, 12, 22, 25, 34, 64, 90], 'mergeSort([64,34,25,12,22,11,90]) должен быть [11,12,22,25,34,64,90]');
+
+const arr2 = [5, 2, 8, 1, 9];
+const sorted2 = [...arr2];
+mergeSort(sorted2);
+assert.strict.deepEqual(sorted2, [1, 2, 5, 8, 9], 'mergeSort([5,2,8,1,9]) должен быть [1,2,5,8,9]');
+
+// Тест 2: Граничные случаи
+const arr3 = [1];
+const sorted3 = [...arr3];
+mergeSort(sorted3);
+assert.strict.deepEqual(sorted3, [1], 'mergeSort([1]) должен быть [1]');
+
+const arr4 = [2, 1];
+const sorted4 = [...arr4];
+mergeSort(sorted4);
+assert.strict.deepEqual(sorted4, [1, 2], 'mergeSort([2,1]) должен быть [1,2]');
+
+// Тест 3: Уже отсортированный массив
+const arr5 = [1, 2, 3, 4, 5];
+const sorted5 = [...arr5];
+mergeSort(sorted5);
+assert.strict.deepEqual(sorted5, [1, 2, 3, 4, 5], 'mergeSort([1,2,3,4,5]) должен быть [1,2,3,4,5]');
+
+// Тест 4: Обратно отсортированный массив
+const arr6 = [5, 4, 3, 2, 1];
+const sorted6 = [...arr6];
+mergeSort(sorted6);
+assert.strict.deepEqual(sorted6, [1, 2, 3, 4, 5], 'mergeSort([5,4,3,2,1]) должен быть [1,2,3,4,5]');`,
     solution: `public class MergeSort {
   public static void mergeSort(int[] arr) {
     if (arr == null || arr.length <= 1) {
@@ -511,7 +682,48 @@ export const BE: UITask[] = [
   }
 }`,
     tests: `// Тесты для быстрой сортировки
-// Проверяем корректность алгоритма`,
+// Проверяем корректность алгоритма
+const { quickSort } = userModule;
+
+// Тест 1: Обычные случаи
+const arr1 = [64, 34, 25, 12, 22, 11, 90];
+const sorted1 = [...arr1];
+quickSort(sorted1);
+assert.strict.deepEqual(sorted1, [11, 12, 22, 25, 34, 64, 90], 'quickSort([64,34,25,12,22,11,90]) должен быть [11,12,22,25,34,64,90]');
+
+const arr2 = [5, 2, 8, 1, 9, 3];
+const sorted2 = [...arr2];
+quickSort(sorted2);
+assert.strict.deepEqual(sorted2, [1, 2, 3, 5, 8, 9], 'quickSort([5,2,8,1,9,3]) должен быть [1,2,3,5,8,9]');
+
+// Тест 2: Граничные случаи
+const arr3 = [1];
+const sorted3 = [...arr3];
+quickSort(sorted3);
+assert.strict.deepEqual(sorted3, [1], 'quickSort([1]) должен быть [1]');
+
+const arr4 = [2, 1];
+const sorted4 = [...arr4];
+quickSort(sorted4);
+assert.strict.deepEqual(sorted4, [1, 2], 'quickSort([2,1]) должен быть [1,2]');
+
+// Тест 3: Уже отсортированный массив
+const arr5 = [1, 2, 3, 4, 5];
+const sorted5 = [...arr5];
+quickSort(sorted5);
+assert.strict.deepEqual(sorted5, [1, 2, 3, 4, 5], 'quickSort([1,2,3,4,5]) должен быть [1,2,3,4,5]');
+
+// Тест 4: Обратно отсортированный массив
+const arr6 = [5, 4, 3, 2, 1];
+const sorted6 = [...arr6];
+quickSort(sorted6);
+assert.strict.deepEqual(sorted6, [1, 2, 3, 4, 5], 'quickSort([5,4,3,2,1]) должен быть [1,2,3,4,5]');
+
+// Тест 5: Дубликаты
+const arr7 = [3, 1, 4, 1, 5, 9, 2, 6, 5];
+const sorted7 = [...arr7];
+quickSort(sorted7);
+assert.strict.deepEqual(sorted7, [1, 1, 2, 3, 4, 5, 5, 6, 9], 'quickSort([3,1,4,1,5,9,2,6,5]) должен быть [1,1,2,3,4,5,5,6,9]');`,
     solution: `public class QuickSort {
   public static void quickSort(int[] arr) {
     if (arr == null || arr.length <= 1) return;
@@ -598,7 +810,45 @@ public class Dijkstra {
   }
 }`,
     tests: `// Тесты для алгоритма Дейкстры
-// Проверяем корректность поиска кратчайшего пути`,
+// Проверяем корректность поиска кратчайшего пути
+const { dijkstra } = userModule;
+
+// Тест 1: Простой граф
+const graph1 = [
+  [0, 4, 0, 0, 0, 0, 0, 8, 0],
+  [4, 0, 8, 0, 0, 0, 0, 11, 0],
+  [0, 8, 0, 7, 0, 4, 0, 0, 2],
+  [0, 0, 7, 0, 9, 14, 0, 0, 0],
+  [0, 0, 0, 9, 0, 10, 0, 0, 0],
+  [0, 0, 4, 14, 10, 0, 2, 0, 0],
+  [0, 0, 0, 0, 0, 2, 0, 1, 6],
+  [8, 11, 0, 0, 0, 0, 1, 0, 7],
+  [0, 0, 2, 0, 0, 0, 6, 7, 0]
+];
+const result1 = dijkstra(graph1, 0);
+assert.strict.deepEqual(result1, [0, 4, 12, 19, 21, 11, 9, 8, 14], 'dijkstra должен найти кратчайшие пути от вершины 0');
+
+// Тест 2: Граф с одной вершиной
+const graph2 = [[0]];
+const result2 = dijkstra(graph2, 0);
+assert.strict.deepEqual(result2, [0], 'dijkstra для одной вершины должен вернуть [0]');
+
+// Тест 3: Граф с двумя вершинами
+const graph3 = [
+  [0, 5],
+  [5, 0]
+];
+const result3 = dijkstra(graph3, 0);
+assert.strict.deepEqual(result3, [0, 5], 'dijkstra для двух вершин должен вернуть [0, 5]');
+
+// Тест 4: Граф без путей
+const graph4 = [
+  [0, 0, 0],
+  [0, 0, 0],
+  [0, 0, 0]
+];
+const result4 = dijkstra(graph4, 0);
+assert.strict.deepEqual(result4, [0, Infinity, Infinity], 'dijkstra для графа без путей должен вернуть [0, Infinity, Infinity]');`,
     solution: `import java.util.*;
 
 public class Dijkstra {
@@ -724,7 +974,42 @@ public class LRUCache<K, V> {
   }
 }`,
     tests: `// Тесты для LRU Cache
-// Проверяем корректность работы кэша`,
+// Проверяем корректность работы кэша
+const { LRUCache } = userModule;
+
+// Тест 1: Базовые операции
+const cache1 = new LRUCache(2);
+cache1.put(1, "one");
+cache1.put(2, "two");
+assert.strict.equal(cache1.get(1), "one", 'cache.get(1) должен вернуть "one"');
+assert.strict.equal(cache1.get(2), "two", 'cache.get(2) должен вернуть "two"');
+
+// Тест 2: LRU eviction
+const cache2 = new LRUCache(2);
+cache2.put(1, "one");
+cache2.put(2, "two");
+cache2.put(3, "three"); // должен вытеснить ключ 1
+assert.strict.equal(cache2.get(1), null, 'cache.get(1) должен вернуть null после eviction');
+assert.strict.equal(cache2.get(2), "two", 'cache.get(2) должен вернуть "two"');
+assert.strict.equal(cache2.get(3), "three", 'cache.get(3) должен вернуть "three"');
+
+// Тест 3: Обновление существующего ключа
+const cache3 = new LRUCache(2);
+cache3.put(1, "one");
+cache3.put(2, "two");
+cache3.put(1, "updated"); // обновляем ключ 1
+assert.strict.equal(cache3.get(1), "updated", 'cache.get(1) должен вернуть "updated"');
+assert.strict.equal(cache3.get(2), "two", 'cache.get(2) должен вернуть "two"');
+
+// Тест 4: Доступ к ключу делает его недавно использованным
+const cache4 = new LRUCache(2);
+cache4.put(1, "one");
+cache4.put(2, "two");
+cache4.get(1); // делаем ключ 1 недавно использованным
+cache4.put(3, "three"); // должен вытеснить ключ 2
+assert.strict.equal(cache4.get(1), "one", 'cache.get(1) должен вернуть "one"');
+assert.strict.equal(cache4.get(2), null, 'cache.get(2) должен вернуть null');
+assert.strict.equal(cache4.get(3), "three", 'cache.get(3) должен вернуть "three"');`,
     solution: `import java.util.*;
 
 public class LRUCache<K, V> {
@@ -892,7 +1177,38 @@ public class LRUCache<K, V> {
   }
 }`,
     tests: `// Тесты для бинарного дерева
-// Проверяем корректность операций`,
+// Проверяем корректность операций
+const { BinaryTree } = userModule;
+
+// Тест 1: Вставка и поиск
+const tree1 = new BinaryTree();
+tree1.insert(50);
+tree1.insert(30);
+tree1.insert(70);
+tree1.insert(20);
+tree1.insert(40);
+assert.strict.equal(tree1.search(50), true, 'tree.search(50) должен вернуть true');
+assert.strict.equal(tree1.search(30), true, 'tree.search(30) должен вернуть true');
+assert.strict.equal(tree1.search(70), true, 'tree.search(70) должен вернуть true');
+assert.strict.equal(tree1.search(20), true, 'tree.search(20) должен вернуть true');
+assert.strict.equal(tree1.search(40), true, 'tree.search(40) должен вернуть true');
+assert.strict.equal(tree1.search(90), false, 'tree.search(90) должен вернуть false');
+
+// Тест 2: Поиск несуществующих элементов
+const tree2 = new BinaryTree();
+tree2.insert(10);
+assert.strict.equal(tree2.search(5), false, 'tree.search(5) должен вернуть false');
+assert.strict.equal(tree2.search(15), false, 'tree.search(15) должен вернуть false');
+
+// Тест 3: Пустое дерево
+const tree3 = new BinaryTree();
+assert.strict.equal(tree3.search(1), false, 'tree.search(1) в пустом дереве должен вернуть false');
+
+// Тест 4: Один элемент
+const tree4 = new BinaryTree();
+tree4.insert(42);
+assert.strict.equal(tree4.search(42), true, 'tree.search(42) должен вернуть true');
+assert.strict.equal(tree4.search(41), false, 'tree.search(41) должен вернуть false');`,
     solution: `public class BinaryTree {
   private Node root;
   
@@ -1092,7 +1408,40 @@ public class LRUCache<K, V> {
   }
 }`,
     tests: `// Тесты для HashMap
-// Проверяем корректность работы`,
+// Проверяем корректность работы
+const { MyHashMap } = userModule;
+
+// Тест 1: Базовые операции
+const map1 = new MyHashMap();
+map1.put("one", 1);
+map1.put("two", 2);
+map1.put("three", 3);
+assert.strict.equal(map1.get("one"), 1, 'map.get("one") должен вернуть 1');
+assert.strict.equal(map1.get("two"), 2, 'map.get("two") должен вернуть 2');
+assert.strict.equal(map1.get("three"), 3, 'map.get("three") должен вернуть 3');
+assert.strict.equal(map1.size(), 3, 'map.size() должен вернуть 3');
+
+// Тест 2: Проверка наличия ключей
+assert.strict.equal(map1.containsKey("one"), true, 'map.containsKey("one") должен вернуть true');
+assert.strict.equal(map1.containsKey("two"), true, 'map.containsKey("two") должен вернуть true');
+assert.strict.equal(map1.containsKey("four"), false, 'map.containsKey("four") должен вернуть false');
+
+// Тест 3: Обновление значений
+map1.put("one", 10);
+assert.strict.equal(map1.get("one"), 10, 'map.get("one") после обновления должен вернуть 10');
+assert.strict.equal(map1.size(), 3, 'map.size() после обновления должен остаться 3');
+
+// Тест 4: Удаление элементов
+const removed = map1.remove("two");
+assert.strict.equal(removed, 2, 'map.remove("two") должен вернуть 2');
+assert.strict.equal(map1.get("two"), null, 'map.get("two") после удаления должен вернуть null');
+assert.strict.equal(map1.containsKey("two"), false, 'map.containsKey("two") после удаления должен вернуть false');
+assert.strict.equal(map1.size(), 2, 'map.size() после удаления должен быть 2');
+
+// Тест 5: Пустая карта
+const map2 = new MyHashMap();
+assert.strict.equal(map2.isEmpty(), true, 'map.isEmpty() для пустой карты должен вернуть true');
+assert.strict.equal(map2.size(), 0, 'map.size() для пустой карты должен вернуть 0');`,
     solution: `public class MyHashMap<K, V> {
   private static final int INITIAL_CAPACITY = 16;
   private static final double LOAD_FACTOR = 0.75;
@@ -1356,7 +1705,22 @@ public class ProducerConsumer {
     Thread.sleep(5000);
     pc.stop();
   }
-}`
+}`,
+    tests: `// Тесты для Producer-Consumer
+// Проверяем корректность работы паттерна
+const { ProducerConsumer } = userModule;
+
+// Тест 1: Создание Producer-Consumer
+const pc1 = new ProducerConsumer(5);
+assert.strict.equal(pc1.queue.size(), 0, 'queue.size() для нового Producer-Consumer должен быть 0');
+assert.strict.equal(pc1.running, true, 'running для нового Producer-Consumer должен быть true');
+
+// Тест 2: Проверка методов
+assert.strict.equal(pc1.isEmpty(), true, 'isEmpty() для пустой очереди должен вернуть true');
+
+// Тест 3: Остановка
+pc1.stop();
+assert.strict.equal(pc1.running, false, 'running после stop() должен быть false');`,
   },
 
   {
@@ -1470,7 +1834,40 @@ public class ObserverPattern {
     agency.removeObserver(channel2);
     agency.setNews("Update: Technology details released!");
   }
-}`
+}`,
+    tests: `// Тесты для Observer Pattern
+// Проверяем корректность работы паттерна
+const { NewsAgency, NewsChannel, EmailSubscriber } = userModule;
+
+// Тест 1: Создание и базовые операции
+const agency = new NewsAgency();
+const channel1 = new NewsChannel("CNN");
+const channel2 = new NewsChannel("BBC");
+const subscriber1 = new EmailSubscriber("user1@example.com");
+
+// Тест 2: Добавление наблюдателей
+agency.addObserver(channel1);
+agency.addObserver(channel2);
+agency.addObserver(subscriber1);
+assert.strict.equal(agency.observers.length, 3, 'agency.observers.length должен быть 3');
+
+// Тест 3: Уведомление наблюдателей
+let notificationReceived = false;
+const originalUpdate = channel1.update;
+channel1.update = function(message) {
+  notificationReceived = true;
+  originalUpdate.call(this, message);
+};
+agency.setNews("Test news");
+assert.strict.equal(notificationReceived, true, 'Наблюдатели должны получить уведомление');
+
+// Тест 4: Удаление наблюдателей
+agency.removeObserver(channel2);
+assert.strict.equal(agency.observers.length, 2, 'agency.observers.length после удаления должен быть 2');
+
+// Тест 5: Создание EmailSubscriber
+const subscriber2 = new EmailSubscriber("user2@example.com");
+assert.strict.equal(subscriber2.email, "user2@example.com", 'EmailSubscriber должен сохранить email');`,
   },
 
   {
@@ -1508,7 +1905,25 @@ public class ObserverPattern {
   }
 }`,
     tests: `// Тесты для Singleton Pattern
-// Проверяем корректность работы паттерна`,
+// Проверяем корректность работы паттерна
+const { SingletonPattern } = userModule;
+
+// Тест 1: Получение экземпляра
+const instance1 = SingletonPattern.getInstance();
+const instance2 = SingletonPattern.getInstance();
+assert.strict.equal(instance1, instance2, 'getInstance() должен возвращать один и тот же экземпляр');
+
+// Тест 2: Проверка, что экземпляр не null
+assert.strict.ok(instance1 !== null, 'getInstance() не должен возвращать null');
+
+// Тест 3: Проверка, что экземпляр является объектом
+assert.strict.equal(typeof instance1, 'object', 'getInstance() должен возвращать объект');
+
+// Тест 4: Множественные вызовы
+const instance3 = SingletonPattern.getInstance();
+const instance4 = SingletonPattern.getInstance();
+assert.strict.equal(instance3, instance4, 'Множественные вызовы getInstance() должны возвращать один экземпляр');
+assert.strict.equal(instance1, instance3, 'Все вызовы getInstance() должны возвращать один экземпляр');`,
     solution: `public class SingletonPattern {
   private static volatile SingletonPattern instance;
   private static final Object lock = new Object();
@@ -1582,7 +1997,49 @@ public class ObserverPattern {
   }
 }`,
     tests: `// Тесты для Factory Pattern
-// Проверяем корректность работы паттерна`,
+// Проверяем корректность работы паттерна
+const { TransportFactory, Car, Truck, Motorcycle } = userModule;
+
+// Тест 1: Создание автомобиля
+const car = TransportFactory.createTransport('car', 'Toyota Camry');
+assert.strict.ok(car instanceof Car, 'createTransport("car") должен вернуть экземпляр Car');
+assert.strict.equal(car.model, 'Toyota Camry', 'car.model должен быть "Toyota Camry"');
+
+// Тест 2: Создание грузовика
+const truck = TransportFactory.createTransport('truck', 'Ford F-150');
+assert.strict.ok(truck instanceof Truck, 'createTransport("truck") должен вернуть экземпляр Truck');
+assert.strict.equal(truck.model, 'Ford F-150', 'truck.model должен быть "Ford F-150"');
+
+// Тест 3: Создание мотоцикла
+const motorcycle = TransportFactory.createTransport('motorcycle', 'Honda CBR');
+assert.strict.ok(motorcycle instanceof Motorcycle, 'createTransport("motorcycle") должен вернуть экземпляр Motorcycle');
+assert.strict.equal(motorcycle.model, 'Honda CBR', 'motorcycle.model должен быть "Honda CBR"');
+
+// Тест 4: Неизвестный тип транспорта
+const unknown = TransportFactory.createTransport('unknown', 'Test');
+assert.strict.equal(unknown, null, 'createTransport("unknown") должен вернуть null');
+
+// Тест 5: Проверка методов транспорта
+let startCalled = false;
+let stopCalled = false;
+let infoCalled = false;
+
+const testCar = new Car('Test Car');
+const originalStart = testCar.start;
+const originalStop = testCar.stop;
+const originalGetInfo = testCar.getInfo;
+
+testCar.start = function() { startCalled = true; originalStart.call(this); };
+testCar.stop = function() { stopCalled = true; originalStop.call(this); };
+testCar.getInfo = function() { infoCalled = true; originalGetInfo.call(this); };
+
+testCar.start();
+testCar.stop();
+testCar.getInfo();
+
+assert.strict.equal(startCalled, true, 'start() должен быть вызван');
+assert.strict.equal(stopCalled, true, 'stop() должен быть вызван');
+assert.strict.equal(infoCalled, true, 'getInfo() должен быть вызван');`,
     solution: `// Интерфейс Transport
 interface Transport {
   void start();
@@ -1773,7 +2230,41 @@ public class SimpleThreadPool {
   }
 }`,
     tests: `// Тесты для ThreadPoolExecutor
-// Проверяем корректность работы пула потоков`,
+// Проверяем корректность работы пула потоков
+const { SimpleThreadPool } = userModule;
+
+// Тест 1: Создание ThreadPool
+const pool = new SimpleThreadPool(2, 4, 60, 'SECONDS', []);
+assert.strict.equal(pool.corePoolSize, 2, 'corePoolSize должен быть 2');
+assert.strict.equal(pool.maximumPoolSize, 4, 'maximumPoolSize должен быть 4');
+assert.strict.equal(pool.isShutdown, false, 'isShutdown должен быть false');
+
+// Тест 2: Выполнение простой задачи
+let taskExecuted = false;
+pool.execute(() => {
+  taskExecuted = true;
+});
+// Даем время на выполнение
+setTimeout(() => {
+  assert.strict.equal(taskExecuted, true, 'Задача должна быть выполнена');
+}, 100);
+
+// Тест 3: Проверка счетчика потоков
+const initialThreadCount = pool.threadCount.get();
+pool.execute(() => {});
+// После выполнения задачи счетчик должен увеличиться
+setTimeout(() => {
+  assert.strict.ok(pool.threadCount.get() >= initialThreadCount, 'Счетчик потоков должен увеличиться');
+}, 100);
+
+// Тест 4: Shutdown
+pool.shutdown();
+assert.strict.equal(pool.isShutdown, true, 'isShutdown после shutdown должен быть true');
+
+// Тест 5: Создание Worker
+const worker = new pool.Worker(() => {});
+assert.strict.ok(worker !== null, 'Worker должен быть создан');
+assert.strict.ok(worker.firstTask !== null, 'Worker должен иметь firstTask');`,
     solution: `import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 

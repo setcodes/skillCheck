@@ -15,7 +15,7 @@ import { QuestionTags } from '@/shared/ui/question-tags';
 import { useApp } from '@/app/providers/AppProvider';
 import { getQuestions } from '@/shared/api/questions';
 import { useToast } from '@/shared/hooks/use-sonner';
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, Trash2 } from 'lucide-react';
 
 export default function Theory() {
 	const { prof, role } = useApp();
@@ -110,7 +110,35 @@ export default function Theory() {
 			<div className="lg:col-span-2 h-full min-h-0">
 				<Card className="h-full flex flex-col">
 					<CardHeader>
-						<CardTitle>Теория — {prof}</CardTitle>
+						<div className="flex items-center justify-between">
+							<CardTitle>Теория — {prof}</CardTitle>
+							<Button 
+								variant="outline" 
+								size="sm"
+								onClick={()=>{
+									// Очищаем все данные об оценках
+									localStorage.removeItem("bridge.taskScores.v1"); // Оценки задач
+									localStorage.removeItem("bridge.theoryScores.v1"); // Оценки теории
+									localStorage.removeItem("solutions.v4"); // Решения задач
+									
+									// Очищаем черновики теории для всех профессий
+									const professions = ['frontend', 'backend-java', 'analyst', 'devops'];
+									professions.forEach(prof => {
+										localStorage.removeItem(`theory.drafts.v1.${prof}`);
+									});
+									
+									// Показываем уведомление
+									toast.success("Все оценки сброшены", "Очищены оценки задач, теории и решения");
+									
+									// Перезагружаем страницу
+									setTimeout(() => location.reload(), 1000);
+								}}
+								className="inline-flex items-center gap-2"
+							>
+								<Trash2 className="h-4 w-4" />
+								Сброс оценок
+							</Button>
+						</div>
 						<TagFilter
 							categories={cats}
 							selectedCategories={selectedCategories}
@@ -150,7 +178,7 @@ export default function Theory() {
 			</div>
 
 			{/* Right Panel: Evaluation + Hint */}
-			<div className="lg:col-span-1 space-y-4">
+			<div className="lg:col-span-1 flex flex-col space-y-4 h-full min-h-0">
 				{/* Evaluation block */}
 				<Card className="h-fit">
 					<CardHeader>
@@ -222,7 +250,7 @@ export default function Theory() {
 				</Card>
 
 				{/* Hint block */}
-				<Card className="h-96 flex flex-col">
+				<Card className="flex-1 flex flex-col min-h-0">
 					<CardHeader className="flex-shrink-0">
 						<CardTitle>Подсказка</CardTitle>
 						{cur && <CardDescription>{cur.title}</CardDescription>}
