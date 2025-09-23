@@ -89,11 +89,17 @@ export async function runModule(
     // Для Java кода ищем статические методы (исключаем main)
     if (isJavaCode && functionNames.length === 0) {
       const javaMethodMatches = userCode.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/g)
+      if (debug) {
+        console.log('Java method matches:', javaMethodMatches)
+      }
       if (javaMethodMatches) {
         functionNames = javaMethodMatches.map(f => {
           const match = f.match(/(?:public\s+)?static\s+\w+\s+(\w+)\s*\(/)
           return match ? match[1] : ''
         }).filter(name => name && name !== 'main') // Исключаем main функцию
+        if (debug) {
+          console.log('Found Java functions:', functionNames)
+        }
       }
     }
     
@@ -286,77 +292,107 @@ export async function runModule(
         
         // Извлекаем функции из Java кода
         for (const funcName of functionNames) {
-          // Более простое регулярное выражение для извлечения тела функции
-          const funcRegex = new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{([\\s\\S]*?)\\}(?=\\s*(?:public\\s+)?static|\\s*\\})`, 'g')
-          const match = funcRegex.exec(userCode)
-          if (match) {
-            let funcBody = match[1]
-            // Конвертируем тело функции
-            funcBody = funcBody
-              .replace(/\b(public|private|static|final)\s+/g, '')
-              .replace(/System\.out\.println/g, 'console.log')
-              .replace(/int\[\]/g, 'Array')
-              .replace(/String\[\]/g, 'Array')
-              .replace(/double\[\]/g, 'Array')
-              .replace(/boolean\[\]/g, 'Array')
-              .replace(/\bint\b/g, 'let')
-              .replace(/\bString\b/g, 'let')
-              .replace(/\bdouble\b/g, 'let')
-              .replace(/\bboolean\b/g, 'let')
-              .replace(/\bchar\b/g, 'let')
-              .replace(/\blong\b/g, 'let')
-              .replace(/\bfloat\b/g, 'let')
-              .replace(/java\.util\.List/g, 'Array')
-              .replace(/java\.util\.Map/g, 'Map')
-              .replace(/java\.util\.Set/g, 'Set')
-              .replace(/java\.util\.ArrayList/g, 'Array')
-              .replace(/java\.util\.HashMap/g, 'Map')
-              .replace(/java\.util\.HashSet/g, 'Set')
-              .replace(/new\s+Array\s*\{([^}]+)\}/g, '[$1]')
-              .replace(/new\s+int\[\]\s*\{([^}]+)\}/g, '[$1]')
-              .replace(/new\s+String\[\]\s*\{([^}]+)\}/g, '[$1]')
-              .replace(/\.add\s*\(/g, '.push(')
-              .replace(/\.contains\s*\(/g, '.has(')
-              .replace(/\.containsKey\s*\(/g, '.has(')
-              .replace(/\.put\s*\(/g, '.set(')
-              .replace(/\.get\s*\(/g, '.get(')
-              .replace(/\.isEmpty\s*\(\s*\)/g, '.size === 0')
-              .replace(/\.size\s*\(\s*\)/g, '.size')
-              .replace(/\.equals\s*\(/g, ' === ')
-              .replace(/\.length\s*\(\s*\)/g, '.length')
-              .replace(/java\.util\.Arrays\.toString/g, 'JSON.stringify')
-              .replace(/Arrays\.toString/g, 'JSON.stringify')
-              .replace(/==\s*/g, '=== ')
-              .replace(/!=\s*/g, '!== ')
-              .replace(/;\s*$/gm, '')
+          // Ищем функцию по имени с более простым подходом
+          const funcStartRegex = new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\([^)]*\\)\\s*\\{`)
+          const funcStartMatch = userCode.match(funcStartRegex)
+          
+          if (funcStartMatch) {
+            const startIndex = userCode.indexOf(funcStartMatch[0])
+            let braceCount = 0
+            let funcBody = ''
+            let i = startIndex + funcStartMatch[0].length
             
-            // Извлекаем параметры функции
-            const paramMatch = userCode.match(new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\(([^)]*)\\)`))
-            let params = ''
-            if (paramMatch) {
-              params = paramMatch[1]
-                .split(',')
-                .map((p: string) => {
-                  const parts = p.trim().split(/\s+/)
-                  return parts[parts.length - 1] // берем только имя параметра
-                })
-                .join(', ')
+            // Находим закрывающую скобку, считая вложенные скобки
+            while (i < userCode.length) {
+              const char = userCode[i]
+              if (char === '{') {
+                braceCount++
+              } else if (char === '}') {
+                if (braceCount === 0) {
+                  break
+                }
+                braceCount--
+              }
+              funcBody += char
+              i++
             }
             
-            // Создаем функцию
-            try {
-              javaFunctions[funcName] = new Function(params, funcBody)
-              if (debug) {
-                console.log(`Created function ${funcName} with params: ${params}`)
-                console.log(`Function body: ${funcBody}`)
+            if (funcBody) {
+              // Конвертируем тело функции
+              funcBody = funcBody
+                .replace(/\b(public|private|static|final)\s+/g, '')
+                .replace(/System\.out\.println/g, 'console.log')
+                .replace(/int\[\]/g, 'Array')
+                .replace(/String\[\]/g, 'Array')
+                .replace(/double\[\]/g, 'Array')
+                .replace(/boolean\[\]/g, 'Array')
+                .replace(/\bint\b/g, 'let')
+                .replace(/\bString\b/g, 'let')
+                .replace(/\bdouble\b/g, 'let')
+                .replace(/\bboolean\b/g, 'let')
+                .replace(/\bchar\b/g, 'let')
+                .replace(/\blong\b/g, 'let')
+                .replace(/\bfloat\b/g, 'let')
+                .replace(/java\.util\.List/g, 'Array')
+                .replace(/java\.util\.Map/g, 'Map')
+                .replace(/java\.util\.Set/g, 'Set')
+                .replace(/java\.util\.ArrayList/g, 'Array')
+                .replace(/java\.util\.HashMap/g, 'Map')
+                .replace(/java\.util\.HashSet/g, 'Set')
+                .replace(/new\s+Array\s*\{([^}]+)\}/g, '[$1]')
+                .replace(/new\s+int\[\]\s*\{([^}]+)\}/g, '[$1]')
+                .replace(/new\s+String\[\]\s*\{([^}]+)\}/g, '[$1]')
+                .replace(/\.add\s*\(/g, '.push(')
+                .replace(/\.contains\s*\(/g, '.has(')
+                .replace(/\.containsKey\s*\(/g, '.has(')
+                .replace(/\.put\s*\(/g, '.set(')
+                .replace(/\.get\s*\(/g, '.get(')
+                .replace(/\.isEmpty\s*\(\s*\)/g, '.size === 0')
+                .replace(/\.size\s*\(\s*\)/g, '.size')
+                .replace(/\.equals\s*\(/g, ' === ')
+                .replace(/\.length\s*\(\s*\)/g, '.length')
+                .replace(/java\.util\.Arrays\.toString/g, 'JSON.stringify')
+                .replace(/Arrays\.toString/g, 'JSON.stringify')
+                .replace(/==\s*/g, '=== ')
+                .replace(/!=\s*/g, '!== ')
+                .replace(/;\s*$/gm, '')
+              
+              // Извлекаем параметры функции
+              const paramMatch = userCode.match(new RegExp(`(?:public\\s+)?static\\s+\\w+\\s+${funcName}\\s*\\(([^)]*)\\)`))
+              let params = ''
+              if (paramMatch) {
+                params = paramMatch[1]
+                  .split(',')
+                  .map((p: string) => {
+                    const parts = p.trim().split(/\s+/)
+                    return parts[parts.length - 1] // берем только имя параметра
+                  })
+                  .join(', ')
               }
-            } catch (e: any) {
-              console.error(`Error creating function ${funcName}:`, e)
-              console.error(`Params: ${params}`)
-              console.error(`Body: ${funcBody}`)
+              
+              // Создаем функцию
+              try {
+                javaFunctions[funcName] = new Function(params, funcBody)
+                if (debug) {
+                  console.log(`Created function ${funcName} with params: ${params}`)
+                  console.log(`Function body: ${funcBody}`)
+                }
+              } catch (e: any) {
+                console.error(`Error creating function ${funcName}:`, e)
+                console.error(`Params: ${params}`)
+                console.error(`Body: ${funcBody}`)
+                // Создаем заглушку функции
+                javaFunctions[funcName] = function() {
+                  throw new Error(`Function ${funcName} could not be created: ${e?.message || 'Unknown error'}`)
+                }
+              }
+            } else {
+              if (debug) {
+                console.warn(`Function ${funcName} not found in Java code`)
+              }
               // Создаем заглушку функции
               javaFunctions[funcName] = function() {
-                throw new Error(`Function ${funcName} could not be created: ${e?.message || 'Unknown error'}`)
+                throw new Error(`Function ${funcName} not found in Java code`)
               }
             }
           } else {
