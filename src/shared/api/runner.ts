@@ -67,6 +67,11 @@ export async function runModule(
       return { strict }
     }
 
+    // Проверяем тип кода
+    const isJavaCode = userCode.includes('public class') || userCode.includes('public static') || userCode.includes('System.out.println')
+    const isPythonCode = userCode.includes('def ') || userCode.includes('import ') || userCode.includes('print(') || userCode.includes('if __name__')
+    const isMermaidCode = userCode.includes('graph') || userCode.includes('flowchart') || userCode.includes('sequenceDiagram') || userCode.includes('classDiagram')
+    
     // Создаем модуль из пользовательского кода
     const exportedFunctions = userCode.match(/export\s+function\s+(\w+)/g)?.map(f => f.replace('export function ', '')) || []
     
@@ -98,15 +103,6 @@ export async function runModule(
     
     // Убираем export и типы из кода для выполнения
     let cleanUserCode = userCode.replace(/export\s+/g, '')
-    
-    // Проверяем, это Java код
-    const isJavaCode = userCode.includes('public class') || userCode.includes('public static') || userCode.includes('System.out.println')
-    
-    // Проверяем, это Python код
-    const isPythonCode = userCode.includes('def ') || userCode.includes('import ') || userCode.includes('print(') || userCode.includes('if __name__')
-    
-    // Проверяем, это Mermaid диаграмма
-    const isMermaidCode = userCode.includes('graph') || userCode.includes('flowchart') || userCode.includes('sequenceDiagram') || userCode.includes('classDiagram')
     
     if (isJavaCode) {
       // Улучшенная конвертация Java в JavaScript
