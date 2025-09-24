@@ -11,10 +11,11 @@ import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { useToast } from '@/shared/hooks/use-sonner'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
-import { runModule, runSql, runYaml } from '@/shared/api/runner'
+import { runModule, runSql, runYaml, runDevOpsTests, runMermaid } from '@/shared/api/runner'
 import { getTasks } from '@/shared/api/questions'
 import type { UITask } from '@/entities/task/model/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import mermaid from 'mermaid'
 type Sol={code:string;lastResult?:{ok:boolean;message:string}[];score?:number;comment?:string}
 const K='solutions.v4';const load=()=>{try{const r=localStorage.getItem(K);if(r)return JSON.parse(r)}catch{}return{}};const save=(x:any)=>{try{localStorage.setItem(K,JSON.stringify(x))}catch{}}
 export default function Solve(){
@@ -86,6 +87,21 @@ export default function Solve(){
     }
   }
   
+  const formatLanguageLabel = (language?: string) => {
+    if (!language) return 'Не задан'
+    const labels: Record<string, string> = {
+      javascript: 'JavaScript',
+      typescript: 'TypeScript',
+      java: 'Java',
+      sql: 'SQL',
+      python: 'Python',
+      yaml: 'YAML',
+      dockerfile: 'Dockerfile',
+      mermaid: 'Диаграммы',
+    }
+    return labels[language] || language.toUpperCase()
+  }
+  
   // Улучшенное определение языка с проверкой содержимого кода
   const detectLanguage = (code: string) => {
     if (code.includes('public class') || code.includes('public static') || code.includes('System.out.println')) {
@@ -94,7 +110,13 @@ export default function Solve(){
     if (code.includes('SELECT') || code.includes('FROM') || code.includes('WHERE')) {
       return 'sql'
     }
-    if (code.includes('apiVersion:') || code.includes('kind:') || code.includes('metadata:')) {
+    // Сначала проверяем Dockerfile (более специфично)
+    if (code.includes('FROM ') || code.includes('WORKDIR ') || code.includes('COPY ') || code.includes('RUN ')) {
+      return 'dockerfile'
+    }
+    // Затем проверяем YAML (Kubernetes, Docker Compose, Helm и т.д.)
+    if (code.includes('apiVersion:') || code.includes('kind:') || code.includes('metadata:') || 
+        (code.includes('version:') && code.includes('services:'))) {
       return 'yaml'
     }
     if (code.includes('interface ') || code.includes(': string') || code.includes(': number')) {
@@ -111,6 +133,56 @@ export default function Solve(){
     return detectedLanguage
   }, [task?.id, code])
   
+  const [mermaidSvg, setMermaidSvg] = useState<string>('')
+  const [mermaidError, setMermaidError] = useState<string>('')
+  const mermaidInitializedRef = useRef(false)
+
+  useEffect(()=>{
+    if (taskLanguage !== 'mermaid') {
+      setMermaidSvg('')
+      setMermaidError('')
+      return
+    }
+
+    if (!mermaidInitializedRef.current) {
+      try {
+        mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' })
+      } catch (e) {
+        console.error('Mermaid initialize error:', e)
+      }
+      mermaidInitializedRef.current = true
+    }
+
+    if (!code.trim()) {
+      setMermaidSvg('')
+      setMermaidError('')
+      return
+    }
+
+    let cancelled = false
+    const renderDiagram = async () => {
+      try {
+        const renderId = `mermaid-preview-${Date.now()}`
+        const { svg } = await mermaid.render(renderId, code)
+        if (!cancelled) {
+          setMermaidSvg(svg)
+          setMermaidError('')
+        }
+      } catch (err: any) {
+        if (!cancelled) {
+          setMermaidSvg('')
+          setMermaidError(err?.message || 'Не удалось отрисовать диаграмму')
+        }
+      }
+    }
+
+    renderDiagram()
+
+    return () => {
+      cancelled = true
+    }
+  }, [taskLanguage, code])
+
   const [logs, setLogs] = useState<string[]>([])
   // Toast notifications for per-task timer (down mode)
   const halfNotifiedRef = useRef(false)
@@ -173,9 +245,18 @@ export default function Solve(){
       if (taskLanguage==='sql') {
         // @ts-ignore
         res = await runSql(code, (task as any).testsSql || { expectedRows: [] })
+      } else if (taskLanguage==='yaml' && task.id?.startsWith('dv_')) {
+        // Для DevOps YAML задач используем runDevOpsTests
+        res = await runDevOpsTests(code, task.tests)
       } else if (taskLanguage==='yaml') {
+        // Для обычных YAML задач используем runYaml
         // @ts-ignore
         res = await runYaml(code, (task as any).testsYaml || { rules: [] })
+      } else if (taskLanguage==='dockerfile') {
+        // Для Dockerfile используем runDevOpsTests напрямую
+        res = await runDevOpsTests(code, task.tests)
+      } else if (taskLanguage==='mermaid') {
+        res = await runMermaid(code, task.tests)
       } else {
         res = await runModule(code,task.tests,{debug:false}); 
       }
@@ -317,8 +398,13 @@ export default function Solve(){
               className="w-full justify-start text-left h-auto p-3"
               onClick={()=>setCur(x.id)}
             >
-              <div className="flex flex-col items-start">
-                <span className="font-medium">{x.title}</span>
+              <div className="flex flex-col items-start gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-medium">{x.title}</span>
+                  <Badge variant="outline" className="text-[10px] tracking-wide">
+                    {formatLanguageLabel((x as any).language ?? getLanguage())}
+                  </Badge>
+                </div>
                 <span className="text-xs text-muted-foreground capitalize">{x.level}</span>
               </div>
             </Button>
@@ -416,12 +502,12 @@ export default function Solve(){
                       {task.level}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
-                      {getLanguage().toUpperCase()}
+                      {formatLanguageLabel((task as any)?.language ?? getLanguage())}
                     </Badge>
                   </div>
-                  <Button size="sm" variant="default" onClick={()=>editorRef.current?.enterFullscreen()}>
-                    Перейти к решению
-                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    Язык задания: {formatLanguageLabel((task as any)?.language ?? getLanguage())}
+                  </span>
                 </div>
               </div>
               {/* Block 2: Title + Description with icon */}
@@ -436,30 +522,69 @@ export default function Solve(){
             
             {/* Scrollable content area */}
             <div className="p-6 flex-1 overflow-y-auto">
-              {/* Code Editor */}
-              <div className="mb-2">
-                <label className="text-sm font-medium">Код задачи:</label>
+              {/* Стартовый шаблон кода */}
+              <div className="mb-4">
+                <Collapsible>
+                  <CollapsibleTrigger className="group cursor-pointer flex items-center gap-2 hover:bg-muted/70 transition-colors rounded px-2 py-1">
+                    <label className="text-sm font-medium">Стартовый шаблон кода</label>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto">
+                      {task.starter}
+                    </pre>
+                  </CollapsibleContent>
+                </Collapsible>
               </div>
-              <pre className="mt-2 p-4 bg-muted rounded-lg text-xs overflow-x-auto">
-                {task.starter}
-              </pre>
-              {/* Редактор кода */}
-              <CodeEditor
-                ref={editorRef}
-                value={code}
-                onChange={(value) => setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:value}}))}
-                language={taskLanguage}
-                height="300px"
-                placeholder="Введите ваш код здесь..."
-                onFullscreenChange={()=>{ /* no-op */ }}
-                onRun={run}
-                onResetTask={resetTask}
-                onResetTests={resetTests}
-                consoleOutput={logs}
-                onClearConsole={()=> setLogs([])}
-                timerLabel={formatSeconds(taskTimerValueSec)}
-                timerStatus={taskTimerRunning ? 'running' : 'paused'}
-              />
+              
+              {/* Скрытый редактор кода для полноэкранного режима */}
+              <div className="hidden">
+                <CodeEditor
+                  ref={editorRef}
+                  value={code}
+                  onChange={(value) => setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code:value}}))}
+                  language={taskLanguage}
+                  height="300px"
+                  placeholder="Введите ваш код здесь..."
+                  onFullscreenChange={()=>{ /* no-op */ }}
+                  onRun={run}
+                  onResetTask={resetTask}
+                  onResetTests={resetTests}
+                  consoleOutput={logs}
+                  onClearConsole={()=> setLogs([])}
+                  timerLabel={formatSeconds(taskTimerValueSec)}
+                  timerStatus={taskTimerRunning ? 'running' : 'paused'}
+                />
+              </div>
+
+              {/* Кнопка для перехода к решению */}
+              <div className="flex justify-center mb-6">
+                <Button 
+                  size="lg" 
+                  variant="default" 
+                  onClick={()=>editorRef.current?.enterFullscreen()}
+                  className="px-8 py-3"
+                >
+                  <Play className="h-5 w-5 mr-2" />
+                  Перейти к решению
+                </Button>
+              </div>
+
+
+              {taskLanguage==='mermaid' && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium mb-2">Предпросмотр диаграммы</h3>
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    {mermaidError ? (
+                      <p className="text-sm text-destructive">{mermaidError}</p>
+                    ) : mermaidSvg ? (
+                      <div className="overflow-auto" dangerouslySetInnerHTML={{ __html: mermaidSvg }} />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Измените код диаграммы, чтобы увидеть предпросмотр.</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               
               {/* Reference Solution for Interviewer */}
