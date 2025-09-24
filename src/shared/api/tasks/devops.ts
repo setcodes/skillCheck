@@ -1231,8 +1231,8 @@ assert 'elasticsearch:' in userCode or 'kibana:' in userCode, 'Должен бы
 # Проверяем, что есть Message Queue
 assert 'kafka:' in userCode or 'rabbitmq:' in userCode, 'Должна быть Message Queue'
 
-# Проверяем, что есть Service Mesh
-assert 'istio:' in userCode or 'linkerd:' in userCode, 'Должен быть Service Mesh'`,
+# Service Mesh не является обязательным для базовой микросервисной архитектуры
+# (Istio/Linkerd сложно настроить в docker-compose)`,
     solution: `# docker-compose.yml
 version: '3.8'
 

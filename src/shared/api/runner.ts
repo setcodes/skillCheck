@@ -1,4 +1,249 @@
 import { parse } from 'java-parser'
+import initSqlJs, { type SqlJsStatic, type SqlJsDatabase } from 'sql.js'
+import sqlWasmUrl from 'sql.js/dist/sql-wasm.wasm?url'
+
+type PyodideInstance = {
+  loadPackagesFromImports(code: string): Promise<void>
+  runPythonAsync(code: string, options?: { globals?: any }): Promise<any>
+  globals: {
+    get(name: string): any
+  }
+}
+
+let sqlJsInstance: Promise<SqlJsStatic> | null = null
+function ensureSqlJs(): Promise<SqlJsStatic> {
+  if (!sqlJsInstance) {
+    sqlJsInstance = initSqlJs({ locateFile: () => sqlWasmUrl })
+  }
+  return sqlJsInstance!
+}
+
+let pyodideInstance: Promise<PyodideInstance> | null = null
+async function ensurePyodide(): Promise<PyodideInstance> {
+  if (typeof window === 'undefined') {
+    throw new Error('Pyodide is not available in this environment')
+  }
+  if (!pyodideInstance) {
+    pyodideInstance = (async () => {
+      if (typeof window.loadPyodide !== 'function') {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script')
+          script.src = 'https://cdn.jsdelivr.net/pyodide/v0.27.3/full/pyodide.js'
+          script.onload = () => resolve()
+          script.onerror = () => reject(new Error('Failed to load Pyodide runtime'))
+          document.head.appendChild(script)
+        })
+      }
+      const pyodide = await window.loadPyodide?.({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.27.3/full/' })
+      if (!pyodide) {
+        throw new Error('Pyodide failed to initialize')
+      }
+      return pyodide as PyodideInstance
+    })()
+  }
+  return pyodideInstance
+}
+
+function indentLines(code: string, spaces = 4): string {
+  const indent = ' '.repeat(spaces)
+  return code
+    .split('\n')
+    .map(line => `${indent}${line}`)
+    .join('\n')
+}
+
+function compareSqlValues(actual: any, expected: any): boolean {
+  const actualNumber = typeof actual === 'number' ? actual : Number(actual)
+  const expectedNumber = typeof expected === 'number' ? expected : Number(expected)
+
+  const actualIsNumber = Number.isFinite(actualNumber)
+  const expectedIsNumber = Number.isFinite(expectedNumber)
+
+  if (actualIsNumber && expectedIsNumber) {
+    return Math.abs(actualNumber - expectedNumber) <= 1e-6
+  }
+
+  const normalizeDateLike = (value: unknown): string => {
+    const str = String(value ?? '')
+    const trimmed = str.trim()
+    if (!trimmed) return trimmed
+
+    const monthMatch = trimmed.match(/^(\d{4})-(\d{2})-01(?:[ T]00:00:00(?:\.0+)?(?:Z)?)?$/)
+    if (monthMatch) {
+      return `${monthMatch[1]}-${monthMatch[2]}`
+    }
+
+    const dayMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T]00:00:00(?:\.0+)?(?:Z)?)?$/)
+    if (dayMatch) {
+      const [ , year, month, day ] = dayMatch
+      return `${year}-${month}-${day}`
+    }
+
+    return trimmed
+  }
+
+  return normalizeDateLike(actual) === normalizeDateLike(expected)
+}
+
+function compareSqlResults(actual: any[][], expected: any[][]): boolean {
+  if (actual.length !== expected.length) return false
+  for (let i = 0; i < actual.length; i++) {
+    const aRow = actual[i]
+    const eRow = expected[i]
+    if (aRow.length !== eRow.length) return false
+    for (let j = 0; j < aRow.length; j++) {
+      if (!compareSqlValues(aRow[j], eRow[j])) {
+        return false
+      }
+    }
+  }
+  return true
+}
+
+function registerSqlHelpers(db: SqlJsDatabase) {
+  if (typeof (db as any).create_function !== 'function') {
+    return
+  }
+
+  const createFunction = (name: string, fn: (...args: any[]) => any) => {
+    try {
+      ;(db as any).create_function(name, fn)
+    } catch (error) {
+      console.warn(`Failed to register SQL helper function ${name}:`, error)
+    }
+  }
+
+  const toDateLike = (value: unknown) => {
+    if (value == null) return null
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value
+    }
+    const str = String(value)
+    if (!str.trim()) return null
+    const parsed = new Date(str)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed
+    }
+    const match = str.match(/^(\d{4})-(\d{2})(?:-(\d{2}))?/)
+    if (match) {
+      const year = Number(match[1])
+      const month = Number(match[2]) - 1
+      const day = match[3] ? Number(match[3]) : 1
+      return new Date(Date.UTC(year, month, day))
+    }
+    return null
+  }
+
+  const formatDate = (date: Date | null, granularity: 'month' | 'year' | 'day') => {
+    if (!date) return null
+    const year = date.getUTCFullYear()
+    const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const day = String(date.getUTCDate()).padStart(2, '0')
+    if (granularity === 'year') return `${year}-01-01`
+    if (granularity === 'month') return `${year}-${month}-01`
+    return `${year}-${month}-${day}`
+  }
+
+  const dateTruncImpl = (precision: unknown, value: unknown) => {
+    if (typeof precision !== 'string') return value
+    const norm = precision.toLowerCase()
+    const date = toDateLike(value)
+    if (!date) return value
+    if (norm === 'month') return formatDate(date, 'month')
+    if (norm === 'year') return formatDate(date, 'year')
+    if (norm === 'day') return formatDate(date, 'day')
+    return value
+  }
+  createFunction('date_trunc', dateTruncImpl)
+  createFunction('DATE_TRUNC', dateTruncImpl)
+
+  const toCharImpl = (value: unknown, format: unknown) => {
+    if (typeof format !== 'string') return value
+    const date = toDateLike(value)
+    if (!date) return value
+    const fmt = format.replace(/\s+/g, '').toUpperCase()
+    if (fmt === 'YYYY-MM' || fmt === 'YYYYMM') {
+      const year = date.getUTCFullYear()
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+      if (fmt === 'YYYY-MM') return `${year}-${month}`
+      return `${year}${month}`
+    }
+    if (fmt === 'YYYY-MM-DD' || fmt === 'YYYYMMDD') {
+      const year = date.getUTCFullYear()
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0')
+      const day = String(date.getUTCDate()).padStart(2, '0')
+      if (fmt === 'YYYY-MM-DD') return `${year}-${month}-${day}`
+      return `${year}${month}${day}`
+    }
+    return value
+  }
+  createFunction('to_char', toCharImpl)
+  createFunction('TO_CHAR', toCharImpl)
+}
+
+function evaluateStringCondition(userCode: string, conditionRaw: string): { handled: boolean; value: boolean } {
+  const condition = conditionRaw.trim()
+  if (!condition) return { handled: false, value: false }
+
+  const userCodeLower = userCode.toLowerCase()
+
+  const evaluateSimple = (expr: string): boolean | null => {
+    const trimmed = expr.trim()
+    if (!trimmed) return null
+
+    const usesLower = trimmed.includes('userCode.lower()') || trimmed.includes('userCode.toLowerCase()')
+    const haystack = usesLower ? userCodeLower : userCode
+
+    const includesMatch = trimmed.match(/['"]([^'"]+)['"]\s+in\s+userCode(?:\.lower\(\))?/i)
+    if (includesMatch) {
+      const term = includesMatch[1]
+      const needle = usesLower ? term.toLowerCase() : term
+      return haystack.includes(needle)
+    }
+
+    const notMatch = trimmed.match(/['"]([^'"]+)['"]\s+not\s+in\s+userCode(?:\.lower\(\))?/i)
+    if (notMatch) {
+      const term = notMatch[1]
+      const needle = usesLower ? term.toLowerCase() : term
+      return !haystack.includes(needle)
+    }
+
+    return null
+  }
+
+  const orParts = condition.split(/\s+or\s+/i)
+  if (orParts.length > 1) {
+    let recognized = false
+    for (const part of orParts) {
+      const value = evaluateSimple(part)
+      if (value !== null) {
+        recognized = true
+        if (value) return { handled: true, value: true }
+      }
+    }
+    if (recognized) return { handled: true, value: false }
+  }
+
+  const andParts = condition.split(/\s+and\s+/i)
+  if (andParts.length > 1) {
+    let recognized = false
+    for (const part of andParts) {
+      const value = evaluateSimple(part)
+      if (value !== null) {
+        recognized = true
+        if (!value) return { handled: true, value: false }
+      }
+    }
+    if (recognized) return { handled: true, value: true }
+  }
+
+  const single = evaluateSimple(condition)
+  if (single !== null) {
+    return { handled: true, value: single }
+  }
+
+  return { handled: false, value: false }
+}
 
 // Умная конвертация Java в JavaScript с использованием AST
 function convertJavaToJavaScript(javaCode: string): string {
@@ -197,6 +442,10 @@ export async function runModule(
     
     
     
+    if (isPythonCode) {
+      return await runPython(userCode, tests)
+    }
+
     // Создаем модуль из пользовательского кода
     const exportedFunctions = userCode.match(/export\s+function\s+(\w+)/g)?.map(f => f.replace('export function ', '')) || []
     
@@ -243,46 +492,6 @@ export async function runModule(
       // Используем умную конвертацию Java в JavaScript
       cleanUserCode = convertJavaToJavaScript(userCode)
       // Старые конвертации удалены - используем новую функцию convertJavaToJavaScript()
-    } else if (isPythonCode) {
-      // Конвертация Python в JavaScript
-      cleanUserCode = userCode
-        // Конвертируем def в function
-        .replace(/def\s+(\w+)\s*\(([^)]*)\)\s*:/g, 'function $1($2) {')
-        // Конвертируем print в console.log
-        .replace(/print\s*\(/g, 'console.log(')
-        // Конвертируем if __name__ == '__main__'
-        .replace(/if\s+__name__\s*==\s*['"]__main__['"]\s*:/g, '// Main execution')
-        // Конвертируем Python типы
-        .replace(/\bint\b/g, 'let')
-        .replace(/\bstr\b/g, 'let')
-        .replace(/\bfloat\b/g, 'let')
-        .replace(/\bbool\b/g, 'let')
-        .replace(/\blist\b/g, 'Array')
-        .replace(/\bdict\b/g, 'Object')
-        // Конвертируем Python операторы
-        .replace(/==/g, '===')
-        .replace(/!=/g, '!==')
-        .replace(/\band\b/g, '&&')
-        .replace(/\bor\b/g, '||')
-        .replace(/\bnot\b/g, '!')
-        // Конвертируем Python методы
-        .replace(/\.append\s*\(/g, '.push(')
-        .replace(/\.len\s*\(/g, '.length')
-        .replace(/len\s*\(/g, '.length')
-        // Конвертируем range
-        .replace(/range\s*\(([^)]+)\)/g, 'Array.from({length: $1}, (_, i) => i)')
-        // Конвертируем Python циклы
-        .replace(/for\s+(\w+)\s+in\s+range\s*\(([^)]+)\)\s*:/g, 'for (let $1 = 0; $1 < $2; $1++) {')
-        .replace(/for\s+(\w+)\s+in\s+(\w+)\s*:/g, 'for (let $1 of $2) {')
-        // Конвертируем Python условия
-        .replace(/if\s+(.+)\s*:/g, 'if ($1) {')
-        .replace(/elif\s+(.+)\s*:/g, '} else if ($1) {')
-        .replace(/else\s*:/g, '} else {')
-        // Убираем отступы Python
-        .replace(/^    /gm, '')
-        .replace(/^  /gm, '')
-        // Добавляем закрывающие скобки
-        .replace(/\n(\w)/g, '\n}\n$1')
     } else if (isMermaidCode) {
       // Mermaid диаграммы - возвращаем как есть для рендеринга
       return [{ ok: true, message: 'Mermaid diagram rendered successfully' }]
@@ -653,37 +862,172 @@ export async function runModule(
 }
 
 // --- SQL runner (in-browser) ---
+type SqlTestSpec = {
+  schema?: string[]
+  data?: string[]
+  expectedRows: any[]
+  check?: string
+  queryVar?: string
+}
+
+function runSqlStatements(db: SqlJsDatabase, statements?: string[]) {
+  for (const raw of statements || []) {
+    const sql = raw.trim()
+    if (!sql) continue
+    const statement = sql.endsWith(';') ? sql : `${sql};`
+    db.run(statement)
+  }
+}
+
 export async function runSql(
   userSql: string,
-  spec: { schema?: string[]; data?: string[]; expectedRows: any[]; check?: string; queryVar?: string }
+  spec: SqlTestSpec
 ): Promise<{ ok: boolean; message: string }[]> {
   const results: { ok: boolean; message: string }[] = []
   try {
-    // dynamic import to avoid heavy initial bundle if not needed
-    const alasqlMod: any = await import('alasql')
-    const alasql = (alasqlMod as any).default || alasqlMod
-    // reset database context by using a new database per run
-    alasql('CREATE DATABASE IF NOT EXISTS tmpdb')
-    alasql('USE tmpdb')
+    const SQL = await ensureSqlJs()
+    const db = new SQL.Database()
     try {
-      for (const s of (spec.schema || [])) alasql(s)
-      for (const d of (spec.data || [])) alasql(d)
-      const query = spec.check
+      registerSqlHelpers(db)
+      runSqlStatements(db, spec?.schema)
+      runSqlStatements(db, spec?.data)
+
+      const query = spec?.check
         ? String(spec.check).replace(new RegExp(String(spec.queryVar || 'SQL'), 'g'), `(${userSql})`)
         : userSql
-      const rows = alasql(query) as any[]
-      const normalized = Array.isArray(rows)
-        ? rows.map((r) => (Array.isArray(r) ? r : Object.values(r)))
-        : []
-      const exp = spec.expectedRows || []
-      const ok = JSON.stringify(normalized) === JSON.stringify(exp)
-      results.push({ ok, message: ok ? 'SQL: все проверки пройдены' : `SQL: ожидалось ${JSON.stringify(exp)}, получено ${JSON.stringify(normalized)}` })
+
+      const trimmedQuery = query.trim()
+      if (!trimmedQuery) {
+        results.push({ ok: false, message: 'SQL: пустой запрос' })
+        return results
+      }
+
+      const execResult = db.exec(trimmedQuery)
+      const rows = execResult.length > 0 ? execResult[0].values : []
+      const normalized = rows.map((row: any[]) => row.slice())
+      const expected = spec?.expectedRows || []
+
+      if (!expected.length && !normalized.length) {
+        results.push({ ok: true, message: 'SQL: все проверки пройдены' })
+        return results
+      }
+
+      const ok = compareSqlResults(normalized, expected)
+      const message = ok
+        ? 'SQL: все проверки пройдены'
+        : `SQL: ожидалось ${JSON.stringify(expected)}, получено ${JSON.stringify(normalized)}`
+      results.push({ ok, message })
     } finally {
-      try { alasql('DROP DATABASE tmpdb') } catch {}
+      db.close()
     }
   } catch (e: any) {
     results.push({ ok: false, message: `SQL error: ${e?.message || e}` })
   }
+  return results
+}
+
+function buildPythonTestHarness(tests: string): string {
+  const hasBody = tests.trim().length > 0
+  const body = hasBody ? indentLines(tests) : '    pass'
+  return `import traceback
+
+__results = []
+
+def __run_user_tests():
+${body}
+
+try:
+    __run_user_tests()
+    __results.append({'ok': True, 'message': 'Python: все проверки пройдены'})
+except AssertionError as e:
+    __results.append({'ok': False, 'message': f'AssertionError: {e}'})
+except Exception as e:
+    tb = traceback.format_exc()
+    __results.append({'ok': False, 'message': f'Ошибка при выполнении тестов: {e}'})
+`
+}
+
+export async function runPython(userCode: string, tests: string): Promise<{ ok: boolean; message: string }[]> {
+  const results: { ok: boolean; message: string }[] = []
+  try {
+    const pyodide = await ensurePyodide()
+    const namespace = pyodide.globals.get('dict')()
+    const builtins = pyodide.globals.get('__builtins__')
+    namespace.set('__builtins__', builtins)
+    builtins.destroy()
+
+    try {
+      await pyodide.loadPackagesFromImports(`${userCode}\n${tests}`)
+      await pyodide.runPythonAsync(userCode, { globals: namespace })
+      const harness = buildPythonTestHarness(tests)
+      await pyodide.runPythonAsync(harness, { globals: namespace })
+
+      const pyResults = namespace.get('__results') || null
+      const jsResults = pyResults ? pyResults.toJs({ create_proxies: false }) : null
+      if (pyResults && typeof pyResults.destroy === 'function') {
+        pyResults.destroy()
+      }
+
+      if (Array.isArray(jsResults) && jsResults.length > 0) {
+        for (const entry of jsResults) {
+          results.push({ ok: !!entry.ok, message: String(entry.message || '') })
+        }
+      } else {
+        results.push({ ok: false, message: 'Python: тесты не вернули результатов' })
+      }
+    } finally {
+      if (typeof namespace.destroy === 'function') {
+        namespace.destroy()
+      }
+    }
+  } catch (e: any) {
+    results.push({ ok: false, message: `Python error: ${e?.message || e}` })
+  }
+  return results
+}
+
+export async function runMermaid(userCode: string, tests: string): Promise<{ ok: boolean; message: string }[]> {
+  const results: { ok: boolean; message: string }[] = []
+  const seenMessages = new Set<string>()
+  const addResult = (ok: boolean, message: string) => {
+    if (!seenMessages.has(message)) {
+      results.push({ ok, message })
+      seenMessages.add(message)
+    }
+  }
+
+  const normalizedCode = userCode || ''
+  if (!normalizedCode.trim()) {
+    addResult(false, 'Mermaid: диаграмма не может быть пустой')
+    return results
+  }
+  const assertions = tests.split('\n').map(line => line.trim()).filter(line => line.startsWith('assert '))
+
+  for (const assertion of assertions) {
+    const match = assertion.match(/assert\s+(.+?),\s*['"](.+?)['"]/)
+    if (!match) continue
+    const [, condition, message] = match
+    const evaluation = evaluateStringCondition(normalizedCode, condition)
+    if (evaluation.handled) {
+      addResult(evaluation.value, message)
+    } else {
+      const hasTerm = message ? normalizedCode.toLowerCase().includes(message.toLowerCase()) : false
+      addResult(hasTerm, message)
+    }
+  }
+
+  if (seenMessages.size === 0) {
+    addResult(/\b(graph|flowchart)\b/i.test(normalizedCode), 'Диаграмма должна содержать определение графа (graph/flowchart)')
+    addResult(/-->|<--|---/.test(normalizedCode), 'Диаграмма должна включать связи между элементами (--> или ---)')
+  } else {
+    addResult(/\b(graph|flowchart)\b/i.test(normalizedCode), 'Диаграмма должна содержать определение графа (graph/flowchart)')
+    addResult(/-->|<--|---/.test(normalizedCode), 'Диаграмма должна включать связи между элементами (--> или ---)')
+  }
+
+  if (results.length === 0) {
+    addResult(false, 'Mermaid: не удалось проверить диаграмму')
+  }
+
   return results
 }
 
@@ -736,34 +1080,26 @@ export async function runDevOpsTests(userCode: string, tests: string): Promise<{
           
           // Выполняем проверку
           let ok = false
-          try {
-            // Обрабатываем сложные условия с or
-            if (condition.includes(' or ')) {
-              const parts = condition.split(' or ')
-              ok = parts.some(part => {
-                const trimmedPart = part.trim()
-                if (trimmedPart.includes('in userCode')) {
-                  const searchTerm = trimmedPart.match(/'([^']+)'/)?.[1] || trimmedPart.match(/"([^"]+)"/)?.[1]
-                  return searchTerm ? userCode.includes(searchTerm) : false
+          const evaluated = evaluateStringCondition(userCode, condition)
+          if (evaluated.handled) {
+            ok = evaluated.value
+          } else {
+            try {
+              if (condition.includes('in userCode')) {
+                const searchTerm = condition.match(/'([^']+)'/)?.[1] || condition.match(/"([^"]+)"/)?.[1]
+                if (searchTerm) {
+                  ok = userCode.includes(searchTerm)
                 }
-                return false
-              })
-            } else if (condition.includes('in userCode')) {
-              const searchTerm = condition.match(/'([^']+)'/)?.[1] || condition.match(/"([^"]+)"/)?.[1]
-              if (searchTerm) {
-                ok = userCode.includes(searchTerm)
+              } else {
+                const evalCondition = condition.replace(/userCode/g, JSON.stringify(userCode))
+                ok = eval(evalCondition)
               }
-            } else {
-              // Заменяем userCode в условии
-              const evalCondition = condition.replace(/userCode/g, JSON.stringify(userCode))
-              ok = eval(evalCondition)
-            }
-          } catch (e) {
-            // Если eval не работает, делаем простую проверку строк
-            if (condition.includes('in userCode')) {
-              const searchTerm = condition.match(/'([^']+)'/)?.[1] || condition.match(/"([^"]+)"/)?.[1]
-              if (searchTerm) {
-                ok = userCode.includes(searchTerm)
+            } catch (e) {
+              if (condition.includes('in userCode')) {
+                const searchTerm = condition.match(/'([^']+)'/)?.[1] || condition.match(/"([^"]+)"/)?.[1]
+                if (searchTerm) {
+                  ok = userCode.includes(searchTerm)
+                }
               }
             }
           }

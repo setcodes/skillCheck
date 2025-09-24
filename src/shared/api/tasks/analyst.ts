@@ -13,7 +13,7 @@ export const BA: UITask[] = [
     language: 'sql',
     starter: `-- TODO: Напишите SQL запрос для анализа выручки
 -- Требования:
--- - Группировка по месяцам
+-- - Группировка по месяцам (используйте SUBSTR(date, 1, 7))
 -- - Сумма выручки за каждый месяц
 -- - Сортировка по месяцам
 -- - Таблица: orders (id, date, amount, customer_id)
@@ -28,30 +28,52 @@ FROM orders
 -- Создаем тестовые данные
 CREATE TABLE orders (
   id INTEGER,
-  date DATE,
-  amount DECIMAL(10,2),
+  date TEXT,
+  amount REAL,
   customer_id INTEGER
 );
 
 INSERT INTO orders VALUES 
   (1, '2024-01-15', 100.00, 1),
-  (1, '2024-01-20', 150.00, 2),
-  (1, '2024-02-10', 200.00, 1),
-  (1, '2024-02-15', 75.00, 3),
-  (1, '2024-03-05', 300.00, 2);
+  (2, '2024-01-20', 150.00, 2),
+  (3, '2024-02-10', 200.00, 1),
+  (4, '2024-02-15', 75.00, 3),
+  (5, '2024-03-05', 300.00, 2);
 
 -- Выполняем запрос пользователя
 -- Проверяем, что результат содержит нужные колонки
 -- Проверяем, что данные сгруппированы по месяцам
 -- Проверяем, что есть агрегация выручки`,
+    testsSql: {
+      schema: [
+        `CREATE TABLE orders (
+  id INTEGER,
+  date TEXT,
+  amount REAL,
+  customer_id INTEGER
+);`
+      ],
+      data: [
+        `INSERT INTO orders VALUES (1, '2024-01-15', 100.00, 1);`,
+        `INSERT INTO orders VALUES (2, '2024-01-20', 150.00, 2);`,
+        `INSERT INTO orders VALUES (3, '2024-02-10', 200.00, 1);`,
+        `INSERT INTO orders VALUES (4, '2024-02-15', 75.00, 3);`,
+        `INSERT INTO orders VALUES (5, '2024-03-05', 300.00, 2);`
+      ],
+      expectedRows: [
+        ['2024-01', 250.0, 2, 125.0],
+        ['2024-02', 275.0, 2, 137.5],
+        ['2024-03', 300.0, 1, 300.0]
+      ]
+    },
     solution: `SELECT 
-  DATE_TRUNC('month', date) as month,
+  SUBSTR(date, 1, 7) as month,
   SUM(amount) as total_revenue,
   COUNT(*) as order_count,
   AVG(amount) as avg_order_value
 FROM orders
 WHERE date >= '2024-01-01'
-GROUP BY DATE_TRUNC('month', date)
+GROUP BY SUBSTR(date, 1, 7)
 ORDER BY month;`
   },
 
