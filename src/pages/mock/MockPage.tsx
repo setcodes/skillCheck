@@ -17,7 +17,7 @@ import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCi
 import { useToast } from '@/shared/hooks/use-sonner'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
-import { runModuleWithLogs } from '@/shared/api/runner'
+import { runTaskChecks } from '@/shared/api/runner'
 import { answerText } from '@/entities/question/model/answer'
 import { crossedThresholds, formatSeconds } from '@/shared/lib/timer'
 
@@ -120,11 +120,11 @@ export default function MockPage(){
     const item = cur as MockTaskItem
     if(!item.starter) return
     const code = (item.code ?? item.starter)
-    const tests = getTasks(s.config.profession as Profession).find(t=>t.id===item.taskId)?.tests
-    if(!tests) return
+    const task = getTasks(s.config.profession as Profession).find(t=>t.id===item.taskId)
+    if(!task) return
     let runLogs: string[] = []
     try{
-      const out = await runModuleWithLogs(code, tests)
+      const out = await runTaskChecks(task, code)
       const res = out.results
       runLogs = out.logs
       const passed = res.filter(r=>r.ok).length

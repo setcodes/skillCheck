@@ -21,6 +21,13 @@ describe.each(FE.map((t) => [t.id, t] as const))('task %s', (_id, task) => {
     expect(failed).toEqual([])
   })
 
+  it('solution проходит скрытые проверки', async () => {
+    expect(task.hiddenTests, 'у задачи должны быть скрытые проверки').toBeTruthy()
+    const { results } = await runInSandbox({ code: task.solution ?? '', tests: task.hiddenTests ?? '' })
+    expect(results.length).toBeGreaterThanOrEqual(2)
+    expect(results.filter((r) => !r.ok).map((r) => r.message)).toEqual([])
+  })
+
   it('starter не проходит тесты', async () => {
     const { results: res } = await runInSandbox({ code: task.starter, tests: task.tests })
     expect(res.some((r) => !r.ok)).toBe(true)
