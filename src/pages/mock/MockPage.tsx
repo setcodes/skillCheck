@@ -141,7 +141,7 @@ export default function MockPage(){
     console.warn = (...a:any[])=>{ tmpLogs.push('[warn] '+a.map(String).join(' ')); orig.warn(...a) }
     console.info = (...a:any[])=>{ tmpLogs.push('[info] '+a.map(String).join(' ')); orig.info(...a) }
     try{
-      const res = await runModule(code, tests, { debug: false })
+      const res = await runModule(code, tests)
       const passed = res.filter(r=>r.ok).length
       const total = res.length
       const ratio = total? passed/total : 0

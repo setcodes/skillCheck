@@ -11,11 +11,10 @@ import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { useToast } from '@/shared/hooks/use-sonner'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
-import { runModule, runSql, runYaml, runDevOpsTests, runMermaid } from '@/shared/api/runner'
+import { runModule } from '@/shared/api/runner'
 import { getTasks } from '@/shared/api/questions'
 import type { UITask } from '@/entities/task/model/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import mermaid from 'mermaid'
 type Sol={code:string;lastResult?:{ok:boolean;message:string}[];score?:number;comment?:string}
 const K='solutions.v4';const load=()=>{try{const r=localStorage.getItem(K);if(r)return JSON.parse(r)}catch{}return{}};const save=(x:any)=>{try{localStorage.setItem(K,JSON.stringify(x))}catch{}}
 export default function Solve(){
@@ -76,112 +75,13 @@ export default function Solve(){
     return `${h}:${m}:${s}`
   }
   
-  // Определяем язык программирования в зависимости от профессии
-  const getLanguage = () => {
-    switch(prof) {
-      case 'frontend': return 'javascript'
-      case 'backend-java': return 'java'
-      case 'analyst': return 'sql'
-      case 'devops': return 'yaml'
-      default: return 'javascript'
-    }
-  }
-  
-  const formatLanguageLabel = (language?: string) => {
-    if (!language) return 'Не задан'
-    const labels: Record<string, string> = {
-      javascript: 'JavaScript',
-      typescript: 'TypeScript',
-      java: 'Java',
-      sql: 'SQL',
-      python: 'Python',
-      yaml: 'YAML',
-      dockerfile: 'Dockerfile',
-      mermaid: 'Диаграммы',
-    }
-    return labels[language] || language.toUpperCase()
-  }
-  
-  // Улучшенное определение языка с проверкой содержимого кода
-  const detectLanguage = (code: string) => {
-    if (code.includes('public class') || code.includes('public static') || code.includes('System.out.println')) {
-      return 'java'
-    }
-    if (code.includes('SELECT') || code.includes('FROM') || code.includes('WHERE')) {
-      return 'sql'
-    }
-    // Сначала проверяем Dockerfile (более специфично)
-    if (code.includes('FROM ') || code.includes('WORKDIR ') || code.includes('COPY ') || code.includes('RUN ')) {
-      return 'dockerfile'
-    }
-    // Затем проверяем YAML (Kubernetes, Docker Compose, Helm и т.д.)
-    if (code.includes('apiVersion:') || code.includes('kind:') || code.includes('metadata:') || 
-        (code.includes('version:') && code.includes('services:'))) {
-      return 'yaml'
-    }
-    if (code.includes('interface ') || code.includes(': string') || code.includes(': number')) {
-      return 'typescript'
-    }
-    return 'javascript'
-  }
-  
-  const taskLanguage = useMemo(()=> {
-    const explicitLanguage = (task as any)?.language
-    if (explicitLanguage) return explicitLanguage
-    
-    const detectedLanguage = detectLanguage(code)
-    return detectedLanguage
-  }, [task?.id, code])
-  
-  const [mermaidSvg, setMermaidSvg] = useState<string>('')
-  const [mermaidError, setMermaidError] = useState<string>('')
-  const mermaidInitializedRef = useRef(false)
+  const formatLanguageLabel = (language?: string) => (language === 'typescript' ? 'TypeScript' : 'JavaScript')
 
-  useEffect(()=>{
-    if (taskLanguage !== 'mermaid') {
-      setMermaidSvg('')
-      setMermaidError('')
-      return
-    }
-
-    if (!mermaidInitializedRef.current) {
-      try {
-        mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' })
-      } catch (e) {
-        console.error('Mermaid initialize error:', e)
-      }
-      mermaidInitializedRef.current = true
-    }
-
-    if (!code.trim()) {
-      setMermaidSvg('')
-      setMermaidError('')
-      return
-    }
-
-    let cancelled = false
-    const renderDiagram = async () => {
-      try {
-        const renderId = `mermaid-preview-${Date.now()}`
-        const { svg } = await mermaid.render(renderId, code)
-        if (!cancelled) {
-          setMermaidSvg(svg)
-          setMermaidError('')
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          setMermaidSvg('')
-          setMermaidError(err?.message || 'Не удалось отрисовать диаграмму')
-        }
-      }
-    }
-
-    renderDiagram()
-
-    return () => {
-      cancelled = true
-    }
-  }, [taskLanguage, code])
+  // Явное поле language у задачи; иначе TS, если в стартовом коде есть типы
+  const taskLanguage = useMemo(() => {
+    if (task?.language) return task.language
+    return /:\s*(string|number|boolean|any|unknown)\b|\binterface\s/.test(task?.starter ?? '') ? 'typescript' : 'javascript'
+  }, [task?.id, task?.language, task?.starter])
 
   const [logs, setLogs] = useState<string[]>([])
   // Toast notifications for per-task timer (down mode)
@@ -241,25 +141,7 @@ export default function Solve(){
     console.info = (...a:any[]) => { push('info', a); orig.info(...a) }
 
     try {
-      let res: {ok:boolean; message:string}[] = []
-      if (taskLanguage==='sql') {
-        // @ts-ignore
-        res = await runSql(code, (task as any).testsSql || { expectedRows: [] })
-      } else if (taskLanguage==='yaml' && task.id?.startsWith('dv_')) {
-        // Для DevOps YAML задач используем runDevOpsTests
-        res = await runDevOpsTests(code, task.tests)
-      } else if (taskLanguage==='yaml') {
-        // Для обычных YAML задач используем runYaml
-        // @ts-ignore
-        res = await runYaml(code, (task as any).testsYaml || { rules: [] })
-      } else if (taskLanguage==='dockerfile') {
-        // Для Dockerfile используем runDevOpsTests напрямую
-        res = await runDevOpsTests(code, task.tests)
-      } else if (taskLanguage==='mermaid') {
-        res = await runMermaid(code, task.tests)
-      } else {
-        res = await runModule(code,task.tests,{debug:false}); 
-      }
+      const res = await runModule(code, task.tests)
       setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,lastResult:res}}))
       
       // Проверяем, есть ли результаты тестов
@@ -402,7 +284,7 @@ export default function Solve(){
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{x.title}</span>
                   <Badge variant="outline" className="text-[10px] tracking-wide">
-                    {formatLanguageLabel((x as any).language ?? getLanguage())}
+                    {formatLanguageLabel((x as any).language)}
                   </Badge>
                 </div>
                 <span className="text-xs text-muted-foreground capitalize">{x.level}</span>
@@ -502,11 +384,11 @@ export default function Solve(){
                       {task.level}
                     </Badge>
                     <Badge variant="outline" className="text-xs">
-                      {formatLanguageLabel((task as any)?.language ?? getLanguage())}
+                      {formatLanguageLabel(taskLanguage)}
                     </Badge>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    Язык задания: {formatLanguageLabel((task as any)?.language ?? getLanguage())}
+                    Язык задания: {formatLanguageLabel(taskLanguage)}
                   </span>
                 </div>
               </div>
@@ -571,22 +453,6 @@ export default function Solve(){
               </div>
 
 
-              {taskLanguage==='mermaid' && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-medium mb-2">Предпросмотр диаграммы</h3>
-                  <div className="rounded-lg border bg-muted/30 p-4">
-                    {mermaidError ? (
-                      <p className="text-sm text-destructive">{mermaidError}</p>
-                    ) : mermaidSvg ? (
-                      <div className="overflow-auto" dangerouslySetInnerHTML={{ __html: mermaidSvg }} />
-                    ) : (
-                      <p className="text-sm text-muted-foreground">Измените код диаграммы, чтобы увидеть предпросмотр.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              
               {/* Reference Solution for Interviewer */}
               {role==='interviewer' && task.solution && (
                 <div className="mt-6">
@@ -625,7 +491,7 @@ export default function Solve(){
                           <CodeEditor
                             value={task.solution}
                             onChange={() => {}} // Read-only
-                            language={getLanguage()}
+                            language={taskLanguage}
                             height="300px"
                             placeholder="Эталонное решение..."
                           />
