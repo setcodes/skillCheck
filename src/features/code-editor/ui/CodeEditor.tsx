@@ -4,11 +4,6 @@ import { Editor } from '@monaco-editor/react'
 import { Button } from '@/shared/ui/button'
 import { Wand2, Maximize2, Minimize2, X, Play, RotateCcw, Clock } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import * as prettier from 'prettier/standalone'
-import parserBabel from 'prettier/parser-babel'
-import parserHtml from 'prettier/parser-html'
-import parserCss from 'prettier/parser-postcss'
-import parserYaml from 'prettier/parser-yaml'
 
 export type CodeEditorHandle = {
   enterFullscreen: () => void
@@ -166,38 +161,24 @@ const CodeEditor = forwardRef<CodeEditorHandle, CodeEditorProps>(function CodeEd
       // Форматирование в зависимости от языка
       switch (language) {
         case 'javascript':
-        case 'typescript':
+        case 'typescript': {
+          // Prettier грузим по требованию — он не нужен для старта страницы
+          const [prettier, estree, babel, ts] = await Promise.all([
+            import('prettier/standalone'),
+            import('prettier/plugins/estree'),
+            import('prettier/plugins/babel'),
+            import('prettier/plugins/typescript'),
+          ])
           formattedCode = await prettier.format(currentValue, {
-            parser: 'babel',
-            plugins: [parserBabel],
+            parser: language === 'typescript' ? 'typescript' : 'babel',
+            plugins: [estree, babel, ts],
             semi: true,
             singleQuote: true,
             tabWidth: 2,
             trailingComma: 'es5',
           })
           break
-        case 'html':
-          formattedCode = await prettier.format(currentValue, {
-            parser: 'html',
-            plugins: [parserHtml],
-            tabWidth: 2,
-            printWidth: 80,
-          })
-          break
-        case 'css':
-          formattedCode = await prettier.format(currentValue, {
-            parser: 'css',
-            plugins: [parserCss],
-            tabWidth: 2,
-          })
-          break
-        case 'yaml':
-          formattedCode = await prettier.format(currentValue, {
-            parser: 'yaml',
-            plugins: [parserYaml],
-            tabWidth: 2,
-          })
-          break
+        }
         case 'java':
           // Для Java используем простое форматирование
           formattedCode = currentValue

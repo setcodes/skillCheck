@@ -1,4 +1,4 @@
-import { UITask } from '../tasks'
+import type { UITask } from '@/entities/task/model/types'
 
 /* =============== FRONTEND TASKS =============== */
 export const FE: UITask[] = [
