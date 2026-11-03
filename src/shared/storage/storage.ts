@@ -61,8 +61,18 @@ export const KEYS = {
   solutions: 'solutions.v4',
   mockSession: 'mock.session.v1',
   taskScoresBridge: 'bridge.taskScores.v1',
+  theoryScoresBridge: 'bridge.theoryScores.v1',
+  theoryDrafts: (prof: string) => `theory.drafts.v1.${prof}`,
   bankOverrides: (prof: string) => `bank:v2:${prof}`,
   legacyBankQuestions: (prof: string) => `bank:${prof}:questions`,
   legacyBankTasks: (prof: string) => `bank:${prof}:tasks`,
   taskTimer: (prof: string, taskId: string) => `task.timer.v2.${prof}.${taskId}`,
 } as const
+
+/** Сброс всех оценок интервьюера и решений кандидата (банк вопросов не трогает). */
+export function clearAllEvaluations(professions: readonly string[]): void {
+  removeKey(KEYS.taskScoresBridge)
+  removeKey(KEYS.theoryScoresBridge)
+  removeKey(KEYS.solutions)
+  for (const prof of professions) removeKey(KEYS.theoryDrafts(prof))
+}

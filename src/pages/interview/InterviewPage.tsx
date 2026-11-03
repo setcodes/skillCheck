@@ -9,6 +9,8 @@ import { Calendar } from '@/shared/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Label } from '@/shared/ui/label'
 import { useToast } from '@/shared/hooks/use-sonner'
+import { clearAllEvaluations, KEYS, readJSON } from '@/shared/storage/storage'
+import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants'
 import { useApp } from '@/app/providers/AppProvider'
 import { Save, Printer, Trash2, Info, CheckCircle } from 'lucide-react'
 import { PROFESSIONS } from '@/entities/profession/model/constants'
@@ -26,9 +28,9 @@ export default function Interview(){
   const[interviewers,setInterviewers]=useState<string[]>(()=>{ try { const v=localStorage.getItem("cand.interviewers"); if(!v) return []; const p=JSON.parse(v); return Array.isArray(p)? p.filter(x=>typeof x==='string'): [] } catch { return [] } })
   const[newInterviewer,setNewInterviewer]=useState("")
   
-  const bridge=JSON.parse(localStorage.getItem("bridge.taskScores.v1")||"{}") as Record<string,Row>
+  const[bridge,setBridge]=useState<Record<string,Row>>(()=>readJSON(KEYS.taskScoresBridge,{}))
   const rows=useMemo(()=>Object.values(bridge).filter(r=>r.prof===prof),[prof,bridge])
-  const tBridge=JSON.parse(localStorage.getItem("bridge.theoryScores.v1")||"{}") as Record<string,TheoryRow>
+  const[tBridge,setTBridge]=useState<Record<string,TheoryRow>>(()=>readJSON(KEYS.theoryScoresBridge,{}))
   const tRows=useMemo(()=>Object.values(tBridge).filter(r=>r.prof===prof),[prof,tBridge])
   const final=rows.length? (rows.reduce((s,r)=>s+(r.score||0),0)/(rows.length*5))*100:0
   const level=final>=85?"Senior":final>=65?"Middle":"Junior-"
@@ -69,22 +71,11 @@ export default function Interview(){
               <Button 
                 variant="outline" 
                 onClick={()=>{
-                  // Очищаем все данные об оценках
-                  localStorage.removeItem("bridge.taskScores.v1"); // Оценки задач
-                  localStorage.removeItem("bridge.theoryScores.v1"); // Оценки теории
-                  localStorage.removeItem("solutions.v4"); // Решения задач
-                  
-                  // Очищаем черновики теории для всех профессий
-                  const professions = ['frontend', 'backend-java', 'analyst', 'devops'];
-                  professions.forEach(prof => {
-                    localStorage.removeItem(`theory.drafts.v1.${prof}`);
-                  });
-                  
-                  // Показываем уведомление
-                  toast.success("Все оценки сброшены", "Очищены оценки задач, теории и решения");
-                  
-                  // Перезагружаем страницу
-                  setTimeout(() => location.reload(), 1000);
+                  if (!window.confirm('Сбросить все оценки, комментарии и решения?')) return
+                  clearAllEvaluations(ENABLED_PROFESSIONS)
+                  setBridge({})
+                  setTBridge({})
+                  toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения')
                 }}
                 className="inline-flex items-center gap-2 w-full"
               >
