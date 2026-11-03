@@ -13,7 +13,9 @@
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "test": "vitest run",
     "test:watch": "vitest",
-    "check": "npm run typecheck && npm run lint && npm run validate-questions && npm run test && npm run build"
+    "check": "npm run typecheck && npm run lint && npm run validate-questions && npm run test && npm run build",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
@@ -40,6 +42,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.64.1",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "autoprefixer": "^10.4.21",
