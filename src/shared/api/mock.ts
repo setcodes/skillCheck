@@ -1,7 +1,7 @@
 import type { Profession } from '@/entities/profession/model/types'
 import type { TheoryQuestion } from '@/entities/question/model/types'
 import type { UITask } from '@/entities/task/model/types'
-import { getQuestions, getTasks } from './questions'
+import { getQuestions, getTasks } from '@/shared/bank'
 import type { MockSessionConfig, MockSessionState, MockItem, MockTheoryItem, MockTaskItem } from '@/entities/mock/model/types'
 
 const LS_KEY = 'mock.session.v1'

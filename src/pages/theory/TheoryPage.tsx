@@ -13,14 +13,14 @@ import {
 import { TagFilter } from '@/shared/ui/tag-filter';
 import { QuestionTags } from '@/shared/ui/question-tags';
 import { useApp } from '@/app/providers/AppProvider';
-import { getQuestions } from '@/shared/api/questions';
+import { useQuestions } from '@/shared/bank';
 import { useToast } from '@/shared/hooks/use-sonner';
 import { Send, CheckCircle, Trash2 } from 'lucide-react';
 
 export default function Theory() {
 	const { prof, role } = useApp();
 	const { toast } = useToast();
-	const ALL = getQuestions(prof) || [];
+	const ALL = useQuestions(prof);
 	const cats = useMemo(() => {
 		const set = new Set<string>();
 		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');

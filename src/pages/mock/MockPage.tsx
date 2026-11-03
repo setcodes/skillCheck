@@ -10,7 +10,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuT
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { useApp } from '@/app/providers/AppProvider'
 import { createSession, loadSession, saveSession, clearSession, mapTaskScore } from '@/shared/api/mock'
-import { getQuestions, getTasks } from '@/shared/api/questions'
+import { getQuestions, getTasks } from '@/shared/bank'
+import type { Profession } from '@/entities/profession/model/types'
 import type { MockSessionState, MockItem, MockTaskItem, MockTheoryItem } from '@/entities/mock/model/types'
 import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCircle, Copy } from 'lucide-react'
 import { useToast } from '@/shared/hooks/use-sonner'
@@ -131,8 +132,7 @@ export default function MockPage(){
     const item = cur as MockTaskItem
     if(!item.starter) return
     const code = (item.code ?? item.starter)
-    const { TASKS_BY_PROF } = await import('@/shared/api/tasks')
-    const tests = TASKS_BY_PROF[s.config.profession as keyof typeof TASKS_BY_PROF]?.find((t:any)=>t.id===item.taskId)?.tests
+    const tests = getTasks(s.config.profession as Profession).find(t=>t.id===item.taskId)?.tests
     if(!tests) return
     let runLogs: string[] = []
     try{

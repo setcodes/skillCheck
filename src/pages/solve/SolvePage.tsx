@@ -12,14 +12,14 @@ import { useToast } from '@/shared/hooks/use-sonner'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
 import { runModuleWithLogs } from '@/shared/api/runner'
-import { getTasks } from '@/shared/api/questions'
+import { useTasks } from '@/shared/bank'
 import type { UITask } from '@/entities/task/model/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 type Sol={code:string;lastResult?:{ok:boolean;message:string}[];score?:number;comment?:string}
 const K='solutions.v4';const load=()=>{try{const r=localStorage.getItem(K);if(r)return JSON.parse(r)}catch{}return{}};const save=(x:any)=>{try{localStorage.setItem(K,JSON.stringify(x))}catch{}}
 export default function Solve(){
   const {role,prof}=useApp(); const[t,setT]=useState<Record<string,Sol>>(load()); useEffect(()=>save(t),[t])
-  const tasks=getTasks(prof); const levels=Array.from(new Set(tasks.map((x:UITask)=>x.level))) as UITask['level'][]
+  const tasks=useTasks(prof); const levels=Array.from(new Set(tasks.map((x:UITask)=>x.level))) as UITask['level'][]
   const[level,setLevel]=useState<UITask['level']>(levels[0]||'junior'); useEffect(()=>{setLevel(levels[0]||'junior')},[prof])
   const list=tasks.filter((x:UITask)=>x.level===level); const[cur,setCur]=useState<string>(list[0]?.id||''); useEffect(()=>{const l=tasks.filter((x:UITask)=>x.level===level);setCur(l[0]?.id||'')},[level,tasks])
   const task=useMemo(()=>tasks.find((x:UITask)=>x.id===cur),[cur,tasks]); const code=(t[cur]?.code)??(task?.starter||'')
