@@ -82,18 +82,20 @@ export const FE_EXTRA: TaskDef[] = [
     title: 'flattenObject(obj)',
     exportName: 'flattenObject',
     description:
-      'Превратить вложенный объект в плоский с ключами через точку: { a: { b: 1 } } → { "a.b": 1 }. Массивы и не-объекты остаются значениями.',
+      'Превратить вложенный объект в плоский с ключами через точку: { a: { b: 1 } } → { "a.b": 1 }. Разворачиваются только обычные объекты; массивы, Date, null и примитивы остаются значениями.',
     starter: `export function flattenObject(obj: Record<string, any>, prefix = ''): Record<string, any> {
   // TODO: Реализуйте flattenObject
   // Вложенные обычные объекты разворачиваются: ключи склеиваются через точку
-  // Массивы, null и примитивы — конечные значения
+  // Массивы, Date, null и примитивы — конечные значения
   throw new Error('Not implemented');
 }`,
     solution: `export function flattenObject(obj: Record<string, any>, prefix = ''): Record<string, any> {
   const result: Record<string, any> = {};
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? prefix + '.' + key : key;
-    const isPlainObject = value !== null && typeof value === 'object' && !Array.isArray(value);
+    // обычный объект — только с прототипом Object.prototype или null: Date, Map и массивы остаются значениями
+    const proto = value !== null && typeof value === 'object' ? Object.getPrototypeOf(value) : undefined;
+    const isPlainObject = proto === Object.prototype || proto === null;
     if (isPlainObject) Object.assign(result, flattenObject(value, path));
     else result[path] = value;
   }
@@ -258,7 +260,7 @@ export const FE_EXTRA: TaskDef[] = [
     title: 'createEmitter()',
     exportName: 'createEmitter',
     description:
-      'Простой эмиттер событий: on (возвращает функцию отписки), off, once, emit. Отписка во время emit не должна пропускать других подписчиков.',
+      'Простой эмиттер событий: on (возвращает функцию отписки), off, once, emit. Отписка во время emit не должна пропускать других подписчиков; off(event, handler) снимает и подписку, сделанную через once.',
     starter: `export function createEmitter() {
   // TODO: Реализуйте createEmitter
   // on(event, handler) — подписка, возвращает функцию отписки
@@ -270,8 +272,19 @@ export const FE_EXTRA: TaskDef[] = [
     solution: `export function createEmitter() {
   const handlers = new Map<string, Set<(...args: any[]) => void>>();
 
+  // once подписывает обёртку; запоминаем, какой исходный обработчик она представляет
+  const originals = new WeakMap<(...args: any[]) => void, (...args: any[]) => void>();
+
   function off(event: string, handler: (...args: any[]) => void) {
-    handlers.get(event)?.delete(handler);
+    const set = handlers.get(event);
+    if (!set) return;
+    if (set.delete(handler)) return;
+    for (const h of set) {
+      if (originals.get(h) === handler) {
+        set.delete(h);
+        return;
+      }
+    }
   }
   function on(event: string, handler: (...args: any[]) => void) {
     if (!handlers.has(event)) handlers.set(event, new Set());
@@ -283,6 +296,7 @@ export const FE_EXTRA: TaskDef[] = [
       off(event, wrapper);
       handler(...args);
     };
+    originals.set(wrapper, handler);
     return on(event, wrapper);
   }
   function emit(event: string, ...args: any[]) {
@@ -300,7 +314,7 @@ export const FE_EXTRA: TaskDef[] = [
     title: 'promisePool(tasks, limit)',
     exportName: 'promisePool',
     description:
-      'Выполнить асинхронные задачи с ограничением параллелизма: одновременно не больше limit. Результаты — в порядке входа. При первой ошибке новые задачи не запускаются, итоговый промис отклоняется.',
+      'Выполнить асинхронные задачи с ограничением параллелизма: одновременно не больше limit. Результаты — в порядке входа. При первой ошибке (в том числе синхронном исключении задачи) новые задачи не запускаются, итоговый промис отклоняется. limit < 1 — RangeError.',
     starter: `export function promisePool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
   // TODO: Реализуйте promisePool
   // Одновременно выполняется не больше limit задач
@@ -310,6 +324,11 @@ export const FE_EXTRA: TaskDef[] = [
 }`,
     solution: `export function promisePool<T>(tasks: (() => Promise<T>)[], limit: number): Promise<T[]> {
   return new Promise((resolve, reject) => {
+    // при limit 0 ни одна задача не стартует и промис повис бы навсегда
+    if (!(limit >= 1)) {
+      reject(new RangeError('limit must be >= 1'));
+      return;
+    }
     const results: T[] = new Array(tasks.length);
     let next = 0;
     let finished = 0;
@@ -323,18 +342,21 @@ export const FE_EXTRA: TaskDef[] = [
     const launch = () => {
       if (failed || next >= tasks.length) return;
       const index = next++;
-      tasks[index]().then(
-        (value) => {
-          results[index] = value;
-          finished++;
-          if (finished === tasks.length) resolve(results);
-          else launch(); // освободился слот — берём следующую задачу
-        },
-        (error) => {
-          failed = true;
-          reject(error);
-        }
-      );
+      // Promise.resolve().then: синхронный throw задачи станет отказом, а не исключением внутри then-колбэка
+      Promise.resolve()
+        .then(() => tasks[index]())
+        .then(
+          (value) => {
+            results[index] = value;
+            finished++;
+            if (finished === tasks.length) resolve(results);
+            else launch(); // освободился слот — берём следующую задачу
+          },
+          (error) => {
+            failed = true;
+            reject(error);
+          }
+        );
     };
 
     for (let i = 0; i < Math.min(limit, tasks.length); i++) launch();

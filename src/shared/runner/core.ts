@@ -4,8 +4,27 @@
 // Для golden-тестов в Node вызывается напрямую.
 
 import { transform } from 'sucrase'
-import { runCall } from './checks'
+import { deepEqual, runCall } from './checks'
 import type { SandboxInput, SandboxOutput, TestResult } from './types'
+
+// Проверка, которая так и не завершилась (промис без resolve), иначе дожидалась бы общего таймаута
+// воркера и уносила с собой результаты всех проверок. Синхронный бесконечный цикл ловит только supervisor.
+export const CHECK_TIMEOUT_MS = 2000
+
+async function withTimeout(run: () => Promise<TestResult[]>): Promise<TestResult[]> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<TestResult[]>((resolve) => {
+    timer = setTimeout(
+      () => resolve([{ ok: false, message: `Проверка не завершилась за ${CHECK_TIMEOUT_MS / 1000} с — вероятно, промис никогда не выполняется` }]),
+      CHECK_TIMEOUT_MS
+    )
+  })
+  try {
+    return await Promise.race([run(), timeout])
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor as new (
   ...args: string[]
@@ -43,13 +62,9 @@ function createAssert(report: (r: TestResult) => void) {
   const strict = {
     equal: (a: unknown, b: unknown, m?: string) =>
       ok(Object.is(a, b), 'equal', `expected ${formatLogArg(a)} === ${formatLogArg(b)}`, m),
+    // структурное сравнение, а не JSON.stringify: порядок ключей не важен, NaN ≠ null, Date ≠ строка
     deepEqual: (a: unknown, b: unknown, m?: string) =>
-      ok(
-        JSON.stringify(a) === JSON.stringify(b),
-        'deepEqual',
-        `deep diff: ${formatLogArg(a)} !== ${formatLogArg(b)}`,
-        m
-      ),
+      ok(deepEqual(a, b), 'deepEqual', `deep diff: ${formatLogArg(a)} !== ${formatLogArg(b)}`, m),
     ok: (v: unknown, m?: string) => ok(!!v, 'ok', 'ok(false)', m),
   }
   return { strict }
@@ -75,9 +90,9 @@ function compileUserModule(code: string): string {
 function prepareTests(tests: string): string {
   const withoutImports = tests
     .replace(/import\s+\{\s*strict\s+as\s+assert\s*\}\s+from\s+['"]assert['"];?/g, '')
+    // модуль решения приходит параметром m, поэтому годится любая деструктуризация: const { a, b } = m
     .replace(/import\s+\*\s+as\s+m\s+from\s+['"]MODULE['"];?/g, '')
-    .replace(/const\s+\{\s*(\w+)\s*\}\s*=\s*m;?/g, 'const { $1 } = userModule;')
-    .replace(/import\s+\{\s*(\w+)\s*\}\s+from\s+['"]MODULE['"];?/g, 'const { $1 } = userModule;')
+    .replace(/import\s*\{([^}]*)\}\s*from\s*['"]MODULE['"];?/g, (_, names: string) => `const {${names.replace(/\bas\b/g, ':')}} = m;`)
     .replace(/assert\.equal/g, 'assert.strict.equal')
     .replace(/assert\.deepEqual/g, 'assert.strict.deepEqual')
     .replace(/assert\.ok/g, 'assert.strict.ok')
@@ -92,7 +107,7 @@ async function runScript(
   const results: TestResult[] = []
   let testFn: (...args: unknown[]) => Promise<unknown>
   try {
-    testFn = new AsyncFunction('assert', 'userModule', 'global', 'console', prepareTests(source))
+    testFn = new AsyncFunction('assert', 'm', 'global', 'console', prepareTests(source))
   } catch (e) {
     return [{ ok: false, message: `Ошибка в тестах: ${errorMessage(e)}` }]
   }
@@ -132,19 +147,21 @@ export async function runInSandbox({ code, tests, checks, exportName }: SandboxI
     return fail(`Ошибка в коде решения: ${errorMessage(e)}`)
   }
 
-  if (!checks) return { results: await runScript(tests ?? '', instantiate(), sandboxConsole), logs }
+  if (!checks) return { results: await withTimeout(() => runScript(tests ?? '', instantiate(), sandboxConsole)), logs }
 
   const results: TestResult[] = []
   for (const check of checks) {
-    let produced: TestResult[]
-    if (check.type === 'call') {
-      produced = [await runCall(check, { instantiate, exportName: exportName ?? '' })]
-    } else {
+    const produced = await withTimeout(async () => {
+      if (check.type === 'call') return [await runCall(check, { instantiate, exportName: exportName ?? '' })]
       try {
-        produced = await runScript(check.code, instantiate(), sandboxConsole)
+        return await runScript(check.code, instantiate(), sandboxConsole)
       } catch (e) {
-        produced = [{ ok: false, message: `Ошибка в коде решения: ${errorMessage(e)}` }]
+        return [{ ok: false, message: `Ошибка в коде решения: ${errorMessage(e)}` }]
       }
+    })
+    // у call-проверки есть название — подставляем его в сообщение о тайм-ауте
+    if (check.type === 'call' && produced.length === 1 && !produced[0].message.startsWith(check.title)) {
+      produced[0] = { ...produced[0], message: `${check.title}: ${produced[0].message}` }
     }
     for (const r of produced) results.push(check.hidden ? { ...r, hidden: true } : r)
   }

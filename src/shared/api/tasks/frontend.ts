@@ -72,8 +72,8 @@ export const FE: TaskDef[] = [
   // Нормализуем строку: убираем пробелы и приводим к нижнему регистру
   const normalized = str.replace(/\\s/g, '').toLowerCase();
   
-  // Сравниваем с обратной строкой
-  return normalized === normalized.split('').reverse().join('');
+  // Сравниваем с обратной строкой. [...s], а не split(''): split рвёт эмодзи на половинки суррогатной пары
+  return normalized === [...normalized].reverse().join('');
 }`
   },
 
@@ -168,17 +168,21 @@ export const FE: TaskDef[] = [
 }`,
     solution: `export function throttle<T extends (...a: any[]) => any>(fn: T, delay = 200) {
   let lastCall = 0;
-  let timeoutId: NodeJS.Timeout | null = null;
-  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   return function(this: any, ...args: any[]) {
     const now = Date.now();
-    
+
     if (now - lastCall >= delay) {
+      // таймер мог опоздать: отложенный вызов уже не нужен, иначе получим два вызова подряд
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = null;
       lastCall = now;
       return fn.apply(this, args);
     } else {
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = setTimeout(() => {
+        timeoutId = null;
         lastCall = Date.now();
         fn.apply(this, args);
       }, delay - (now - lastCall));
@@ -192,7 +196,7 @@ export const FE: TaskDef[] = [
     level: 'junior', 
     title: 'safeGet(obj, path)', 
     exportName: 'safeGet',
-    description: 'Безопасное получение значения по пути (a.b.c) с fallback.',
+    description: 'Безопасно получить значение по пути "a.b.c" (индексы массива — тоже через точку). Если путь обрывается на null/undefined или итоговое значение undefined — вернуть defaultValue. Ложные значения 0, "" и false — найденные значения.',
     starter: `export function safeGet(obj: any, path: string, defaultValue?: any): any {
   // TODO: Реализуйте функцию safeGet
   // Безопасно получает значение по пути в объекте
@@ -201,9 +205,14 @@ export const FE: TaskDef[] = [
   throw new Error('Not implemented');
 }`,
     solution: `export function safeGet(obj: any, path: string, defaultValue?: any): any {
-  return path.split('.').reduce((current, key) => {
-    return current && current[key] !== undefined ? current[key] : defaultValue;
-  }, obj);
+  let current = obj;
+  for (const key of path.split('.')) {
+    // null и undefined не имеют свойств; '' и 0 — имеют (у строки есть length)
+    if (current == null) return defaultValue;
+    current = current[key];
+  }
+  // reduce с подстановкой defaultValue посреди пути продолжил бы обход уже по нему
+  return current === undefined ? defaultValue : current;
 }`
   },
 
@@ -220,8 +229,9 @@ export const FE: TaskDef[] = [
   throw new Error('Not implemented');
 }`,
     solution: `export async function promiseAllSettled<T>(promises: Promise<T>[]): Promise<Array<{status: 'fulfilled'|'rejected', value?: T, reason?: any}>> {
-  return Promise.all(promises.map(promise => 
-    promise.then(
+  // Promise.resolve: во входе могут оказаться обычные значения, у них нет .then
+  return Promise.all(promises.map(promise =>
+    Promise.resolve(promise).then(
       value => ({ status: 'fulfilled' as const, value }),
       reason => ({ status: 'rejected' as const, reason })
     )
@@ -244,8 +254,8 @@ export const FE: TaskDef[] = [
   throw new Error('Not implemented');
 }`,
     solution: `export function debounce<T extends (...a: any[]) => any>(fn: T, delay = 200) {
-  let timeoutId: NodeJS.Timeout | null = null;
-  
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
   const debounced = function(this: any, ...args: any[]) {
     if (timeoutId) clearTimeout(timeoutId);
     timeoutId = setTimeout(() => fn.apply(this, args), delay);
@@ -368,7 +378,7 @@ export const FE: TaskDef[] = [
     level: 'middle', 
     title: 'deepClone(obj)', 
     exportName: 'deepClone',
-    description: 'Глубокое копирование (без функций/циклов).',
+    description: 'Глубокое копирование примитивов, массивов, обычных объектов (в том числе без прототипа), Date и RegExp. Функции и циклические ссылки не поддерживаются.',
     starter: `export function deepClone<T>(x: T): T {
   // TODO: Реализуйте глубокое копирование
   // Поддерживает объекты, массивы, примитивы
@@ -383,13 +393,12 @@ export const FE: TaskDef[] = [
   if (x instanceof Array) return x.map(item => deepClone(item)) as T;
   if (x instanceof RegExp) return new RegExp(x.source, x.flags) as T;
   
+  // Object.keys вместо for…in + x.hasOwnProperty: у Object.create(null) метода hasOwnProperty нет
   const cloned = {} as T;
-  for (const key in x) {
-    if (x.hasOwnProperty(key)) {
-      cloned[key] = deepClone(x[key]);
-    }
+  for (const key of Object.keys(x) as (keyof T)[]) {
+    cloned[key] = deepClone(x[key]);
   }
-  
+
   return cloned;
 }`
   },
@@ -463,11 +472,11 @@ export const FE: TaskDef[] = [
     level: 'middle',
     title: 'delegate(root, selector, type, handler)',
     exportName: 'delegate',
-    description: 'Делегирование событий: один обработчик на root, срабатывает для потомков, подходящих под selector (через .closest()). Вернуть функцию отписки. В тестах используются лёгкие заглушки элементов.',
+    description: 'Делегирование событий: один обработчик на root, срабатывает для потомков, подходящих под selector (через .closest()); элемент, найденный выше root, не считается. Вернуть функцию отписки. В тестах используются лёгкие заглушки элементов: closest и contains.',
     starter: `export function delegate(root: Element, selector: string, type: string, handler: (this: Element, ev: Event) => void) {
   // TODO: Реализуйте делегирование событий
   // Привязывает ОДИН обработчик к root
-  // Вызывает handler (с this = найденный элемент) только если event.target.closest(selector) нашёл элемент
+  // Вызывает handler (с this = найденный элемент) только если event.target.closest(selector) нашёл элемент внутри root
   // Возвращает функцию, снимающую обработчик
   throw new Error('Not implemented');
 }`,
@@ -475,7 +484,8 @@ export const FE: TaskDef[] = [
   const eventHandler = (event: Event) => {
     const target = event.target as Element | null;
     const match = target?.closest(selector);
-    if (match) handler.call(match, event);
+    // closest идёт вверх и за пределы root: элемент выше по дереву — не наш
+    if (match && root.contains(match)) handler.call(match, event);
   };
   root.addEventListener(type, eventHandler);
   return () => root.removeEventListener(type, eventHandler);
@@ -487,36 +497,29 @@ export const FE: TaskDef[] = [
     level: 'middle', 
     title: 'fetchJSON(url, {signal})', 
     exportName: 'fetchJSON',
-    description: 'Безопасный fetch: ok/json/ошибки/отмена.',
+    description:
+      'Безопасная обёртка над fetch: ответ вне 2xx — ошибка со статусом в сообщении; 204 — null; иначе разобранный JSON. Опции и заголовки пользователя пробрасываются (headers может быть объектом или Headers), Content-Type: application/json ставится, только если есть body. Отмена через signal пробрасывается как есть — с именем AbortError, чтобы вызывающий код отличал её от сбоя.',
     starter: `export async function fetchJSON(url: string, opts: RequestInit = {}) {
   // TODO: Реализуйте безопасный fetch
-  // Проверяет response.ok
-  // Парсит JSON
-  // Обрабатывает ошибки
-  // Поддерживает AbortController
+  // Проверяет response.ok (fetch не отклоняется на 404 и 500)
+  // 204 No Content — вернуть null; иначе разобрать JSON
+  // Content-Type: application/json — только когда есть body
+  // Ошибку отмены (AbortError) не переупаковывать
   throw new Error('Not implemented');
 }`,
     solution: `export async function fetchJSON(url: string, opts: RequestInit = {}) {
-  try {
-    const response = await fetch(url, {
-      ...opts,
-      headers: {
-        'Content-Type': 'application/json',
-        ...opts.headers,
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error(\`HTTP error! status: \${response.status}\`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    if (error.name === 'AbortError') {
-      throw new Error('Request was aborted');
-    }
-    throw error;
+  // new Headers принимает и объект, и Headers; спред Headers дал бы пустой объект
+  const headers = new Headers(opts.headers);
+  // Content-Type на GET без тела превращает запрос в «непростой» и вызывает лишний preflight
+  if (opts.body != null && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+
+  // Ошибку отмены не ловим и не переупаковываем: вызывающий код отличает её по name === 'AbortError'
+  const response = await fetch(url, { ...opts, headers });
+  if (!response.ok) {
+    throw new Error(\`HTTP \${response.status} \${response.statusText}\`.trim());
   }
+  if (response.status === 204) return null; // тела нет — response.json() бросил бы SyntaxError
+  return response.json();
 }`
   },
 
@@ -533,7 +536,17 @@ export const FE: TaskDef[] = [
   // get(key) - получить значение
   // set(key, value) - установить значение
   // При превышении размера удаляет наименее используемый элемент
-  throw new Error('Not implemented');
+  constructor(capacity: number) {
+    throw new Error('Not implemented');
+  }
+
+  get(key: K): V | undefined {
+    throw new Error('Not implemented');
+  }
+
+  set(key: K, value: V): void {
+    throw new Error('Not implemented');
+  }
 }`,
     solution: `export class LRUCache<K, V> {
   private capacity: number;
@@ -556,6 +569,7 @@ export const FE: TaskDef[] = [
   }
   
   set(key: K, value: V): void {
+    if (this.capacity <= 0) return; // кэш нулевой ёмкости ничего не хранит
     if (this.cache.has(key)) {
       // Обновляем существующий ключ
       this.cache.delete(key);
@@ -575,7 +589,7 @@ export const FE: TaskDef[] = [
     level: 'senior', 
     title: 'deepEqual(a, b)', 
     exportName: 'deepEqual',
-    description: 'Глубокое сравнение без циклов.',
+    description: 'Глубокое сравнение: примитивы (NaN равен NaN), массивы, обычные объекты (порядок ключей не важен), Date, RegExp, Map и Set. Значения разных типов и с разными прототипами не равны. Циклические ссылки не поддерживаются.',
     starter: `export function deepEqual(a: any, b: any): boolean {
   // TODO: Реализуйте глубокое сравнение
   // Сравнивает объекты, массивы, примитивы
@@ -585,41 +599,55 @@ export const FE: TaskDef[] = [
 }`,
     solution: `export function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
-  
+
+  // NaN не равен самому себе по ===, но два NaN — одинаковые значения
+  if (Number.isNaN(a) && Number.isNaN(b)) return true;
+
   if (a == null || b == null) return a === b;
-  
-  if (typeof a !== typeof b) return false;
-  
-  if (typeof a !== 'object') return a === b;
-  
-  if (a instanceof Date && b instanceof Date) {
-    return a.getTime() === b.getTime();
+
+  if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+  // Разные прототипы — разные сущности: Date и {}, массив и объект, Map и {}
+  if (Object.getPrototypeOf(a) !== Object.getPrototypeOf(b)) return false;
+
+  if (a instanceof Date) return a.getTime() === b.getTime();
+
+  if (a instanceof RegExp) return a.source === b.source && a.flags === b.flags;
+
+  // У Map и Set нет собственных ключей — без отдельной ветки любые два Map «равны»
+  if (a instanceof Map) {
+    if (a.size !== b.size) return false;
+    for (const [key, value] of a) {
+      if (!b.has(key) || !deepEqual(value, b.get(key))) return false;
+    }
+    return true;
   }
-  
-  if (a instanceof RegExp && b instanceof RegExp) {
-    return a.source === b.source && a.flags === b.flags;
+
+  if (a instanceof Set) {
+    if (a.size !== b.size) return false;
+    for (const value of a) if (!b.has(value)) return false;
+    return true;
   }
-  
-  if (Array.isArray(a) && Array.isArray(b)) {
+
+  if (Array.isArray(a)) {
     if (a.length !== b.length) return false;
     for (let i = 0; i < a.length; i++) {
       if (!deepEqual(a[i], b[i])) return false;
     }
     return true;
   }
-  
-  if (Array.isArray(a) || Array.isArray(b)) return false;
-  
+
   const keysA = Object.keys(a);
   const keysB = Object.keys(b);
-  
+
   if (keysA.length !== keysB.length) return false;
-  
+
   for (const key of keysA) {
-    if (!keysB.includes(key)) return false;
+    // hasOwn вместо keysB.includes: O(1) на ключ вместо O(n)
+    if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
     if (!deepEqual(a[key], b[key])) return false;
   }
-  
+
   return true;
 }`
   },
@@ -642,9 +670,16 @@ export const FE: TaskDef[] = [
   
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-  const i = Math.floor(Math.log(n) / Math.log(k));
-  
-  return parseFloat((n / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  // Ограничиваем индекс: дробное n < 1 дало бы -1, огромное — выход за массив
+  let i = Math.min(Math.max(0, Math.floor(Math.log(n) / Math.log(k))), sizes.length - 1);
+  let value = parseFloat((n / Math.pow(k, i)).toFixed(2));
+  // 1048575 байт округляются до 1024 KB — это уже 1 MB
+  if (value >= k && i < sizes.length - 1) {
+    i++;
+    value = parseFloat((n / Math.pow(k, i)).toFixed(2));
+  }
+
+  return value + ' ' + sizes[i];
 }`
   },
 

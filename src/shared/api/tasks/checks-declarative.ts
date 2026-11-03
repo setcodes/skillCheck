@@ -97,6 +97,8 @@ export const DECLARATIVE_CHECKS: Record<string, Check[]> = {
     hidden(eq('null вместо объекта', [null, 'a.b', 'def'], 'def')),
     hidden(eq('индекс массива в пути', [{ a: [{ b: 5 }] }, 'a.0.b'], 5)),
     hidden(eq('путь через не-объект', [{ a: 1 }, 'a.b.c', 'def'], 'def')),
+    hidden(eq('после обрыва пути обход не продолжается по значению по умолчанию', [{}, 'a.length', 'def'], 'def')),
+    hidden(eq('у пустой строки есть свойства: "".length — 0', [{ a: '' }, 'a.length', 9], 0)),
   ],
 
   fe_formatBytes: [
@@ -142,6 +144,9 @@ export const DECLARATIVE_CHECKS: Record<string, Check[]> = {
     hidden(eq('разные даты', js('[new Date(5), new Date(6)]'), false)),
     hidden(eq('глубокое различие', [{ a: { b: [1, { c: 2 }] } }, { a: { b: [1, { c: 3 }] } }], false)),
     hidden(eq('разные типы', [1, '1'], false)),
+    hidden(eq('NaN равен NaN, в том числе внутри объектов', js('[{ x: NaN }, { x: NaN }]'), true)),
+    hidden(eq('дата и пустой объект различаются', js('[new Date(5), {}]'), false)),
+    hidden(eq('Map сравниваются по содержимому', js('[new Map([[1, 2]]), new Map()]'), false)),
   ],
 
   fe_parseQuery: [
@@ -197,6 +202,7 @@ export const DECLARATIVE_CHECKS: Record<string, Check[]> = {
     eq('исходный объект не меняется', [{ a: { b: 1 } }], { 'a.b': 1 }, { unchanged: true }),
     hidden(eq('глубокая вложенность', [{ a: { b: { c: { d: 1 } } } }], { 'a.b.c.d': 1 })),
     hidden(eq('несколько веток', [{ x: { y: 1 }, z: { w: 2 } }], { 'x.y': 1, 'z.w': 2 })),
+    hidden(ok('Date остаётся значением, а не разворачивается', js('[{ meta: { at: new Date(5) } }]'), '(r) => r["meta.at"] instanceof Date && r["meta.at"].getTime() === 5')),
   ],
 
   fe_buildTree: [

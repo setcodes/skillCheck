@@ -54,6 +54,42 @@ describe('runInSandbox', () => {
     expect(results).toEqual([{ ok: false, message: 'Test execution error: boom' }])
   })
 
+  it('deepEqual в сценариях сравнивает структурно: порядок ключей не важен, NaN не равен null', async () => {
+    const { results } = await runInSandbox({
+      code: 'export const pair = () => ({ b: 2, a: 1 })',
+      tests: T(`const { pair } = m;
+        assert.deepEqual(pair(), { a: 1, b: 2 }, 'порядок ключей');
+        assert.deepEqual([NaN], [null], 'NaN против null');`),
+    })
+    expect(results.map((r) => r.ok)).toEqual([true, false])
+  })
+
+  it('зависший сценарий завершается своим тайм-аутом, не дожидаясь общего', async () => {
+    const { results } = await runInSandbox({
+      code: 'export const never = () => new Promise(() => {})\nexport const one = () => 1',
+      checks: [
+        { type: 'script', code: T('const { never } = m; await never(); assert.ok(true);') },
+        { type: 'call', title: 'call с satisfies тоже не висит', args: [], expect: { satisfies: '(r) => true' } },
+        { type: 'call', title: 'следующая проверка выполняется', fn: 'one', args: [], expect: { equals: 1 } },
+      ],
+      exportName: 'never',
+    })
+    expect(results.map((r) => r.ok)).toEqual([false, false, true])
+    expect(results[0].message).toMatch(/не завершилась/)
+    expect(results[1].message).toMatch(/^call с satisfies тоже не висит: Проверка не завершилась/)
+  }, 10000)
+
+  it('в сценарии работают деструктуризация нескольких имён и именованный импорт с as', async () => {
+    const code = 'export const a = () => 1\nexport const b = () => 2'
+    const multi = await runInSandbox({ code, tests: T('const { a, b } = m; assert.equal(a() + b(), 3);') })
+    const named = await runInSandbox({
+      code,
+      tests: "import { strict as assert } from 'assert';\nimport { a, b as two } from 'MODULE';\nassert.equal(a() + two(), 3);",
+    })
+    expect(multi.results).toEqual([{ ok: true, message: 'equal' }])
+    expect(named.results).toEqual([{ ok: true, message: 'equal' }])
+  })
+
   it('без ассертов — явная ошибка', async () => {
     const { results } = await runInSandbox({
       code: 'export function f() { return 1 }',
