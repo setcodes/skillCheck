@@ -4,50 +4,138 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Светлая тема — «бумажный» терминал: холодный белый, тёмные чернила */
+    --background: 210 16% 96%;
+    --foreground: 220 18% 13%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 220 18% 13%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    /* Primary accent: green */
-    --primary: 142 72% 40%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 84% 4.9%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 142 30% 96%;
-    --accent-foreground: 222.2 84% 4.9%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 0 0% 100%;
-    --ring: 142 72% 40%;
-    --radius: 0.5rem;
+    --popover-foreground: 220 18% 13%;
+    /* Основное действие — зелёный промпта */
+    --primary: 132 52% 30%;
+    --primary-foreground: 0 0% 100%;
+    --primary-text: 132 55% 27%;
+    --secondary: 214 16% 92%;
+    --secondary-foreground: 220 18% 13%;
+    --muted: 214 16% 93%;
+    --muted-foreground: 220 9% 38%;
+    --accent: 214 16% 92%;
+    --accent-foreground: 220 18% 13%;
+    --destructive: 2 70% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 216 14% 86%;
+    --input: 216 14% 80%;
+    --field: 0 0% 100%;
+    --ring: 132 52% 30%;
+    --surface: 214 20% 98%;
+    /* ANSI-роли разделов */
+    --ansi-yellow: 35 92% 30%;
+    --ansi-blue: 214 72% 42%;
+    --ansi-magenta: 300 42% 40%;
+    --ansi-cyan: 186 75% 26%;
+    --ansi-red: 2 70% 44%;
+    /* «успех»: верный ответ, пройденные проверки — всегда зелёный, независимо от акцента */
+    --ok: 132 55% 28%;
+    --radius: 0.375rem;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    /* Primary accent: green (darker for dark mode) */
-    --primary: 142 72% 45%;
-    --primary-foreground: 222.2 84% 4.9%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 0 0% 100%;
-    --ring: 142 72% 45%;
+    /* Тёмная тема — тёплый графит фосфорного терминала */
+    --background: 30 6% 7%;
+    --foreground: 40 18% 87%;
+    --card: 30 6% 9.5%;
+    --card-foreground: 40 18% 87%;
+    --popover: 30 6% 10%;
+    --popover-foreground: 40 18% 87%;
+    --primary: 92 48% 58%;
+    --primary-foreground: 30 6% 7%;
+    --primary-text: 92 52% 62%;
+    --secondary: 30 5% 14%;
+    --secondary-foreground: 40 18% 87%;
+    --muted: 30 5% 13%;
+    --muted-foreground: 35 8% 62%;
+    --accent: 30 5% 15%;
+    --accent-foreground: 40 18% 87%;
+    --destructive: 4 72% 58%;
+    --destructive-foreground: 30 6% 7%;
+    --border: 30 5% 18%;
+    --input: 30 5% 22%;
+    --field: 30 6% 11%;
+    --ring: 92 48% 58%;
+    --surface: 30 6% 12%;
+    --ansi-yellow: 42 85% 62%;
+    --ansi-blue: 210 75% 70%;
+    --ansi-magenta: 300 45% 72%;
+    --ansi-cyan: 178 48% 60%;
+    --ansi-red: 4 78% 66%;
+    /* «успех»: верный ответ, пройденные проверки — всегда зелёный, независимо от акцента */
+    --ok: 92 52% 60%;
+  }
+
+  /* Dracula — тёмная тема поверх .dark: фиолетовый акцент, розовый, циан и зелёный */
+  .dark[data-theme="dracula"] {
+    --background: 231 15% 15%;
+    --foreground: 60 30% 96%;
+    --card: 231 15% 18%;
+    --card-foreground: 60 30% 96%;
+    --popover: 231 15% 19%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 265 89% 78%;
+    --primary-foreground: 231 15% 15%;
+    --primary-text: 265 89% 80%;
+    --secondary: 232 14% 24%;
+    --secondary-foreground: 60 30% 96%;
+    --muted: 232 14% 23%;
+    --muted-foreground: 228 24% 72%;
+    --accent: 232 14% 26%;
+    --accent-foreground: 60 30% 96%;
+    --destructive: 0 100% 67%;
+    --destructive-foreground: 231 15% 15%;
+    --border: 232 14% 29%;
+    --input: 232 14% 34%;
+    --field: 231 15% 16%;
+    --ring: 265 89% 78%;
+    --surface: 232 14% 21%;
+    --ansi-yellow: 65 92% 76%;
+    --ansi-blue: 191 97% 77%;
+    --ansi-magenta: 326 100% 74%;
+    --ansi-cyan: 135 94% 65%;
+    --ansi-red: 0 100% 67%;
+    /* «успех»: верный ответ, пройденные проверки — всегда зелёный, независимо от акцента */
+    --ok: 135 94% 65%;
+  }
+
+  /* Monokai — тёмная тема поверх .dark: оранжевый акцент, жёлтые строки, розовые ключевые слова */
+  .dark[data-theme="monokai"] {
+    --background: 75 5% 12%;
+    --foreground: 60 30% 96%;
+    --card: 70 8% 15%;
+    --card-foreground: 60 30% 96%;
+    --popover: 70 8% 16%;
+    --popover-foreground: 60 30% 96%;
+    --primary: 32 98% 56%;
+    --primary-foreground: 70 8% 12%;
+    --primary-text: 32 98% 62%;
+    --secondary: 60 7% 20%;
+    --secondary-foreground: 60 30% 96%;
+    --muted: 60 7% 18%;
+    --muted-foreground: 50 12% 66%;
+    --accent: 60 7% 21%;
+    --accent-foreground: 60 30% 96%;
+    --destructive: 338 95% 56%;
+    --destructive-foreground: 70 8% 12%;
+    --border: 55 10% 22%;
+    --input: 55 10% 28%;
+    --field: 70 8% 13%;
+    --ring: 32 98% 56%;
+    --surface: 70 7% 18%;
+    --ansi-yellow: 54 70% 68%;
+    --ansi-blue: 190 81% 67%;
+    --ansi-magenta: 261 100% 75%;
+    --ansi-cyan: 80 76% 53%;
+    --ansi-red: 338 95% 56%;
+    /* «успех»: верный ответ, пройденные проверки — всегда зелёный, независимо от акцента */
+    --ok: 80 76% 53%;
   }
 }
 
@@ -55,20 +143,35 @@
   * {
     @apply border-border;
   }
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    caret-color: hsl(var(--primary));
+  }
+  ::selection {
+    background-color: hsl(var(--primary) / 0.3);
+    color: inherit;
   }
   .font-brand { font-family: 'Share Tech', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', sans-serif; }
-  
-  /* Light inputs */
+
+  /* Поля ввода — на токенах темы */
   input, textarea, select {
-    background-color: #f9fafb !important;
-    color: #1f2937 !important;
+    background-color: hsl(var(--field)) !important;
+    color: hsl(var(--foreground)) !important;
   }
-  
-  .dark input, .dark textarea, .dark select {
-    background-color: #1f2937 !important;
-    color: #f9fafb !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 

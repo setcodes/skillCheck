@@ -5,7 +5,6 @@ import { asRole, collectErrors, seedStorage } from './helpers'
 const task = (id: string) => FRONTEND_TASKS.find((t) => t.id === id)!
 
 async function runInEditor(page: import('@playwright/test').Page) {
-  await page.getByRole('button', { name: 'Перейти к решению' }).click()
   await page.getByRole('button', { name: 'Запустить' }).click()
 }
 
@@ -17,17 +16,17 @@ test.describe('решение задач', () => {
     await page.goto('/solve/fe_chunk')
     await runInEditor(page)
     await expect(page.getByText('Все тесты пройдены!')).toBeVisible()
-    await page.getByRole('button', { name: 'Выйти' }).click()
     const total = chunk.checks.filter((c) => c.hidden).length
     await expect(page.getByText(`Скрытые проверки: ${total} из ${total}`)).toBeVisible()
     expect(errors).toEqual([])
   })
 
-  test('«Показать тесты» описывает проверки читаемо, скрытые не раскрываются', async ({ page }) => {
+  test('«Как проверяется» описывает проверки читаемо, скрытые не раскрываются', async ({ page }) => {
     await page.goto('/solve/fe_chunk')
-    await page.getByText('Показать тесты').click()
-    await expect(page.locator('details pre')).toContainText('chunk([1, 2, 3, 4, 5], 2) → [[1, 2], [3, 4], [5]]')
-    await expect(page.locator('details pre')).not.toContainText('нулевой размер')
+    await page.getByRole('tab', { name: 'Как проверяется' }).click()
+    const spec = page.getByRole('tabpanel').locator('pre')
+    await expect(spec).toContainText('chunk([1, 2, 3, 4, 5], 2) → [[1, 2], [3, 4], [5]]')
+    await expect(spec).not.toContainText('нулевой размер')
   })
 
   test('стартовый шаблон не проходит тесты', async ({ page }) => {
@@ -47,7 +46,6 @@ test.describe('решение задач', () => {
     await page.goto('/solve/fe_debounce')
     await runInEditor(page)
     await expect(page.getByText('Тесты не пройдены')).toBeVisible()
-    await page.getByRole('button', { name: 'Выйти' }).click()
     const summary = await page.getByText(/Скрытые проверки: \d+ из \d+/).textContent()
     const [, passed, total] = summary!.match(/(\d+) из (\d+)/)!.map(Number)
     expect(passed).toBeLessThan(total) // скрытая проверка про this провалена
@@ -59,9 +57,9 @@ test.describe('решение задач', () => {
     await page.goto('/solve/fe_chunk')
     await runInEditor(page)
     await expect(page.getByText(/Превышено время выполнения/).first()).toBeVisible({ timeout: 20_000 })
-    // страница отзывчива: можно выйти из редактора
-    await page.getByRole('button', { name: 'Выйти' }).click()
-    await expect(page.getByRole('heading', { name: 'Результаты тестов' })).toBeVisible()
+    // страница отзывчива: можно переключить вкладку вывода
+    await page.getByRole('tab', { name: 'Консоль' }).click()
+    await expect(page.getByRole('tab', { name: 'Консоль' })).toHaveAttribute('aria-selected', 'true')
   })
 
   test('кандидат: подсказки открываются по одной, рубрика и эталон скрыты', async ({ page }) => {

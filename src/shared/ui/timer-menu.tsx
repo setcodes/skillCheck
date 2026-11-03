@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Clock, Pause, Play, RotateCcw } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
@@ -9,25 +10,30 @@ interface Props {
   timer: ReturnType<typeof useTimer>
   title: string
   align?: 'start' | 'end'
+  side?: 'top' | 'bottom'
+  /** свой триггер вместо кнопки по умолчанию (например, в строке состояния) */
+  children?: ReactNode
 }
 
 const PRESETS_MIN = [5, 15, 30, 60]
 
-export function TimerMenu({ timer, title, align = 'end' }: Props) {
+export function TimerMenu({ timer, title, align = 'end', side = 'bottom', children }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className="inline-flex items-center gap-2" aria-label={`${title}: ${timer.display}`}>
-          <Clock className="h-4 w-4" />
-          <span className="font-mono" aria-live="off">{timer.display}</span>
-          <span
-            className={cn('h-2 w-2 rounded-full', timer.running ? 'bg-green-500' : 'bg-muted-foreground/50')}
-            aria-hidden
-          />
-          <span className="sr-only">{timer.running ? 'идёт' : 'на паузе'}</span>
-        </Button>
+        {children ?? (
+          <Button variant="outline" className="inline-flex items-center gap-2" aria-label={`${title}: ${timer.display}`}>
+            <Clock className="h-4 w-4" />
+            <span className="font-mono" aria-live="off">{timer.display}</span>
+            <span
+              className={cn('h-2 w-2 rounded-full', timer.running ? 'bg-green-500' : 'bg-muted-foreground/50')}
+              aria-hidden
+            />
+            <span className="sr-only">{timer.running ? 'идёт' : 'на паузе'}</span>
+          </Button>
+        )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-64">
+      <DropdownMenuContent align={align} side={side} className="w-64">
         <div className="px-2 py-1.5 text-xs text-muted-foreground">{title}</div>
         <DropdownMenuSeparator />
         <div className="px-2 py-1.5">

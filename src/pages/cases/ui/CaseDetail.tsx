@@ -1,137 +1,93 @@
-import { ChevronDown } from 'lucide-react'
-import { Badge } from '@/shared/ui/badge'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
+import { useEffect, useState } from 'react'
+import { FileCode2, Star } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
-import type { Case, CaseFile, IssueRisk } from '@/entities/case/model/types'
+import { CodeView } from '@/shared/ui/code-view'
+import type { Case, CaseFile } from '@/entities/case/model/types'
 import type { UserRole } from '@/entities/user/model/types'
 
-const RISK: Record<IssueRisk, { label: string; className: string; order: number }> = {
-  critical: { label: 'Критично', className: 'bg-red-100 text-red-800 border-red-200', order: 0 },
-  important: { label: 'Важно', className: 'bg-orange-100 text-orange-800 border-orange-200', order: 1 },
-  quality: { label: 'Качество', className: 'bg-yellow-100 text-yellow-800 border-yellow-200', order: 2 },
-  cosmetic: { label: 'Косметика', className: 'bg-slate-100 text-slate-800 border-slate-200', order: 3 },
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Bullets({ title, items, mark, tone }: { title: string; items: string[]; mark: string; tone: string }) {
+  if (items.length === 0) return null
   return (
-    <section className="mt-6">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-2">{title}</h3>
-      {children}
+    <section className="space-y-1.5">
+      <h2 className="text-xs font-bold text-foreground">{title}</h2>
+      <ul className="space-y-1">
+        {items.map((x, i) => (
+          <li key={i} className="flex gap-2 leading-relaxed">
+            <span className={cn('w-3 shrink-0', tone)} aria-hidden>{mark}</span>
+            <span className="font-sans text-[0.9rem] text-foreground">{x}</span>
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }
 
-function Bullets({ items }: { items: string[] }) {
-  if (items.length === 0) return null
-  return (
-    <ul className="list-disc pl-5 space-y-1 text-sm">
-      {items.map((x, i) => (
-        <li key={i}>{x}</li>
-      ))}
-    </ul>
-  )
-}
+type Tab = { key: string; file: CaseFile; reference: boolean }
 
-function Code({ file }: { file: CaseFile }) {
-  return (
-    <figure className="mb-3">
-      <figcaption className="text-xs font-mono text-muted-foreground mb-1">{file.name}</figcaption>
-      <pre className="p-4 bg-muted rounded-lg text-xs overflow-x-auto">
-        <code>{file.code}</code>
-      </pre>
-    </figure>
-  )
-}
-
+/** Условие кейса и его файлы во вкладках; эталон (live) — отдельные вкладки только для интервьюера. */
 export function CaseDetail({ item, role }: { item: Case; role: UserRole }) {
   const interviewer = role === 'interviewer'
-  const issues = [...item.issues].sort((a, b) => RISK[a.risk].order - RISK[b.risk].order)
+  const tabs: Tab[] = [
+    ...item.files.map((file) => ({ key: `f:${file.name}`, file, reference: false })),
+    ...(interviewer ? item.solution.map((file) => ({ key: `s:${file.name}`, file, reference: true })) : []),
+  ]
+  const [active, setActive] = useState(tabs[0]?.key)
+  useEffect(() => setActive(tabs[0]?.key), [item.id, role]) // eslint-disable-line react-hooks/exhaustive-deps
+  const tab = tabs.find((t) => t.key === active) ?? tabs[0]
 
   return (
-    <article>
-      <header className="flex flex-wrap items-center gap-2 mb-2">
-        <Badge variant="outline">{item.kind === 'review' ? 'Ревью кода' : 'Live coding'}</Badge>
-        <Badge variant="secondary" className="capitalize">{item.level}</Badge>
-        {item.reviewedAt == null && <span className="text-xs text-muted-foreground">Кейс ещё не вычитан</span>}
+    <article className="mx-auto max-w-4xl space-y-8 px-5 py-8 font-mono text-[0.85rem] sm:px-8">
+      <header className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          <span className={item.kind === 'review' ? 'text-ansi-magenta' : 'text-ansi-yellow'}>{item.kind === 'review' ? 'ревью кода' : 'live coding'}</span>
+          {' · '}
+          {item.level} · {item.topic}
+          {item.reviewedAt == null && <span className="text-ansi-yellow"> · ещё не вычитан</span>}
+        </p>
+        <h1 className="text-balance font-display text-2xl font-bold leading-snug tracking-[-0.02em] text-foreground">{item.title}</h1>
+        <blockquote className="flex gap-3 rounded-sm border bg-card px-4 py-3">
+          <span className="text-primary-text" aria-hidden>❯</span>
+          <p className="font-sans text-base leading-relaxed text-foreground">{item.brief}</p>
+        </blockquote>
       </header>
-      <h2 className="text-xl font-semibold">{item.title}</h2>
 
-      <Section title="Задание">
-        <blockquote className="border-l-4 pl-4 text-sm italic">{item.brief}</blockquote>
-      </Section>
-
-      {item.context.length > 0 && (
-        <Section title="Контекст от интервьюера">
-          <Bullets items={item.context} />
-        </Section>
-      )}
-      {item.requirements.length > 0 && (
-        <Section title="Что должно получиться">
-          <Bullets items={item.requirements} />
-        </Section>
-      )}
-      {item.files.length > 0 && (
-        <Section title={item.kind === 'review' ? 'Код для ревью' : 'Стартовый шаблон'}>
-          {item.files.map((f) => (
-            <Code key={f.name} file={f} />
-          ))}
-        </Section>
-      )}
-
-      {interviewer && (
-        <div className="mt-8 border-t pt-2">
-          <p className="text-xs text-muted-foreground mt-2">Материалы интервьюера</p>
-
-          {issues.length > 0 && (
-            <Section title={`Что нужно найти (${issues.length})`}>
-              <ol className="space-y-3">
-                {issues.map((issue, i) => (
-                  <li key={i} className="text-sm">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline" className={cn(RISK[issue.risk].className)}>
-                        {RISK[issue.risk].label}
-                      </Badge>
-                      <span className="font-medium">{issue.title}</span>
-                    </div>
-                    <p className="mt-1"><span className="text-muted-foreground">Чем грозит: </span>{issue.consequence}</p>
-                    <p><span className="text-muted-foreground">Исправление: </span>{issue.fix}</p>
-                  </li>
-                ))}
-              </ol>
-            </Section>
-          )}
-
-          {item.grading.length > 0 && (
-            <Section title="Что оценивается">
-              <Bullets items={item.grading} />
-            </Section>
-          )}
-          {item.followUps.length > 0 && (
-            <Section title="Что спросить после">
-              <Bullets items={item.followUps} />
-            </Section>
-          )}
-          {item.testsToMention.length > 0 && (
-            <Section title="Какие проверки и тесты стоит назвать">
-              <Bullets items={item.testsToMention} />
-            </Section>
-          )}
-          {item.solution.length > 0 && (
-            <Section title="Эталонное решение">
-              <Collapsible>
-                <CollapsibleTrigger className="group flex items-center gap-2 text-sm hover:bg-muted/70 rounded px-2 py-1">
-                  Показать решение
-                  <ChevronDown className="h-4 w-4 transition-transform group-data-[state=open]:rotate-180" aria-hidden />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="mt-2">
-                  {item.solution.map((f) => (
-                    <Code key={f.name} file={f} />
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            </Section>
-          )}
+      {(item.context.length > 0 || item.requirements.length > 0) && (
+        <div className="grid gap-6 md:grid-cols-2">
+          <Bullets title="Контекст от интервьюера" items={item.context} mark="›" tone="text-ansi-cyan" />
+          <Bullets title="Что должно получиться" items={item.requirements} mark="□" tone="text-ok" />
         </div>
+      )}
+
+      {tabs.length > 0 && tab && (
+        <section aria-label={item.kind === 'review' ? 'Код для ревью' : 'Стартовый шаблон'} className="overflow-hidden rounded-sm border">
+          <div role="tablist" aria-label="Файлы" className="flex items-stretch overflow-x-auto border-b bg-card">
+            {tabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                role="tab"
+                aria-selected={t.key === tab.key}
+                onClick={() => setActive(t.key)}
+                className={cn(
+                  'flex shrink-0 items-center gap-2 whitespace-nowrap border-r px-3 py-2 text-xs transition-colors',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                  t.key === tab.key ? 'bg-background text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {t.reference ? (
+                  <Star className="h-3.5 w-3.5 text-ansi-yellow" fill="currentColor" stroke="none" aria-hidden />
+                ) : (
+                  <FileCode2 className="h-3.5 w-3.5 text-ansi-blue" aria-hidden />
+                )}
+                {t.reference && <span className="text-muted-foreground">эталон/</span>}
+                {t.file.name}
+              </button>
+            ))}
+          </div>
+          <div role="tabpanel" aria-label={tab.file.name}>
+            <CodeView code={tab.file.code} className="rounded-none border-0" />
+          </div>
+        </section>
       )}
     </article>
   )

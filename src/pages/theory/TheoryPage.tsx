@@ -1,259 +1,282 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Badge } from '@/shared/ui/badge';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Textarea } from '@/shared/ui/textarea';
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from '@/shared/ui/card';
-import { TagFilter } from '@/shared/ui/tag-filter';
-import { QuestionTags } from '@/shared/ui/question-tags';
-import { useApp } from '@/app/providers/AppProvider';
-import { useQuestions } from '@/shared/bank';
-import { useNavigate, useParams } from 'react-router-dom';
-import { clearAllEvaluations, KEYS, readJSON, writeJSON } from '@/shared/storage/storage';
-import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants';
-import { useToast } from '@/shared/hooks/use-sonner';
-import { AnswerView } from './ui/AnswerView';
-import { levelLabel, levelNumber, topicLabel, LEVELS } from '@/entities/question/model/topics';
-import { Send, CheckCircle, Trash2 } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, EyeOff, FileText, PanelLeft, Trash2 } from 'lucide-react'
+import { useApp } from '@/app/providers/AppProvider'
+import { useQuestions } from '@/shared/bank'
+import { useToast } from '@/shared/hooks/use-sonner'
+import { cn } from '@/shared/lib/utils'
+import { KEYS, clearAllEvaluations, readJSON, writeJSON } from '@/shared/storage/storage'
+import { Explorer, type ExplorerGroup } from '@/shared/ui/explorer'
+import { InspectorSection } from '@/shared/ui/inspector-section'
+import { ScoreForm } from '@/shared/ui/score-form'
+import { ToolButton } from '@/shared/ui/tool-button'
+import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants'
+import { FRONTEND_TOPICS, LEVELS, levelNumber, topicLabel } from '@/entities/question/model/topics'
+import type { Level, Question } from '@/entities/question/model/types'
+import { AnswerView } from './ui/AnswerView'
 
-export default function Theory() {
-	const { prof, role } = useApp();
-	const { toast } = useToast();
-	const ALL = useQuestions(prof);
-	const cats = useMemo(() => {
-		const set = new Set<string>();
-		for (const q of ALL) set.add(topicLabel(q.topic));
-		return Array.from(set).sort();
-	}, [prof, ALL]);
-	
-	const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-	
-	const list = useMemo(
-		() =>
-			ALL.filter((q) => selectedCategories.length === 0 || selectedCategories.includes(topicLabel(q.topic))).sort(
-				(a, b) =>
-					LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.title.localeCompare(b.title)
-			),
-		[ALL, selectedCategories]
-	);
+type Draft = { score?: number; comment?: string }
+type LevelFilter = Level | 'all'
 
-	// Right panel: select question and evaluate
-	const navigate = useNavigate();
-	const { questionId } = useParams();
-	const cur = useMemo(
-		() => ALL.find((q) => q.id === questionId || q.aliases?.includes(questionId ?? '')) ?? ALL[0],
-		[ALL, questionId]
-	);
-	// старые ссылки по прежним id ведут на актуальный адрес
-	useEffect(() => {
-		if (cur && questionId && questionId !== cur.id) navigate(`/theory/${encodeURIComponent(cur.id)}`, { replace: true });
-	}, [cur, questionId, navigate]);
-	const setCurQ = (id: string) => navigate(`/theory/${encodeURIComponent(id)}`);
+const KIND_LABEL: Record<Question['kind'], string> = {
+  screening: 'скрининг',
+  deep: 'глубокий',
+  practical: 'практика',
+  architecture: 'архитектура',
+}
 
-	// Draft per-question evaluation (persisted locally)
-	type Draft = { score?: number; comment?: string };
-	const DK = `theory.drafts.v1.${prof}`;
-	const loadDrafts = (): Record<string, Draft> => {
-		try {
-			const r = localStorage.getItem(DK);
-			if (r) return JSON.parse(r);
-		} catch {}
-		return {};
-	};
-	const [drafts, setDrafts] = useState<Record<string, Draft>>(loadDrafts());
-	useEffect(() => {
-		try {
-			localStorage.setItem(DK, JSON.stringify(drafts));
-		} catch {}
-	}, [drafts, DK]);
-	const setScore = (s: number) =>
-		cur &&
-		setDrafts((a) => ({ ...a, [cur.id]: { ...(a[cur.id] || {}), score: s } }));
-	const setComment = (c: string) =>
-		cur &&
-		setDrafts((a) => ({
-			...a,
-			[cur.id]: { ...(a[cur.id] || {}), comment: c },
-		}));
-	const push = () => {
-		if (!cur) return;
-		const payload = {
-			prof,
-			questionId: cur.id,
-			title: cur.title,
-			category: topicLabel(cur.topic),
-			difficulty: levelNumber(cur.level),
-			score: drafts[cur.id]?.score ?? 0,
-			comment: drafts[cur.id]?.comment || '',
-		};
-		const key = 'bridge.theoryScores.v1';
-		const bridge = JSON.parse(localStorage.getItem(key) || '{}') as Record<
-			string,
-			any
-		>;
-		bridge[prof + ':' + cur.id] = payload;
-		localStorage.setItem(key, JSON.stringify(bridge));
-		toast.success("Оценка сохранена", "Оценка по теории добавлена в отчёт.");
-	};
+const isEditable = (el: EventTarget | null) =>
+  el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
 
-	return (
-		<div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
-			{/* Questions List */}
-			<div className="lg:col-span-2 h-full min-h-0">
-				<Card className="h-full flex flex-col">
-					<CardHeader>
-						<div className="flex items-center justify-between">
-							<CardTitle>Теория — {prof}</CardTitle>
-							<Button 
-								variant="outline" 
-								size="sm"
-								onClick={() => {
-									if (!window.confirm('Сбросить все оценки, комментарии и решения?')) return;
-									clearAllEvaluations(ENABLED_PROFESSIONS);
-									setDrafts({});
-									toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения');
-								}}
-								className="inline-flex items-center gap-2"
-							>
-								<Trash2 className="h-4 w-4" />
-								Сброс оценок
-							</Button>
-						</div>
-						<TagFilter
-							categories={cats}
-							selectedCategories={selectedCategories}
-							onCategoriesChange={setSelectedCategories}
-							questionCount={list.length}
-						/>
-					</CardHeader>
-					<CardContent className="flex-1 overflow-hidden">
-						<div className="h-full overflow-y-auto space-y-4 pr-1">
-							{list.map((q) => (
-								<Card
-									key={q.id}
-									className={`${cur?.id === q.id ? 'border-primary ring-1 ring-primary' : ''} cursor-pointer transition-colors`}
-									onClick={() => setCurQ(q.id)}
-								>
-									<CardHeader>
-										<div className="flex items-start justify-between gap-4">
-											<CardTitle className="text-lg flex-1">{q?.title || 'Без названия'}</CardTitle>
-											<QuestionTags
-												topic={q.topic}
-												level={q.level}
-												className="flex-shrink-0"
-											/>
-										</div>
-									</CardHeader>
-									<CardContent>
-										{q.prompt.replace(/\?$/, '') !== q.title.replace(/\?$/, '') && (
-											<p className="text-sm text-muted-foreground mb-4">{q.prompt}</p>
-										)}
-										{/* Эталонный ответ убран из списка. Доступен в правой подсказке. */}
-									</CardContent>
-								</Card>
-							))}
-						</div>
-					</CardContent>
-				</Card>
-			</div>
+const byLevelThenTitle = (a: Question, b: Question) => LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.title.localeCompare(b.title)
 
-			{/* Right Panel: Evaluation + Hint */}
-			<div className="lg:col-span-1 flex flex-col space-y-4 h-full min-h-0">
-				{/* Evaluation block */}
-				<Card className="h-fit">
-					<CardHeader>
-						<CardTitle>Оценка</CardTitle>
-						<CardDescription>
-							Выберите вопрос слева, затем выставьте оценку и комментарий.
-						</CardDescription>
-					</CardHeader>
-					<CardContent className="space-y-3">
-						<div className="space-y-1">
-							<label className="text-sm font-medium">Текущий вопрос:</label>
-							<div className="text-sm">
-								{cur ? (
-									<>
-										<div className="font-medium">{cur.title}</div>
-										<div className="text-muted-foreground">
-											{topicLabel(cur.topic)} • {levelLabel(cur.level)}
-										</div>
-									</>
-								) : (
-									<span className="text-muted-foreground">
-										Выберите вопрос из списка слева
-									</span>
-								)}
-							</div>
-						</div>
-						{role === 'interviewer' ? (
-							<>
-								<div className="flex items-center gap-2">
-									<label className="text-sm">Оценка (0–5):</label>
-									<Input
-										type="number"
-										min={0}
-										max={5}
-										step={0.5}
-										className="w-24"
-										value={cur ? (drafts[cur.id]?.score ?? '') : ''}
-										onChange={(e) => setScore(Number(e.target.value))}
-										disabled={!cur}
-									/>
-								</div>
-								<div className="space-y-1">
-									<label className="text-sm">Комментарий:</label>
-									<Textarea
-										placeholder="Краткая обратная связь"
-										value={cur ? drafts[cur.id]?.comment || '' : ''}
-										onChange={(e) => setComment(e.target.value)}
-										disabled={!cur}
-									/>
-								</div>
-								<div>
-									<Button
-										variant="outline"
-										onClick={push}
-										disabled={!cur}
-										className="inline-flex items-center gap-2"
-									>
-										<Send className="h-4 w-4" />
-										Отправить оценку
-									</Button>
-								</div>
-							</>
-						) : (
-							<p className="text-sm text-muted-foreground">
-								Оценка доступна только интервьюеру
-							</p>
-						)}
-					</CardContent>
-				</Card>
+export default function TheoryPage() {
+  const { prof, role } = useApp()
+  const { toast } = useToast()
+  const navigate = useNavigate()
+  const { questionId } = useParams()
+  const all = useQuestions(prof)
+  const interviewer = role === 'interviewer'
 
-				{/* Hint block */}
-				<Card className="flex-1 flex flex-col min-h-0">
-					<CardHeader className="flex-shrink-0">
-						<CardTitle>Подсказка</CardTitle>
-						{cur && <CardDescription>{cur.title}</CardDescription>}
-					</CardHeader>
-					<CardContent className="flex-1 overflow-hidden">
-						{cur && role === 'interviewer' ? (
-							<div className="h-full overflow-y-auto">
-								<AnswerView q={cur} />
-							</div>
-						) : (
-							<p className="text-sm text-muted-foreground">
-								В режиме «Кандидат» ответы скрыты.
-							</p>
-						)}
-					</CardContent>
-				</Card>
-			</div>
-		</div>
-	);
+  const [query, setQuery] = useState('')
+  const [level, setLevel] = useState<LevelFilter>('all')
+  const [explorerOpen, setExplorerOpen] = useState(false)
+
+  const cur = useMemo(() => all.find((q) => q.id === questionId || q.aliases?.includes(questionId ?? '')) ?? all[0], [all, questionId])
+  // старые ссылки по прежним id ведут на актуальный адрес
+  useEffect(() => {
+    if (cur && questionId && questionId !== cur.id) navigate(`/theory/${encodeURIComponent(cur.id)}`, { replace: true })
+  }, [cur, questionId, navigate])
+  const open = (id: string) => {
+    navigate(`/theory/${encodeURIComponent(id)}`)
+    setExplorerOpen(false)
+  }
+
+  // Черновики оценок по вопросам (локально, до отправки в отчёт)
+  const draftsKey = KEYS.theoryDrafts(prof)
+  const [drafts, setDrafts] = useState<Record<string, Draft>>(() => readJSON(draftsKey, {}))
+  useEffect(() => {
+    writeJSON(draftsKey, drafts)
+  }, [drafts, draftsKey])
+  const patchDraft = (p: Draft) => cur && setDrafts((d) => ({ ...d, [cur.id]: { ...d[cur.id], ...p } }))
+
+  // Темы — папки в порядке справочника, внутри — по уровню и названию
+  const groups: ExplorerGroup[] = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    const match = (x: Question) =>
+      (level === 'all' || x.level === level) && (!q || x.title.toLowerCase().includes(q) || x.prompt.toLowerCase().includes(q))
+    const topicIds = [...FRONTEND_TOPICS.map((t) => t.id), ...new Set(all.map((x) => x.topic).filter((t) => !FRONTEND_TOPICS.some((f) => f.id === t)))]
+    return topicIds
+      .map((topic) => ({
+        id: topic,
+        name: topic,
+        hint: topicLabel(topic),
+        items: all
+          .filter((x) => x.topic === topic && match(x))
+          .sort(byLevelThenTitle)
+          .map((x) => {
+            const score = drafts[x.id]?.score
+            return {
+              id: x.id,
+              title: x.title,
+              mark: interviewer && score !== undefined ? { text: String(score), tone: 'text-primary-text', label: `оценка ${score}` } : undefined,
+            }
+          }),
+      }))
+      .filter((g) => g.items.length > 0)
+  }, [all, query, level, drafts, interviewer])
+
+  const flat = useMemo(() => groups.flatMap((g) => g.items.map((i) => i.id)), [groups])
+  const index = cur ? flat.indexOf(cur.id) : -1
+  const step = (dir: 1 | -1) => {
+    if (flat.length === 0) return
+    const next = index === -1 ? flat[0] : flat[(index + dir + flat.length) % flat.length]
+    open(next)
+  }
+
+  // [ и ] — предыдущий и следующий вопрос
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || isEditable(e.target)) return
+      if (e.key === '[') step(-1)
+      if (e.key === ']') step(1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  const send = () => {
+    if (!cur) return
+    const bridge = readJSON<Record<string, unknown>>(KEYS.theoryScoresBridge, {})
+    bridge[`${prof}:${cur.id}`] = {
+      prof,
+      questionId: cur.id,
+      title: cur.title,
+      category: topicLabel(cur.topic),
+      difficulty: levelNumber(cur.level),
+      score: drafts[cur.id]?.score ?? 0,
+      comment: drafts[cur.id]?.comment ?? '',
+    }
+    writeJSON(KEYS.theoryScoresBridge, bridge)
+    toast.success('Оценка сохранена', 'Оценка по теории добавлена в отчёт.')
+  }
+
+  const resetEvaluations = () => {
+    if (!window.confirm('Сбросить все оценки, комментарии и решения?')) return
+    clearAllEvaluations(ENABLED_PROFESSIONS)
+    setDrafts({})
+    toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения')
+  }
+
+  if (!cur) return <p className="py-12 text-center font-mono text-sm text-muted-foreground">Для этой профессии пока нет вопросов</p>
+
+  const scored = Object.values(drafts).filter((d) => d.score !== undefined).length
+  const showPrompt = cur.prompt.replace(/\?$/, '') !== cur.title.replace(/\?$/, '')
+
+  return (
+    <div className="relative flex h-full min-h-0 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+      {explorerOpen && (
+        <button
+          type="button"
+          aria-label="Закрыть список вопросов"
+          onClick={() => setExplorerOpen(false)}
+          className="fixed inset-0 z-20 bg-background/60 backdrop-blur-[2px] xl:hidden"
+        />
+      )}
+      <Explorer
+        title="теория"
+        label="Список вопросов"
+        counter={
+          <span className="tabular-nums" title={interviewer ? 'Оценено / всего' : 'Всего вопросов'}>
+            {interviewer ? `${scored}/${all.length}` : all.length}
+          </span>
+        }
+        groups={groups}
+        currentId={cur.id}
+        onSelect={open}
+        query={query}
+        onQuery={setQuery}
+        className={explorerOpen ? 'fixed bottom-7 left-14 top-10 z-30 flex shadow-2xl' : 'hidden xl:flex'}
+        onClose={explorerOpen ? () => setExplorerOpen(false) : undefined}
+        filters={
+          <div className="flex flex-wrap gap-1 text-[0.7rem]" role="group" aria-label="Уровень">
+            {(['all', ...LEVELS] as LevelFilter[]).map((l) => (
+              <button
+                key={l}
+                type="button"
+                aria-pressed={level === l}
+                onClick={() => setLevel(l)}
+                className={cn(
+                  'rounded-sm border px-1.5 py-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  level === l ? 'border-primary bg-primary/15 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                --{l}
+              </button>
+            ))}
+          </div>
+        }
+        footer={
+          <ToolButton variant="ghost" onClick={resetEvaluations} className="w-full justify-start">
+            <Trash2 aria-hidden />
+            Сброс оценок
+          </ToolButton>
+        }
+      />
+
+      <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
+        <div className="flex h-9 shrink-0 items-stretch justify-between gap-2 border-b bg-card font-mono">
+          <div className="flex min-w-0 items-stretch">
+            <button
+              type="button"
+              onClick={() => setExplorerOpen((o) => !o)}
+              aria-label="Список вопросов"
+              className="flex items-center border-r px-2.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:hidden"
+            >
+              <PanelLeft className="h-4 w-4" aria-hidden />
+            </button>
+            <span className="flex min-w-0 items-center gap-2 border-r bg-background px-3 text-xs text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]">
+              <FileText className="h-3.5 w-3.5 shrink-0 text-ansi-blue" aria-hidden />
+              <span className="truncate">{cur.id}.md</span>
+            </span>
+          </div>
+          <div className="flex shrink-0 items-center gap-1 pr-2">
+            <span className="px-1 text-xs tabular-nums text-muted-foreground">
+              {index === -1 ? '—' : index + 1}/{flat.length}
+            </span>
+            <ToolButton variant="ghost" onClick={() => step(-1)} aria-label="Предыдущий вопрос" aria-keyshortcuts="[" title="Предыдущий ([)">
+              <ChevronLeft aria-hidden />
+            </ToolButton>
+            <ToolButton variant="ghost" onClick={() => step(1)} aria-label="Следующий вопрос" aria-keyshortcuts="]" title="Следующий (])">
+              <ChevronRight aria-hidden />
+            </ToolButton>
+          </div>
+        </div>
+
+        <div className="flex-1 bg-background lg:min-h-0 lg:overflow-y-auto">
+          <article className="mx-auto max-w-3xl space-y-8 px-5 py-8 sm:px-8">
+            <header className="space-y-3 font-mono">
+              <p className="text-xs text-muted-foreground">
+                <span className="text-ansi-blue">{cur.topic}</span> · {cur.level} · {KIND_LABEL[cur.kind]}
+              </p>
+              <h1 className="text-balance font-display text-2xl font-bold leading-snug tracking-[-0.02em] text-foreground">{cur.title}</h1>
+              {showPrompt && <p className="max-w-[65ch] font-sans text-base leading-relaxed text-foreground">{cur.prompt}</p>}
+              {cur.tags.length > 0 && (
+                <p className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                  {cur.tags.map((t) => (
+                    <span key={t} className="rounded-sm border px-1.5 py-0.5">#{t}</span>
+                  ))}
+                </p>
+              )}
+            </header>
+
+            {interviewer ? (
+              <AnswerView q={cur} />
+            ) : (
+              <section className="flex gap-3 rounded-sm border bg-card px-4 py-4 font-mono text-[0.85rem]">
+                <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                <div className="space-y-1">
+                  <p className="text-foreground">В режиме «Кандидат» ответы скрыты.</p>
+                  <p className="text-muted-foreground">Ответьте вслух или набросайте тезисы — эталон и чек-лист видит интервьюер.</p>
+                </div>
+              </section>
+            )}
+          </article>
+        </div>
+      </div>
+
+      <aside aria-label="Инспектор" className="shrink-0 border-t bg-card lg:w-80 lg:overflow-y-auto lg:border-l lg:border-t-0 2xl:w-96">
+        <InspectorSection label="Оценка" title="Оценка" meta={interviewer ? `${scored} оценено` : undefined}>
+          {interviewer ? (
+            <ScoreForm
+              idPrefix="theory"
+              score={drafts[cur.id]?.score}
+              comment={drafts[cur.id]?.comment}
+              onScore={(score) => patchDraft({ score })}
+              onComment={(comment) => patchDraft({ comment })}
+              onSend={send}
+            />
+          ) : (
+            <p className="text-muted-foreground">Оценка доступна только интервьюеру.</p>
+          )}
+        </InspectorSection>
+        <InspectorSection label="Клавиши" title="Клавиши">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-muted-foreground">
+            {[
+              ['[ ]', 'предыдущий / следующий'],
+              ['/', 'поиск по вопросам'],
+              ['↑ ↓', 'по списку, enter — открыть'],
+            ].map(([k, v]) => (
+              <div key={k} className="contents">
+                <dt>
+                  <kbd className="rounded-sm bg-foreground px-1.5 py-0.5 font-bold text-background">{k}</kbd>
+                </dt>
+                <dd>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </InspectorSection>
+      </aside>
+    </div>
+  )
 }
