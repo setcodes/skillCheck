@@ -16,7 +16,7 @@ import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCi
 import { useToast } from '@/shared/hooks/use-sonner'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
-import { runModule } from '@/shared/api/runner'
+import { runModuleWithLogs } from '@/shared/api/runner'
 
 export default function MockPage(){
   const { prof } = useApp()
@@ -134,14 +134,11 @@ export default function MockPage(){
     const { TASKS_BY_PROF } = await import('@/shared/api/tasks')
     const tests = TASKS_BY_PROF[s.config.profession as keyof typeof TASKS_BY_PROF]?.find((t:any)=>t.id===item.taskId)?.tests
     if(!tests) return
-    const tmpLogs: string[] = []
-    const orig = { log: console.log, error: console.error, warn: console.warn, info: console.info }
-    console.log = (...a:any[])=>{ tmpLogs.push(a.map(String).join(' ')); orig.log(...a) }
-    console.error = (...a:any[])=>{ tmpLogs.push('[error] '+a.map(String).join(' ')); orig.error(...a) }
-    console.warn = (...a:any[])=>{ tmpLogs.push('[warn] '+a.map(String).join(' ')); orig.warn(...a) }
-    console.info = (...a:any[])=>{ tmpLogs.push('[info] '+a.map(String).join(' ')); orig.info(...a) }
+    let runLogs: string[] = []
     try{
-      const res = await runModule(code, tests)
+      const out = await runModuleWithLogs(code, tests)
+      const res = out.results
+      runLogs = out.logs
       const passed = res.filter(r=>r.ok).length
       const total = res.length
       const ratio = total? passed/total : 0
@@ -162,8 +159,7 @@ export default function MockPage(){
         toast.error("Тесты не пройдены", `Пройдено ${passed}/${total}. ${firstFail?.message||''}`)
       }
     } finally {
-      console.log = orig.log; console.error = orig.error; console.warn = orig.warn; console.info = orig.info
-      setLogs(tmpLogs)
+      setLogs(runLogs)
     }
   }
 
