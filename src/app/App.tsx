@@ -4,7 +4,7 @@ import { Button } from '@/shared/ui/button'
 import { Toaster } from '@/shared/ui/sonner'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/shared/ui/card'
 import { AppProvider, useApp } from './providers/AppProvider'
-import { PROFESSIONS, PROFESSION_ICONS } from '@/entities/profession/model/constants'
+import { PROFESSIONS, PROFESSION_ICONS, isProfessionEnabled } from '@/entities/profession/model/constants'
 import type { Profession } from '@/entities/profession/model/types'
 import { cn } from '@/shared/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -36,6 +36,7 @@ function AppContent() {
   const [intRunning, setIntRunning] = useState<boolean>(() => localStorage.getItem('interview.timer.running') === '1')
 
   const handleProfessionSelect = (profId: Profession) => {
+    if (!isProfessionEnabled(profId)) return
     setSelectedProf(profId)
     setProf(profId)
   }
@@ -186,25 +187,33 @@ function AppContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
               {PROFESSIONS.map(profInfo => {
                 const IconComponent = PROFESSION_ICONS[profInfo.id]
+                const soon = profInfo.status === 'soon'
                 return (
-                  <div 
-                    key={profInfo.id} 
+                  <button
+                    type="button"
+                    key={profInfo.id}
+                    disabled={soon}
+                    aria-disabled={soon}
                     className={cn(
-                      "relative p-6 rounded-lg border-2 cursor-pointer transition-all duration-200 hover:shadow-lg",
-                      "border-border bg-card hover:border-primary/50"
+                      "relative p-6 rounded-lg border-2 text-left transition-all duration-200",
+                      "border-border bg-card focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary",
+                      soon ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:shadow-lg hover:border-primary/50"
                     )}
                     onClick={() => handleProfessionSelect(profInfo.id)}
                   >
+                    {soon && (
+                      <span className="absolute top-3 right-3 text-xs rounded-full bg-muted px-2 py-0.5 text-muted-foreground">Скоро</span>
+                    )}
                     <div className="flex flex-col items-center text-center space-y-3">
                       <div className={cn("p-3 rounded-full bg-muted", profInfo.color)}>
                         <IconComponent className="h-8 w-8" />
                       </div>
                       <div>
                         <h3 className="text-lg font-semibold text-foreground">{profInfo.title}</h3>
-                        <p className="text-sm text-muted-foreground">{profInfo.subtitle}</p>
+                        <p className="text-sm text-muted-foreground">{soon ? 'В разработке' : profInfo.subtitle}</p>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
