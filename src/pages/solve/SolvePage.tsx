@@ -11,7 +11,7 @@ import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { useToast } from '@/shared/hooks/use-sonner'
 import { cn } from '@/shared/lib/utils'
 import { useApp } from '@/app/providers/AppProvider'
-import { runModule } from '@/shared/api/runner'
+import { runModuleWithLogs } from '@/shared/api/runner'
 import { getTasks } from '@/shared/api/questions'
 import type { UITask } from '@/entities/task/model/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -129,19 +129,11 @@ export default function Solve(){
     // Показываем тост о начале тестирования
     toast.info("Запуск тестов...", "Выполняются тесты для задачи")
     
-    // перехватываем вывод консоли во время запуска
-    const tmpLogs: string[] = []
-    const orig = { log: console.log, error: console.error, warn: console.warn, info: console.info }
-    const push = (type: string, args: any[]) => {
-      try { tmpLogs.push(`[${type}] ` + args.map((a:any)=> typeof a==='string'?a:JSON.stringify(a)).join(' ')) } catch { /* noop */ }
-    }
-    console.log = (...a:any[]) => { push('log', a); orig.log(...a) }
-    console.error = (...a:any[]) => { push('error', a); orig.error(...a) }
-    console.warn = (...a:any[]) => { push('warn', a); orig.warn(...a) }
-    console.info = (...a:any[]) => { push('info', a); orig.info(...a) }
-
+    let runLogs: string[] = []
     try {
-      const res = await runModule(code, task.tests)
+      const out = await runModuleWithLogs(code, task.tests)
+      const res = out.results
+      runLogs = out.logs
       setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,lastResult:res}}))
       
       // Проверяем, есть ли результаты тестов
@@ -163,10 +155,8 @@ export default function Solve(){
         let errorMessage = firstError ? firstError.message : "Неизвестная ошибка"
         
         // Улучшенные сообщения об ошибках
-        if (errorMessage.includes('Execution timeout')) {
-          errorMessage = "⏱️ Превышено время выполнения (5 секунд)"
-        } else if (errorMessage.includes('недопустимые конструкции')) {
-          errorMessage = "🚫 Код содержит недопустимые конструкции"
+        if (errorMessage.includes('Превышено время выполнения')) {
+          errorMessage = "⏱️ " + errorMessage
         } else if (errorMessage.includes('No functions found')) {
           errorMessage = "🔍 Не найдены функции для выполнения"
         } else if (errorMessage.includes('Test execution error')) {
@@ -180,8 +170,7 @@ export default function Solve(){
       const errorMessage = error instanceof Error ? error.message : "Неизвестная ошибка"
       toast.error("Ошибка выполнения", `Не удалось запустить тесты: ${errorMessage}`)
     } finally {
-      console.log = orig.log; console.error = orig.error; console.warn = orig.warn; console.info = orig.info
-      setLogs(tmpLogs)
+      setLogs(runLogs)
     }
   }
   const setScore=(s:number)=>task&&setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,score:s}})); const setComment=(c:string)=>task&&setT(a=>({...a,[task.id]:{...(a[task.id]||{}),code,comment:c}}))
