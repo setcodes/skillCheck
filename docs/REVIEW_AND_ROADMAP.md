@@ -145,6 +145,8 @@
 4. Убрать привязку к GitHub Pages: `base` из env (`VITE_BASE`, по умолчанию `/`), удалить `public/404.html` и `deploy.yml`/`release.yml`, обновить README.
 5. Единый `UITask`, убрать циклический импорт, исправить `getTasks` (мемоизация — баг переключения задач, D4).
 
+> **Статус Фазы 1: выполнена.** Замороженные профессии и их раннер вынесены в `/frozen`; удалены мёртвые хранилища/тосты/дубли (`question-store` ×3, `use-toast`, `command`, `advanced-filter`, `lib/utils`); убраны `java-parser`, `sql.js`, `mermaid`, `js-yaml`, `zustand`, `cmdk`, `react-toast`; раннер — только JS/TS; Markdown-вклад убран (был нерабочим); `getTasks` больше не зависит от формата банка; GitHub Pages снят (`VITE_BASE`, без `404.html`/`deploy.yml`); Prettier грузится лениво и для TS использует парсер `typescript`. Главный бандл: 2294 КБ → 501 КБ (148 КБ gzip). Остаётся на Фазу 3/6: Monaco грузится с CDN jsdelivr (нужен self-host), шрифт Google Fonts в `index.html` (self-host), `getTasks` с кастомным банком из localStorage всё ещё возвращает новый массив (чинится вместе с хуком `useTasks`).
+
 ### Фаза 2 — Безопасное выполнение JS/TS (≈ 1 неделя)
 
 1. Раннер JS/TS в **Web Worker** (`terminate()` по таймауту, без доступа к DOM/`localStorage`; блокировка `fetch`/`importScripts` внутри воркера). Регулярный blacklist остаётся только как UX-подсказка. Закрывает R1, R2.

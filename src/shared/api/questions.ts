@@ -9,91 +9,6 @@ import { TASKS_BY_PROF } from './tasks'
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore - JSON imports
 import FRONTEND_QA from '@/shared/questions/frontend-qa-100.json'
-// @ts-ignore
-import BACKEND_JAVA_QA from '@/shared/questions/backend-java-qa-100.json'
-// @ts-ignore
-import ANALYST_QA from '@/shared/questions/ba-qa-100.json'
-// @ts-ignore
-import DEVOPS_QA from '@/shared/questions/devops-qa-100.json'
-
-// Optional: Markdown-based questions (for contributions via PR)
-// Place files under src/shared/questions/md/<profession>/*.md
-// Each file may contain frontmatter-like header and sections "## Вопрос" / "## Ответ"
-// Example:
-// ---\n
-// id: fe_md_1\n
-// category: JavaScript\n
-// difficulty: 2\n
-// bucket: screening\n
-// title: Замыкание\n
-// ---\n
-// ## Вопрос\n
-// Объясните замыкание...\n
-// ## Ответ\n
-// Замыкание — ...
-const MD_GLOB: Record<string, any> = {}
-
-function parseMd(raw: string): Omit<TheoryQuestion, 'id'|'title'|'category'|'difficulty'|'bucket'|'prompt'|'answer'> & Partial<TheoryQuestion> {
-  const res: any = {}
-  try {
-    const m = raw.match(/^---([\s\S]*?)---/)
-    let body = raw
-    if (m) {
-      body = raw.slice(m[0].length)
-      const lines = m[1].split(/\r?\n/).map(l=>l.trim()).filter(Boolean)
-      for (const line of lines) {
-        const idx = line.indexOf(':')
-        if (idx>0) {
-          const k = line.slice(0, idx).trim()
-          const v = line.slice(idx+1).trim()
-          res[k] = v
-        }
-      }
-    }
-    // split sections
-    const qMatch = body.split(/\n##\s*Вопрос\s*\n/i)
-    let prompt = ''
-    let answer = ''
-    if (qMatch.length>1) {
-      const afterQ = qMatch[1]
-      const aMatch = afterQ.split(/\n##\s*Ответ\s*\n/i)
-      prompt = (aMatch[0]||'').trim()
-      answer = (aMatch[1]||'').trim()
-    } else {
-      // fallback: split by Ответ only
-      const aMatch = body.split(/\n##\s*Ответ\s*\n/i)
-      prompt = (aMatch[0]||'').trim()
-      answer = (aMatch[1]||'').trim()
-    }
-    res.prompt = prompt
-    res.answer = answer
-  } catch {}
-  return res
-}
-
-function loadMdForProf(prof: Profession): TheoryQuestion[] {
-  const out: TheoryQuestion[] = []
-  const prefix = `/src/shared/questions/md/${prof}/`
-  for (const [k, v] of Object.entries(MD_GLOB)) {
-    if (!k.includes(prefix)) continue
-    const raw = v as string
-    const meta = parseMd(raw)
-    if (!meta) continue
-    // minimal required fields
-    const q: TheoryQuestion = {
-      id: (meta.id as string) || k,
-      title: (meta.title as string) || 'Без названия',
-      category: (meta.category as string) || 'Разное',
-      difficulty: Number(meta.difficulty)||1,
-      bucket: (meta.bucket as any) || 'screening',
-      prompt: (meta.prompt as string) || '',
-      answer: (meta.answer as string) || ''
-    }
-    out.push(q)
-  }
-  // sort by difficulty and title for determinism
-  return out.sort((a,b)=> a.difficulty-b.difficulty || a.title.localeCompare(b.title))
-}
 
 function normalize(arr: any[]): TheoryQuestion[] {
   return (arr || []).map((q: any, idx: number) => {
@@ -114,30 +29,17 @@ function normalize(arr: any[]): TheoryQuestion[] {
   })
 }
 
-const QUESTIONS_FRONTEND: TheoryQuestion[] = (FRONTEND_QA as TheoryQuestion[]) || []
-const QUESTIONS_BACKEND_JAVA: TheoryQuestion[] = (BACKEND_JAVA_QA as TheoryQuestion[]) || []
-const QUESTIONS_ANALYST: TheoryQuestion[] = (ANALYST_QA as TheoryQuestion[]) || []
-const QUESTIONS_DEVOPS: TheoryQuestion[] = (DEVOPS_QA as TheoryQuestion[]) || []
-
-const QUESTIONS_BY_PROF: Record<Profession, TheoryQuestion[]> = {
-  'frontend': QUESTIONS_FRONTEND,
-  'backend-java': QUESTIONS_BACKEND_JAVA,
-  'analyst': QUESTIONS_ANALYST,
-  'devops': QUESTIONS_DEVOPS
+// Замороженные профессии (backend-java, analyst, devops) лежат в /frozen и в сборку не входят
+const QUESTIONS_BY_PROF: Partial<Record<Profession, TheoryQuestion[]>> = {
+  frontend: (FRONTEND_QA as TheoryQuestion[]) || [],
 }
 
 export function getQuestions(prof: Profession): TheoryQuestion[] {
-  // Helper to lazily compute base (MD overrides JSON by id) and normalize
+  // Helper to lazily compute base and normalize
   let baseCache: TheoryQuestion[] | null = null
   const base = () => {
     if (baseCache) return baseCache
-    const md = normalize(loadMdForProf(prof))
-    const jsonBase = normalize(QUESTIONS_BY_PROF[prof] || [])
-    // merge by id: json first, md overrides/adds
-    const map = new Map<string, TheoryQuestion>()
-    for (const q of jsonBase) map.set(q.id, q)
-    for (const q of md) map.set(q.id, q)
-    baseCache = Array.from(map.values())
+    baseCache = normalize(QUESTIONS_BY_PROF[prof] || [])
       .sort((a,b)=> (a.difficulty||0)-(b.difficulty||0) || String(a.title||'').localeCompare(String(b.title||'')))
     return baseCache
   }
@@ -199,7 +101,6 @@ export function getQuestions(prof: Profession): TheoryQuestion[] {
       }
     }
   } catch {}
-  // Prefer Markdown contributions if present, else fallback to JSON base
   const seeded = base()
   // Auto-seed LocalStorage with base so user can edit locally, works offline too
   try { localStorage.setItem(lsKeyQuestions(prof), JSON.stringify(seeded)) } catch {}

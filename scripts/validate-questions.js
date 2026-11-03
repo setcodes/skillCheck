@@ -26,13 +26,17 @@ function log(color, message) {
 function validateJSONQuestions() {
   log('cyan', '\n🔍 Validating JSON question files...');
   
-  const questionsDir = path.join(__dirname, '../src/shared/questions');
-  const files = fs.readdirSync(questionsDir).filter(f => f.endsWith('.json'));
+  // Активный банк + замороженные профессии (см. frozen/README.md)
+  const dirs = ['../src/shared/questions', '../frozen/questions'].map(d => path.join(__dirname, d));
+  const entries = dirs.flatMap(dir =>
+    fs.existsSync(dir) ? fs.readdirSync(dir).filter(f => f.endsWith('.json')).map(f => [dir, f]) : []
+  );
+  const files = entries.map(([, f]) => f);
   
   let totalQuestions = 0;
   let errors = 0;
   
-  for (const file of files) {
+  for (const [questionsDir, file] of entries) {
     const filePath = path.join(questionsDir, file);
     log('blue', `\n📁 Validating ${file}...`);
     
@@ -123,90 +127,14 @@ function validateJSONQuestions() {
   return { totalQuestions, errors };
 }
 
-function validateMarkdownQuestions() {
-  log('cyan', '\n🔍 Validating Markdown question files...');
-  
-  const mdDir = path.join(__dirname, '../src/shared/questions/md');
-  let totalQuestions = 0;
-  let errors = 0;
-  
-  if (!fs.existsSync(mdDir)) {
-    log('yellow', 'ℹ️ No Markdown questions directory found');
-    return { totalQuestions, errors };
-  }
-  
-  function walkDir(dir) {
-    const files = fs.readdirSync(dir);
-    
-    for (const file of files) {
-      const filePath = path.join(dir, file);
-      const stat = fs.statSync(filePath);
-      
-      if (stat.isDirectory()) {
-        walkDir(filePath);
-      } else if (file.endsWith('.md')) {
-        log('blue', `\n📁 Validating ${path.relative(mdDir, filePath)}...`);
-        totalQuestions++;
-        
-        try {
-          const content = fs.readFileSync(filePath, 'utf8');
-          
-          // Проверяем frontmatter
-          if (!content.startsWith('---')) {
-            log('red', `❌ Error: File does not start with frontmatter (---)`);
-            errors++;
-            continue;
-          }
-          
-          // Проверяем наличие секций
-          if (!content.includes('## Вопрос')) {
-            log('red', `❌ Error: Missing '## Вопрос' section`);
-            errors++;
-          }
-          
-          if (!content.includes('## Ответ')) {
-            log('red', `❌ Error: Missing '## Ответ' section`);
-            errors++;
-          }
-          
-          // Проверяем frontmatter поля
-          const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---/);
-          if (frontmatterMatch) {
-            const frontmatter = frontmatterMatch[1];
-            const requiredFields = ['id', 'title', 'category', 'difficulty', 'bucket'];
-            
-            for (const field of requiredFields) {
-              if (!frontmatter.includes(`${field}:`)) {
-                log('red', `❌ Error: Missing frontmatter field '${field}'`);
-                errors++;
-              }
-            }
-          }
-          
-          log('green', '✅ Valid Markdown question');
-          
-        } catch (error) {
-          log('red', `❌ Error reading file: ${error.message}`);
-          errors++;
-        }
-      }
-    }
-  }
-  
-  walkDir(mdDir);
-  return { totalQuestions, errors };
-}
-
-function generateReport(jsonStats, mdStats) {
+function generateReport(jsonStats) {
   log('cyan', '\n📊 Validation Report');
   log('cyan', '==================');
   
-  const totalQuestions = jsonStats.totalQuestions + mdStats.totalQuestions;
-  const totalErrors = jsonStats.errors + mdStats.errors;
+  const totalQuestions = jsonStats.totalQuestions;
+  const totalErrors = jsonStats.errors;
   
   log('blue', `📈 Total questions: ${totalQuestions}`);
-  log('blue', `📁 JSON questions: ${jsonStats.totalQuestions}`);
-  log('blue', `📝 Markdown questions: ${mdStats.totalQuestions}`);
   
   if (totalErrors === 0) {
     log('green', '\n✅ All validations passed!');
@@ -224,9 +152,7 @@ function main() {
   log('bright', '================================');
   
   const jsonStats = validateJSONQuestions();
-  const mdStats = validateMarkdownQuestions();
-  
-  generateReport(jsonStats, mdStats);
+  generateReport(jsonStats);
 }
 
 // Запуск
