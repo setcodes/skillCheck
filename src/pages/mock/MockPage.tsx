@@ -10,13 +10,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuT
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { useApp } from '@/app/providers/AppProvider'
 import { createSession, loadSession, saveSession, clearSession, mapTaskScore } from '@/shared/api/mock'
-import { getQuestions, getTasks } from '@/shared/api/questions'
+import { getQuestions, getTasks } from '@/shared/bank'
+import type { Profession } from '@/entities/profession/model/types'
 import type { MockSessionState, MockItem, MockTaskItem, MockTheoryItem } from '@/entities/mock/model/types'
 import { Clock, Pause, Play, RotateCcw, CheckCircle, AlertTriangle, Printer, XCircle, Copy } from 'lucide-react'
 import { useToast } from '@/shared/hooks/use-sonner'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { runModuleWithLogs } from '@/shared/api/runner'
+import { crossedThresholds, formatSeconds } from '@/shared/lib/timer'
 
 export default function MockPage(){
   const { prof } = useApp()
@@ -73,39 +75,25 @@ export default function MockPage(){
     return ()=> clearInterval(id)
   }, [s?.running, s?.finished, s?.id])
 
-  // Toast notifications for half/10%/over (down only)
-  const halfRef = useRef(false)
-  const tenRef = useRef(false)
-  const prevValRef = useRef<number>(s?.remainingSec||0)
+  // Пороги времени (половина / 10% / истекло) — общая логика с остальными таймерами
+  const prevRemainingRef = useRef<number>(s?.remainingSec||0)
   useEffect(()=>{
-    if(!s || s.finished) return
-    const limit = s.config.durationSec
+    if(!s || s.finished) { prevRemainingRef.current = s?.remainingSec||0; return }
     const remaining = s.remainingSec
-    if(!s.running) { halfRef.current=false; tenRef.current=false }
-    if(s.running && limit>0){
-      const half = Math.floor(limit/2)
-      const ten = Math.ceil(limit*0.10)
-      if(!halfRef.current && remaining<=half){
-        halfRef.current=true
-        toast.info("Половина времени Mock‑сессии", fmt(remaining))
-      }
-      if(!tenRef.current && remaining<=ten){
-        tenRef.current=true
-        toast.warning("Меньше 10% времени", fmt(remaining))
+    if(s.running){
+      for(const e of crossedThresholds(prevRemainingRef.current, remaining, s.config.durationSec)){
+        if(e==='half') toast.info("Половина времени Mock‑сессии", fmt(remaining))
+        if(e==='tenPercent') toast.warning("Меньше 10% времени", fmt(remaining))
+        if(e==='expired') toast.error("Время истекло", "Сессия завершена")
       }
     }
-    if(prevValRef.current>0 && remaining===0 && s.running===false){
-      toast.error("Время истекло", "Сессия завершена")
-      setS(prev=> prev ? { ...prev, finished: true, running: false } : prev)
-    }
-    prevValRef.current = remaining
+    prevRemainingRef.current = remaining
   }, [s?.remainingSec, s?.running])
 
   const start = ()=> setS(createSession(prof, { theoryCount, taskCount, durationSec: durationMin*60, allowPause, level, weightTasks, candidateName: candName, candidateDept: candDept, candidatePosition: candPos }))
   const reset = ()=> { clearSession(); setS(null) }
-  const fmt=(x:number)=>{
-    x=Math.max(0, Math.floor(x)); const h=Math.floor(x/3600).toString().padStart(2,'0'); const m=Math.floor((x%3600)/60).toString().padStart(2,'0'); const s=(x%60).toString().padStart(2,'0'); return `${h}:${m}:${s}`
-  }
+  const fmt = formatSeconds
+
   const cur: MockItem | undefined = s?.items[s?.currentIndex||0]
   const qMap = useMemo(()=>{
     if(!s) return {}
@@ -131,8 +119,7 @@ export default function MockPage(){
     const item = cur as MockTaskItem
     if(!item.starter) return
     const code = (item.code ?? item.starter)
-    const { TASKS_BY_PROF } = await import('@/shared/api/tasks')
-    const tests = TASKS_BY_PROF[s.config.profession as keyof typeof TASKS_BY_PROF]?.find((t:any)=>t.id===item.taskId)?.tests
+    const tests = getTasks(s.config.profession as Profession).find(t=>t.id===item.taskId)?.tests
     if(!tests) return
     let runLogs: string[] = []
     try{

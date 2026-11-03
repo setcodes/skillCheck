@@ -2,109 +2,74 @@ import React from 'react'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { useToast } from '@/shared/hooks/use-sonner'
-import { getQuestions, putQuestions, getTasks, putTasks } from '@/shared/api/questions'
+import { exportBank, importBank, resetBank, getQuestions, MAX_IMPORT_BYTES } from '@/shared/bank'
 import { useApp } from '@/app/providers/AppProvider'
-export default function DataHub(){
+
+export default function DataHub() {
   const { prof } = useApp()
-  const {toast} = useToast()
-  const lsKeyQuestions = (p:string)=> `bank:${p}:questions`
+  const { toast } = useToast()
+
   const exportJSON = () => {
-    const data = { questions: getQuestions(prof), tasks: getTasks(prof) }
-    const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'})
-    const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `bank-${prof}.json`; a.click(); URL.revokeObjectURL(url)
-    toast.success("Экспортировано", `Данные ${prof} экспортированы в файл.`)
+    const blob = new Blob([JSON.stringify(exportBank(prof), null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `bank-${prof}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success('Экспортировано', `Данные ${prof} экспортированы в файл.`)
   }
-  const importJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0]; if(!f) return
-    const r = new FileReader()
-    r.onload = () => { try{
-      const p = JSON.parse(String(r.result))
 
-      // Поддерживаем несколько форматов ввода:
-      // 1) { questions: TheoryQuestion[], tasks?: UITask[] }
-      // 2) TheoryQuestion[]
-      // 3) Простой массив вопросов в формате [{id, level, category, question, answer}]
-
-      const maybeArray = Array.isArray(p) ? p : (Array.isArray(p?.questions) ? p.questions : null)
-      const maybeTasks = Array.isArray(p?.tasks) ? p.tasks : null
-
-      if (maybeArray) {
-        const normalized = normalizeQuestions(maybeArray)
-        if (normalized.length) putQuestions(prof, normalized)
-      }
-      if (maybeTasks) {
-        // сохраняем задачи как есть (ожидается формат UITask[]) 
-        putTasks(prof, maybeTasks)
-      }
-      toast.success("Импортировано", "Данные импортированы. Открой «Теорию»/«Решение задач».")
-    } catch { 
-      toast.error("Ошибка", "Неверный формат JSON файла.")
-    } }
-    r.readAsText(f)
+  const importJSON = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // чтобы можно было выбрать тот же файл повторно
+    if (!file) return
+    if (file.size > MAX_IMPORT_BYTES) {
+      toast.error('Файл слишком большой', `Максимум ${MAX_IMPORT_BYTES / 1024 / 1024} МБ`)
+      return
+    }
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(await file.text())
+    } catch {
+      toast.error('Ошибка', 'Неверный формат JSON файла.')
+      return
+    }
+    const report = importBank(prof, parsed)
+    const q = report.questions
+    const t = report.tasks
+    const imported = q.added + q.updated + t.added + t.updated
+    const rejected = q.rejected + t.rejected
+    if (imported === 0) {
+      toast.error('Ничего не импортировано', report.errors[0] ?? 'Нет подходящих записей')
+      return
+    }
+    toast.success(
+      'Импортировано',
+      `Вопросы: +${q.added}, обновлено ${q.updated}. Задачи: +${t.added}, обновлено ${t.updated}.` +
+        (rejected ? ` Отклонено: ${rejected} (${report.errors[0]})` : '')
+    )
   }
 
   const resetToDefaults = () => {
-    try { localStorage.removeItem(lsKeyQuestions(prof)); } catch {}
-    // force re-seed by calling getQuestions
-    const seeded = getQuestions(prof)
-    toast.info('Сброшено', `Вопросы ${prof} сброшены к базе (${seeded.length})`)
+    if (!window.confirm('Сбросить импортированные вопросы и задачи к встроенной базе?')) return
+    resetBank(prof)
+    toast.info('Сброшено', `Банк ${prof} сброшен к встроенному (вопросов: ${getQuestions(prof).length})`)
   }
-  
-  function normalizeQuestions(input: any[]): any[] {
-    // Если элементы уже похожи на TheoryQuestion — возвращаем как есть
-    const looksLikeTheory = (q: any) => q && typeof q.id==='string' && typeof q.title==='string' && typeof q.prompt==='string' && typeof q.answer==='string'
-    if (input.every(looksLikeTheory)) return input
 
-    // Иначе пробуем преобразовать из простого формата:
-    // { id, level, category, question, answer }
-    const levelToDifficulty = (lvl: any): number => {
-      const v = String(lvl||'').toLowerCase()
-      if (v==='junior') return 1
-      if (v==='middle' || v==='mid') return 2
-      if (v==='senior') return 3
-      return 2
-    }
-
-    return input.map((raw: any) => {
-      if (looksLikeTheory(raw)) return raw
-      const id = String(raw?.id ?? crypto.randomUUID?.() ?? Math.random().toString(36).slice(2))
-      const questionText = String(raw?.question ?? raw?.prompt ?? raw?.title ?? '')
-      const title = String(raw?.title ?? questionText)
-      const prompt = String(raw?.prompt ?? questionText)
-      const answer = String(raw?.answer ?? '')
-      const category = String(raw?.category ?? 'General')
-      const difficulty = Number.isFinite(raw?.difficulty) ? Number(raw.difficulty) : levelToDifficulty(raw?.level)
-      const bucket: 'screening'|'deep'|'architecture' = ((): any => {
-        const b = String(raw?.bucket||'').toLowerCase()
-        if (b==='screening' || b==='deep' || b==='architecture') return b
-        return 'screening'
-      })()
-
-      return { id, title, category, difficulty, bucket, prompt, answer }
-    })
-  }
   return (
     <div className="max-w-2xl mx-auto">
       <Card>
         <CardHeader>
           <CardTitle>Импорт / Экспорт — {prof}</CardTitle>
-          <CardDescription>
-            Управление данными вопросов и задач для профессии {prof}
-          </CardDescription>
+          <CardDescription>Управление данными вопросов и задач для профессии {prof}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-wrap gap-4">
-            <Button onClick={exportJSON}>
-              Экспортировать
-            </Button>
+            <Button onClick={exportJSON}>Экспортировать</Button>
             <Button variant="outline" asChild>
               <label>
-                <input 
-                  type="file" 
-                  accept="application/json" 
-                  onChange={importJSON} 
-                  className="hidden"
-                />
+                <input type="file" accept="application/json" onChange={importJSON} className="hidden" />
                 Импортировать
               </label>
             </Button>
@@ -112,10 +77,13 @@ export default function DataHub(){
               Сбросить к базе
             </Button>
           </div>
-          
+
           <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground">
-              <strong>Форматы импорта:</strong> {"{ questions: TheoryQ[], tasks?: UITask[] }"} или массив вопросов вида [{"{ id, level, category, question, answer }"}]. Данные хранятся в localStorage.
+              <strong>Форматы импорта:</strong> {'{ questions, tasks? }'} или массив вопросов вида{' '}
+              {'[{ id, level, category, question, answer }]'}. Записи с тем же <code>id</code>{' '}
+              заменяют встроенные, остальные добавляются; невалидные отклоняются. Данные хранятся в
+              браузере и не теряются при обновлении встроенной базы.
             </p>
           </div>
         </CardContent>

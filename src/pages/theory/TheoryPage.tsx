@@ -13,14 +13,17 @@ import {
 import { TagFilter } from '@/shared/ui/tag-filter';
 import { QuestionTags } from '@/shared/ui/question-tags';
 import { useApp } from '@/app/providers/AppProvider';
-import { getQuestions } from '@/shared/api/questions';
+import { useQuestions } from '@/shared/bank';
+import { useNavigate, useParams } from 'react-router-dom';
+import { clearAllEvaluations, KEYS, readJSON, writeJSON } from '@/shared/storage/storage';
+import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants';
 import { useToast } from '@/shared/hooks/use-sonner';
 import { Send, CheckCircle, Trash2 } from 'lucide-react';
 
 export default function Theory() {
 	const { prof, role } = useApp();
 	const { toast } = useToast();
-	const ALL = getQuestions(prof) || [];
+	const ALL = useQuestions(prof);
 	const cats = useMemo(() => {
 		const set = new Set<string>();
 		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');
@@ -52,11 +55,10 @@ export default function Theory() {
 	}, [ALL, selectedCategories]);
 
 	// Right panel: select question and evaluate
-	const [curQ, setCurQ] = useState<string>(ALL[0]?.id || '');
-	useEffect(() => {
-		setCurQ(ALL[0]?.id || '');
-	}, [prof]);
-	const cur = useMemo(() => ALL.find((q: any) => q.id === curQ), [ALL, curQ]);
+	const navigate = useNavigate();
+	const { questionId } = useParams();
+	const cur = useMemo(() => ALL.find((q: any) => q.id === questionId) ?? ALL[0], [ALL, questionId]);
+	const setCurQ = (id: string) => navigate(`/theory/${encodeURIComponent(id)}`);
 
 	// Draft per-question evaluation (persisted locally)
 	type Draft = { score?: number; comment?: string };
@@ -115,23 +117,11 @@ export default function Theory() {
 							<Button 
 								variant="outline" 
 								size="sm"
-								onClick={()=>{
-									// Очищаем все данные об оценках
-									localStorage.removeItem("bridge.taskScores.v1"); // Оценки задач
-									localStorage.removeItem("bridge.theoryScores.v1"); // Оценки теории
-									localStorage.removeItem("solutions.v4"); // Решения задач
-									
-									// Очищаем черновики теории для всех профессий
-									const professions = ['frontend', 'backend-java', 'analyst', 'devops'];
-									professions.forEach(prof => {
-										localStorage.removeItem(`theory.drafts.v1.${prof}`);
-									});
-									
-									// Показываем уведомление
-									toast.success("Все оценки сброшены", "Очищены оценки задач, теории и решения");
-									
-									// Перезагружаем страницу
-									setTimeout(() => location.reload(), 1000);
+								onClick={() => {
+									if (!window.confirm('Сбросить все оценки, комментарии и решения?')) return;
+									clearAllEvaluations(ENABLED_PROFESSIONS);
+									setDrafts({});
+									toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения');
 								}}
 								className="inline-flex items-center gap-2"
 							>

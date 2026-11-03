@@ -8,8 +8,6 @@ interface AppContextType {
   setRole: (role: UserRole) => void
   prof: Profession
   setProf: (prof: Profession) => void
-  selectedProf: Profession | null
-  setSelectedProf: (prof: Profession | null) => void
 }
 
 const AppContext = createContext<AppContextType>(null as any)
@@ -28,7 +26,6 @@ export function AppProvider({ children }: AppProviderProps) {
     const saved = localStorage.getItem('prof')
     return isProfessionEnabled(saved) ? saved : DEFAULT_PROFESSION
   })
-  const [selectedProf, setSelectedProf] = useState<Profession | null>(null)
 
   const saveRole = (newRole: UserRole) => {
     setRole(newRole)
@@ -48,8 +45,6 @@ export function AppProvider({ children }: AppProviderProps) {
         setRole: saveRole, 
         prof, 
         setProf: saveProf, 
-        selectedProf, 
-        setSelectedProf 
       }}
     >
       {children}
