@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { runModuleWithLogs, type TestResult } from '@/shared/api/runner'
+import { runTaskChecks, type TestResult } from '@/shared/api/runner'
 import { useToast } from '@/shared/hooks/use-sonner'
 import type { UITask } from '@/entities/task/model/types'
 
@@ -30,7 +30,7 @@ export function useTaskRunner(onResult: (taskId: string, code: string, results: 
       setRunning(true)
       toast.info('Запуск тестов...', 'Выполняются тесты для задачи')
       try {
-        const { results, logs } = await runModuleWithLogs(code, task.tests)
+        const { results, logs } = await runTaskChecks(task, code)
         setLogs(logs)
         onResult(task.id, code, results)
         const passed = results.filter((r) => r.ok).length

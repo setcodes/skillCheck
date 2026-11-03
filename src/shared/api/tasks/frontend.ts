@@ -63,7 +63,7 @@ assert.equal(classNames('a', ['b', {c: true, b: false}], {a: true}, 'c'), 'a b c
     level: 'junior', 
     title: 'isPalindrome(str)', 
     exportName: 'isPalindrome',
-    description: 'Палиндром по графемам, игнорируя регистр и пробелы.',
+    description: 'Проверить, что строка — палиндром, игнорируя регистр и пробелы. Не строка — false.',
     starter: `export function isPalindrome(str: unknown): boolean {
   // TODO: Реализуйте проверку палиндрома
   // Игнорируйте регистр и пробелы
@@ -350,31 +350,64 @@ assert.deepEqual(getObj(), { a: 1 }, 'работает с объектами');`
 }`
   },
 
-  { 
-    id: 'fe_useEffect', 
-    level: 'middle', 
-    title: 'useEffect(effect, deps?)', 
-    exportName: 'useEffect',
-    description: 'Реализовать useEffect хук с зависимостями и cleanup.',
-    starter: `export function useEffect(effect: () => void | (() => void), deps?: any[]): void {
-  // TODO: Реализуйте useEffect хук
-  // Принимает функцию эффекта и массив зависимостей
-  // Выполняет эффект при изменении зависимостей
-  // Поддерживает cleanup функцию
+  {
+    id: 'fe_useEffect',
+    level: 'middle',
+    title: 'createEffects()',
+    exportName: 'createEffects',
+    description:
+      'Мини-аналог useEffect без React: createEffects() возвращает { effect, unmount }. effect(fn, deps?) выполняет fn при первом вызове и каждый раз, когда зависимости изменились (Object.is по элементам); без deps — при каждом вызове, с пустым [] — один раз. Перед новым запуском вызывается cleanup предыдущего. unmount() вызывает последний cleanup.',
+    starter: `export function createEffects() {
+  // TODO: Реализуйте createEffects
+  // effect(fn, deps?) — fn может вернуть функцию очистки (cleanup)
+  //   первый вызов — всегда выполняет fn
+  //   без deps — выполняет fn при каждом вызове
+  //   с deps — только если deps изменились (сравнение каждого элемента через Object.is)
+  //   перед повторным запуском вызывает cleanup предыдущего эффекта
+  // unmount() — вызывает последний cleanup (один раз)
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { useEffect } = m; 
-let calls = 0; 
-useEffect(() => { calls++; }); 
-assert.equal(calls, 1);`,
-    solution: `export function useEffect(effect: () => void | (() => void), deps?: any[]): void {
-  // Упрощенная реализация - в реальности нужен более сложный механизм
-  const cleanup = effect();
-  if (typeof cleanup === 'function') {
-    // В реальности cleanup вызывается при размонтировании
+    tests: `import { strict as assert } from 'assert';
+import * as m from 'MODULE';
+const { createEffects } = m;
+const { effect, unmount } = createEffects();
+const log: string[] = [];
+effect(() => { log.push('run'); return () => { log.push('cleanup'); }; }, [1]);
+assert.deepEqual(log, ['run'], 'эффект выполняется при первом вызове');
+effect(() => { log.push('run'); return () => { log.push('cleanup'); }; }, [1]);
+assert.deepEqual(log, ['run'], 'зависимости не изменились — эффект не перезапускается');
+effect(() => { log.push('run2'); return () => { log.push('cleanup2'); }; }, [2]);
+assert.deepEqual(log, ['run', 'cleanup', 'run2'], 'при изменении зависимостей: cleanup предыдущего, затем новый эффект');
+unmount();
+assert.deepEqual(log, ['run', 'cleanup', 'run2', 'cleanup2'], 'unmount вызывает последний cleanup');`,
+    solution: `export function createEffects() {
+  let started = false;
+  let lastDeps: unknown[] | undefined;
+  let cleanup: (() => void) | undefined;
+
+  function effect(fn: () => void | (() => void), deps?: unknown[]) {
+    const changed =
+      !started ||
+      !deps ||
+      !lastDeps ||
+      deps.length !== lastDeps.length ||
+      deps.some((d, i) => !Object.is(d, lastDeps![i]));
+    if (!changed) return;
+
+    cleanup?.(); // сначала убираем за предыдущим запуском
+    cleanup = undefined;
+    started = true;
+    lastDeps = deps;
+    const result = fn();
+    if (typeof result === 'function') cleanup = result;
   }
+
+  function unmount() {
+    cleanup?.();
+    cleanup = undefined;
+  }
+
+  return { effect, unmount };
 }`
   },
 
@@ -493,45 +526,45 @@ assert.equal(cur(1)(2)(3), 6);`,
 }`
   },
 
-  { 
-    id: 'fe_parseQuery', 
-    level: 'middle', 
-    title: 'parseQueryString(qs)', 
+  {
+    id: 'fe_parseQuery',
+    level: 'middle',
+    title: 'parseQueryString(qs)',
     exportName: 'parseQueryString',
-    description: 'Разобрать ?a=1&b=2&a=3 → {a:[1,3],b:"2"}.',
-    starter: `export function parseQueryString(qs: string) {
-  // TODO: Реализуйте парсинг query string
-  // Принимает строку вида "?a=1&b=2&a=3"
-  // Возвращает объект с массивами для повторяющихся ключей
-  // Пример: "?a=1&b=2&a=3" → {a: ['1', '3'], b: '2'}
+    description:
+      'Разобрать строку запроса (с ведущим ? или без): ?a=1&b=2&a=3 → { a: ["1","3"], b: "2" }. Повторяющиеся ключи собираются в массив, ключ без значения даёт пустую строку, значения и ключи декодируются (%XX, + как пробел). Служебные имена вроде constructor — обычные ключи.',
+    starter: `export function parseQueryString(qs: string): Record<string, string | string[]> {
+  // TODO: Реализуйте parseQueryString
+  // Один ключ — строка, повторяющийся — массив строк в порядке появления
+  // Декодируйте ключи и значения; "+" — пробел; сломанные %-последовательности не должны бросать ошибку
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { parseQueryString } = m; 
-assert.deepEqual(parseQueryString('?a=1&b=2&a=3'), {a: ['1', '3'], b: '2'});`,
-    solution: `export function parseQueryString(qs: string) {
-  if (!qs || qs[0] !== '?') return {};
-  
-  const params = qs.slice(1).split('&');
-  const result: any = {};
-  
-  for (const param of params) {
-    const [key, value] = param.split('=');
-    if (key) {
-      if (result[key]) {
-        if (Array.isArray(result[key])) {
-          result[key].push(value || '');
-        } else {
-          result[key] = [result[key], value || ''];
-        }
-      } else {
-        result[key] = value || '';
-      }
+    tests: `import { strict as assert } from 'assert';
+import * as m from 'MODULE';
+const { parseQueryString } = m;
+assert.deepEqual(parseQueryString('?a=1&b=2&a=3'), { a: ['1', '3'], b: '2' });`,
+    solution: `export function parseQueryString(qs: string): Record<string, string | string[]> {
+  const decode = (s: string) => {
+    try {
+      return decodeURIComponent(s.replace(/\\+/g, ' '));
+    } catch {
+      return s; // сломанная последовательность — оставляем как есть
     }
+  };
+  const query = qs.startsWith('?') ? qs.slice(1) : qs;
+  const map = new Map<string, string | string[]>();
+  for (const pair of query.split('&')) {
+    if (!pair) continue;
+    const eq = pair.indexOf('=');
+    const key = decode(eq === -1 ? pair : pair.slice(0, eq));
+    const value = eq === -1 ? '' : decode(pair.slice(eq + 1));
+    if (!key) continue;
+    const prev = map.get(key);
+    if (prev === undefined) map.set(key, value);
+    else map.set(key, Array.isArray(prev) ? [...prev, value] : [prev, value]);
   }
-  
-  return result;
+  // Map не страдает от ключей вроде constructor и __proto__
+  return Object.fromEntries(map);
 }`
   },
 
@@ -749,7 +782,7 @@ assert.equal(deepEqual({x: [1, {y: 2}]}, {x: [1, {y: 2}]}), true);`,
     level: 'middle', 
     title: 'formatBytes(n)', 
     exportName: 'formatBytes',
-    description: 'Форматировать байты: 1536 → "1.5 KB".',
+    description: 'Форматировать размер: до 1024 — "N Bytes", далее KB, MB, GB…; округление до двух знаков без хвостовых нулей (1536 → "1.5 KB", 0 → "0 Bytes").',
     starter: `export function formatBytes(n: number): string {
   // TODO: Реализуйте форматирование байтов
   // Принимает число байтов
@@ -932,44 +965,86 @@ assert.equal((compose(f, g) as any)(3), f(g(3)));`,
 }`
   },
 
-  { 
-    id: 'fe_virtualScroll', 
-    level: 'senior', 
-    title: 'VirtualScroll({items, height, itemHeight})', 
+  {
+    id: 'fe_virtualScroll',
+    level: 'senior',
+    title: 'VirtualScroll',
     exportName: 'VirtualScroll',
-    description: 'Виртуальный скролл для больших списков.',
+    description:
+      'Расчёт виртуального списка. new VirtualScroll({ items, height, itemHeight }); setScrollTop(top) — положение прокрутки (ограничивается диапазоном [0, общая высота − height]); getRange() — { start, end } индексов видимых элементов (end не включается; частично видимая строка входит в диапазон); getVisibleItems() — видимые элементы; getOffsetTop() — смещение первого видимого элемента в пикселях; getTotalHeight() — высота всего списка.',
     starter: `export class VirtualScroll {
-  // TODO: Реализуйте виртуальный скролл
-  // Принимает items, height, itemHeight
-  // Возвращает только видимые элементы
-  // Оптимизирует рендеринг больших списков
-  throw new Error('Not implemented');
+  constructor(options: { items: any[]; height: number; itemHeight: number }) {
+    // TODO: сохраните параметры
+  }
+
+  setScrollTop(top: number): void {
+    // TODO: запомните положение прокрутки, ограничив его допустимым диапазоном
+    throw new Error('Not implemented');
+  }
+
+  getRange(): { start: number; end: number } {
+    // TODO: индексы видимых элементов [start, end)
+    throw new Error('Not implemented');
+  }
+
+  getVisibleItems(): any[] {
+    throw new Error('Not implemented');
+  }
+
+  getOffsetTop(): number {
+    throw new Error('Not implemented');
+  }
+
+  getTotalHeight(): number {
+    throw new Error('Not implemented');
+  }
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { VirtualScroll } = m; 
-const vs = new VirtualScroll({items: Array.from({length: 1000}, (_, i) => i), height: 400, itemHeight: 20}); 
-assert.ok(vs);`,
+    tests: `import { strict as assert } from 'assert';
+import * as m from 'MODULE';
+const { VirtualScroll } = m;
+const items = Array.from({ length: 1000 }, (_, i) => i);
+const vs = new VirtualScroll({ items, height: 400, itemHeight: 20 });
+assert.deepEqual(vs.getRange(), { start: 0, end: 20 }, 'в начале видны первые height / itemHeight элементов');
+assert.equal(vs.getTotalHeight(), 20000, 'общая высота списка');
+vs.setScrollTop(100);
+assert.deepEqual(vs.getRange(), { start: 5, end: 25 }, 'после прокрутки на 100 px');
+assert.deepEqual(vs.getVisibleItems().slice(0, 2), [5, 6], 'видимые элементы');
+assert.equal(vs.getOffsetTop(), 100, 'смещение первого видимого элемента');`,
     solution: `export class VirtualScroll {
+  private scrollTop = 0;
   private items: any[];
   private height: number;
   private itemHeight: number;
-  private scrollTop: number = 0;
-  
-  constructor({items, height, itemHeight}: {items: any[], height: number, itemHeight: number}) {
+
+  constructor({ items, height, itemHeight }: { items: any[]; height: number; itemHeight: number }) {
     this.items = items;
     this.height = height;
     this.itemHeight = itemHeight;
   }
-  
-  getVisibleItems() {
-    const startIndex = Math.floor(this.scrollTop / this.itemHeight);
-    const endIndex = Math.min(startIndex + Math.ceil(this.height / this.itemHeight), this.items.length);
-    return this.items.slice(startIndex, endIndex);
+
+  getTotalHeight(): number {
+    return this.items.length * this.itemHeight;
   }
-  
-  setScrollTop(scrollTop: number) {
-    this.scrollTop = scrollTop;
+
+  setScrollTop(top: number): void {
+    const max = Math.max(0, this.getTotalHeight() - this.height);
+    this.scrollTop = Math.min(Math.max(0, top), max);
+  }
+
+  getRange(): { start: number; end: number } {
+    const start = Math.floor(this.scrollTop / this.itemHeight);
+    // ceil: частично видимая нижняя строка тоже должна быть отрисована
+    const end = Math.min(this.items.length, Math.ceil((this.scrollTop + this.height) / this.itemHeight));
+    return { start, end };
+  }
+
+  getVisibleItems(): any[] {
+    const { start, end } = this.getRange();
+    return this.items.slice(start, end);
+  }
+
+  getOffsetTop(): number {
+    return this.getRange().start * this.itemHeight;
   }
 }`
   }

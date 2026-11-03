@@ -62,3 +62,27 @@ describe('Frontend: развёрнутые ответы', () => {
     for (const t of ['browser-network', 'security', 'performance', 'async', 'state']) expect(count(t), t).toBeGreaterThanOrEqual(5)
   })
 })
+
+describe('Frontend: методические материалы задач', () => {
+  it('у каждой задачи три подсказки, рубрика с весами в сумме 100, типичные ошибки и скрытые проверки', () => {
+    for (const t of FE) {
+      expect(t.hints?.length, `${t.id}: подсказки`).toBe(3)
+      for (const h of t.hints ?? []) expect(h.trim().length, `${t.id}: пустая подсказка`).toBeGreaterThan(30)
+      expect(t.rubric?.length, `${t.id}: рубрика`).toBeGreaterThanOrEqual(3)
+      expect(t.rubric?.length, `${t.id}: рубрика`).toBeLessThanOrEqual(5)
+      expect(t.rubric?.reduce((s, r) => s + r.weight, 0), `${t.id}: сумма весов`).toBe(100)
+      expect(t.commonMistakes?.length, `${t.id}: типичные ошибки`).toBeGreaterThanOrEqual(2)
+      expect((t.hiddenTests ?? '').trim().length, `${t.id}: скрытые проверки`).toBeGreaterThan(0)
+    }
+  })
+  it('подсказки не повторяют друг друга и постепенно становятся конкретнее', () => {
+    for (const t of FE) {
+      const [a, b, c] = t.hints!
+      expect(new Set([a, b, c]).size, t.id).toBe(3)
+      expect(c.length, `${t.id}: третья подсказка конкретнее первой`).toBeGreaterThan(a.length * 0.6)
+    }
+  })
+  it('скрытые проверки отличаются от видимых', () => {
+    for (const t of FE) expect(t.hiddenTests, t.id).not.toBe(t.tests)
+  })
+})

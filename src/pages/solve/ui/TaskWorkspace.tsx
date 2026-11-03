@@ -11,6 +11,7 @@ import type { UITask } from '@/entities/task/model/types'
 import type { UserRole } from '@/entities/user/model/types'
 import type { Solution } from '../model/useSolutions'
 import { detectLanguage, languageLabel } from '../lib/language'
+import { HintsPanel } from './HintsPanel'
 import { ReferenceSolution } from './ReferenceSolution'
 import { ResultsPanel } from './ResultsPanel'
 import { ScorePanel } from './ScorePanel'
@@ -29,6 +30,8 @@ interface Props {
   onScore: (score: number) => void
   onComment: (comment: string) => void
   onSendScore: () => void
+  onRevealHint: () => void
+  onRubric: (done: number[]) => void
 }
 
 const levelVariant = { junior: 'default', middle: 'secondary', senior: 'destructive' } as const
@@ -74,6 +77,10 @@ export function TaskWorkspace(p: Props) {
         </div>
 
         {/* Редактор живёт скрытым и открывается в полноэкранном режиме */}
+        {task.hints && (
+          <HintsPanel hints={task.hints} used={solution.hintsUsed ?? 0} role={role} onReveal={p.onRevealHint} />
+        )}
+
         <div className="hidden">
           <CodeEditor
             ref={editorRef}
@@ -100,17 +107,29 @@ export function TaskWorkspace(p: Props) {
           </Button>
         </div>
 
+        {role === 'interviewer' && task.commonMistakes && task.commonMistakes.length > 0 && (
+          <section className="mt-6 border rounded-lg p-4" aria-label="Типичные ошибки">
+            <h3 className="text-sm font-medium mb-2">Типичные ошибки</h3>
+            <ul className="list-disc pl-5 text-sm space-y-1">
+              {task.commonMistakes.map((m, i) => <li key={i}>{m}</li>)}
+            </ul>
+          </section>
+        )}
         {role === 'interviewer' && task.solution && <ReferenceSolution solution={task.solution} language={language} />}
         {role === 'interviewer' && (
           <ScorePanel
             score={solution.score}
             comment={solution.comment}
+            rubric={task.rubric}
+            rubricDone={solution.rubricDone ?? []}
+            hintsUsed={solution.hintsUsed ?? 0}
+            onRubric={p.onRubric}
             onScore={p.onScore}
             onComment={p.onComment}
             onSend={p.onSendScore}
           />
         )}
-        <ResultsPanel results={solution.lastResult ?? []} tests={task.tests} />
+        <ResultsPanel results={solution.lastResult ?? []} tests={task.tests} role={role} />
       </div>
     </>
   )

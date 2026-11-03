@@ -7,6 +7,10 @@ export interface Solution {
   lastResult?: TestResult[]
   score?: number
   comment?: string
+  /** сколько подсказок открыл кандидат */
+  hintsUsed?: number
+  /** индексы выполненных критериев рубрики */
+  rubricDone?: number[]
 }
 
 type Solutions = Record<string, Solution>

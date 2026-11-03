@@ -46,6 +46,10 @@ export const TaskSchema = z.object({
   tests: nonEmpty,
   language: z.enum(['javascript', 'typescript']).optional(),
   solution: z.string().optional(),
+  hints: z.array(nonEmpty).optional(),
+  rubric: z.array(z.object({ criterion: nonEmpty, weight: z.number().min(0).max(100) })).optional(),
+  commonMistakes: z.array(nonEmpty).optional(),
+  hiddenTests: z.string().optional(),
 }) satisfies z.ZodType<UITask>
 
 const LEGACY_LEVEL: Record<string, string> = { junior: 'junior', middle: 'middle', mid: 'middle', senior: 'senior' }

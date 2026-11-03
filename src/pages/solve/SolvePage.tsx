@@ -59,6 +59,7 @@ export default function SolvePage() {
       title: task.title,
       score: solution.score ?? 0,
       comment: solution.comment ?? '',
+      hintsUsed: solution.hintsUsed ?? 0,
     }
     writeJSON(KEYS.taskScoresBridge, bridge)
     toast.success('Оценка отправлена!', 'Оценка сохранена и доступна в режиме интервью')
@@ -112,6 +113,8 @@ export default function SolvePage() {
             onScore={(score) => patch(task.id, { score })}
             onComment={(comment) => patch(task.id, { comment })}
             onSendScore={sendScore}
+            onRevealHint={() => patch(task.id, { hintsUsed: Math.min((solution.hintsUsed ?? 0) + 1, task.hints?.length ?? 0) })}
+            onRubric={(rubricDone) => patch(task.id, { rubricDone })}
           />
         </div>
       </div>
