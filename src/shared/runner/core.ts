@@ -4,6 +4,7 @@
 // Для golden-тестов в Node вызывается напрямую.
 
 import { transform } from 'sucrase'
+import { runCall } from './checks'
 import type { SandboxInput, SandboxOutput, TestResult } from './types'
 
 const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor as new (
@@ -83,40 +84,69 @@ function prepareTests(tests: string): string {
   return transform(withoutImports, { transforms: ['typescript'], disableESTransforms: true }).code
 }
 
-export async function runInSandbox({ code, tests }: SandboxInput): Promise<SandboxOutput> {
-  const logs: string[] = []
+async function runScript(
+  source: string,
+  userModule: Record<string, unknown>,
+  sandboxConsole: ReturnType<typeof createConsole>
+): Promise<TestResult[]> {
   const results: TestResult[] = []
-  const fail = (message: string): SandboxOutput => ({ results: [{ ok: false, message }], logs })
-  const sandboxConsole = createConsole(logs)
-
-  let userModule: Record<string, unknown>
-  try {
-    const compiled = compileUserModule(code)
-    const module = { exports: {} as Record<string, unknown> }
-    new Function('exports', 'module', 'console', compiled)(module.exports, module, sandboxConsole)
-    userModule = module.exports
-  } catch (e) {
-    return fail(`Ошибка в коде решения: ${errorMessage(e)}`)
-  }
-
-  if (Object.keys(userModule).filter((k) => k !== '__esModule').length === 0) {
-    return fail('No functions found in user code')
-  }
-
   let testFn: (...args: unknown[]) => Promise<unknown>
   try {
-    testFn = new AsyncFunction('assert', 'userModule', 'global', 'console', prepareTests(tests))
+    testFn = new AsyncFunction('assert', 'userModule', 'global', 'console', prepareTests(source))
   } catch (e) {
-    return fail(`Ошибка в тестах: ${errorMessage(e)}`)
+    return [{ ok: false, message: `Ошибка в тестах: ${errorMessage(e)}` }]
   }
-
   const assert = createAssert((r) => results.push(r))
   try {
     await testFn(assert, userModule, globalThis, sandboxConsole)
   } catch (e) {
     results.push({ ok: false, message: `Test execution error: ${errorMessage(e)}` })
   }
-
   if (results.length === 0) results.push({ ok: false, message: 'No test assertions were executed' })
+  return results
+}
+
+export async function runInSandbox({ code, tests, checks, exportName }: SandboxInput): Promise<SandboxOutput> {
+  const logs: string[] = []
+  const fail = (message: string): SandboxOutput => ({ results: [{ ok: false, message }], logs })
+  const sandboxConsole = createConsole(logs)
+
+  let compiled: string
+  try {
+    compiled = compileUserModule(code)
+  } catch (e) {
+    return fail(`Ошибка в коде решения: ${errorMessage(e)}`)
+  }
+
+  // Каждая проверка получает свежий экземпляр модуля решения: состояние не протекает между проверками
+  const instantiate = () => {
+    const module = { exports: {} as Record<string, unknown> }
+    new Function('exports', 'module', 'console', compiled)(module.exports, module, sandboxConsole)
+    return module.exports
+  }
+
+  try {
+    const probe = instantiate()
+    if (Object.keys(probe).filter((k) => k !== '__esModule').length === 0) return fail('No functions found in user code')
+  } catch (e) {
+    return fail(`Ошибка в коде решения: ${errorMessage(e)}`)
+  }
+
+  if (!checks) return { results: await runScript(tests ?? '', instantiate(), sandboxConsole), logs }
+
+  const results: TestResult[] = []
+  for (const check of checks) {
+    let produced: TestResult[]
+    if (check.type === 'call') {
+      produced = [await runCall(check, { instantiate, exportName: exportName ?? '' })]
+    } else {
+      try {
+        produced = await runScript(check.code, instantiate(), sandboxConsole)
+      } catch (e) {
+        produced = [{ ok: false, message: `Ошибка в коде решения: ${errorMessage(e)}` }]
+      }
+    }
+    for (const r of produced) results.push(check.hidden ? { ...r, hidden: true } : r)
+  }
   return { results, logs }
 }

@@ -9,7 +9,7 @@ const post = self.postMessage.bind(self) as (message: unknown) => void
 lockDownScope(self as unknown as Record<string, unknown>)
 
 self.onmessage = async (event: MessageEvent<SandboxInput & { token: string }>) => {
-  const { token, code, tests } = event.data
-  const output = await runInSandbox({ code, tests })
+  const { token, ...input } = event.data
+  const output = await runInSandbox(input)
   post({ token, ...output })
 }

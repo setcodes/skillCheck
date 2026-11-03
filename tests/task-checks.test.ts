@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 
 vi.mock('@/shared/runner/index', () => ({
-  runModuleWithLogs: vi.fn(async (_code: string, tests: string) => ({
-    results: [{ ok: tests === 'ok', message: tests }],
-    logs: [`log:${tests}`],
+  runChecksWithLogs: vi.fn(async (code: string, checks: unknown[], exportName: string) => ({
+    results: [{ ok: true, message: `${exportName}:${checks.length}:${code}` }],
+    logs: [],
   })),
 }))
 
@@ -11,18 +11,9 @@ import { runTaskChecks } from '@/shared/runner/task-checks'
 import { suggestScore } from '@/pages/solve/ui/ScorePanel'
 
 describe('runTaskChecks', () => {
-  it('без скрытых проверок возвращает только видимые', async () => {
-    const out = await runTaskChecks({ tests: 'ok' }, 'code')
-    expect(out.results).toEqual([{ ok: true, message: 'ok' }])
-  })
-
-  it('результаты скрытых проверок помечаются hidden, логи — только видимого запуска', async () => {
-    const out = await runTaskChecks({ tests: 'ok', hiddenTests: 'bad' }, 'code')
-    expect(out.results).toEqual([
-      { ok: true, message: 'ok' },
-      { ok: false, message: 'bad', hidden: true },
-    ])
-    expect(out.logs).toEqual(['log:ok'])
+  it('передаёт в песочницу код, все проверки и имя экспорта одним запуском', async () => {
+    const out = await runTaskChecks({ checks: [{ type: 'script', code: 'a' }, { type: 'script', code: 'b', hidden: true }], exportName: 'fn' }, 'CODE')
+    expect(out.results).toEqual([{ ok: true, message: 'fn:2:CODE' }])
   })
 })
 

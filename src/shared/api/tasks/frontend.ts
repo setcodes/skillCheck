@@ -1,7 +1,7 @@
-import type { UITask } from '@/entities/task/model/types'
+import type { TaskDef } from './meta-types'
 
 /* =============== FRONTEND TASKS =============== */
-export const FE: UITask[] = [
+export const FE: TaskDef[] = [
   // JUNIOR (8 задач) - Основы JavaScript
   { 
     id: 'fe_classNames', 
@@ -16,10 +16,6 @@ export const FE: UITask[] = [
   // Пример: classNames('a', ['b', {c: true, b: false}], {a: true}, 'c') → 'a b c'
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { classNames } = m; 
-assert.equal(classNames('a', ['b', {c: true, b: false}], {a: true}, 'c'), 'a b c');`,
     solution: `export function classNames(...inputs: any[]): string {
   const result: string[] = [];
   const seen = new Set<string>();
@@ -70,11 +66,6 @@ assert.equal(classNames('a', ['b', {c: true, b: false}], {a: true}, 'c'), 'a b c
   // Примеры: 'А роза упала на лапу Азора' → true, 'hello' → false
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { isPalindrome } = m; 
-assert.equal(isPalindrome('А роза упала на лапу Азора'), true); 
-assert.equal(isPalindrome('hello'), false);`,
     solution: `export function isPalindrome(str: unknown): boolean {
   if (typeof str !== 'string') return false;
   
@@ -99,11 +90,6 @@ assert.equal(isPalindrome('hello'), false);`,
   // Пример: uniqueBy([{id:1}, {id:1}, {id:2}], 'id') → [{id:1}, {id:2}]
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { uniqueBy } = m; 
-const a = [{id: 1}, {id: 1}, {id: 2}]; 
-assert.deepEqual(uniqueBy(a, 'id'), [{id: 1}, {id: 2}]);`,
     solution: `export function uniqueBy<T>(arr: T[], key: keyof T | ((x: T) => any)): T[] {
   const seen = new Set();
   const result: T[] = [];
@@ -133,10 +119,6 @@ assert.deepEqual(uniqueBy(a, 'id'), [{id: 1}, {id: 2}]);`,
   // Пример: chunk([1,2,3,4,5], 2) → [[1,2], [3,4], [5]]
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { chunk } = m; 
-assert.deepEqual(chunk([1,2,3,4,5], 2), [[1,2], [3,4], [5]]);`,
     solution: `export function chunk<T>(arr: T[], size: number): T[][] {
   if (size <= 0) return [];
   
@@ -163,10 +145,6 @@ assert.deepEqual(chunk([1,2,3,4,5], 2), [[1,2], [3,4], [5]]);`,
   // Пример: sumBy([{a:2}, {a:3}], 'a') → 5
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { sumBy } = m; 
-assert.equal(sumBy([{a: 2}, {a: 3}], 'a'), 5);`,
     solution: `export function sumBy<T>(arr: T[], it: keyof T | ((x: T) => number)): number {
   return arr.reduce((sum, item) => {
     const value = typeof it === 'function' ? it(item) : item[it];
@@ -188,15 +166,6 @@ assert.equal(sumBy([{a: 2}, {a: 3}], 'a'), 5);`,
   // trailing=true означает выполнение в конце интервала
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { throttle } = m; 
-let n = 0; 
-const f = () => n++; 
-const t = throttle(f, 10); 
-t(); 
-t(); 
-assert.equal(n, 1, 'throttle должен выполнить функцию только один раз при быстрых вызовах');`,
     solution: `export function throttle<T extends (...a: any[]) => any>(fn: T, delay = 200) {
   let lastCall = 0;
   let timeoutId: NodeJS.Timeout | null = null;
@@ -231,11 +200,6 @@ assert.equal(n, 1, 'throttle должен выполнить функцию то
   // Пример: safeGet({a:{b:{c:1}}}, 'a.b.d', 'default') → 'default'
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { safeGet } = m; 
-assert.equal(safeGet({a:{b:{c:1}}}, 'a.b.c'), 1); 
-assert.equal(safeGet({a:{b:{c:1}}}, 'a.b.d', 'default'), 'default');`,
     solution: `export function safeGet(obj: any, path: string, defaultValue?: any): any {
   return path.split('.').reduce((current, key) => {
     return current && current[key] !== undefined ? current[key] : defaultValue;
@@ -255,12 +219,6 @@ assert.equal(safeGet({a:{b:{c:1}}}, 'a.b.d', 'default'), 'default');`,
   // Не отклоняется при ошибке в любом из промисов
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { promiseAllSettled } = m; 
-const results = await promiseAllSettled([Promise.resolve(1), Promise.reject('error')]); 
-assert.equal(results.length, 2); 
-assert.equal(results[0].status, 'fulfilled');`,
     solution: `export async function promiseAllSettled<T>(promises: Promise<T>[]): Promise<Array<{status: 'fulfilled'|'rejected', value?: T, reason?: any}>> {
   return Promise.all(promises.map(promise => 
     promise.then(
@@ -285,18 +243,6 @@ assert.equal(results[0].status, 'fulfilled');`,
   // Должна иметь метод cancel() для отмены
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { debounce } = m; 
-let n = 0; 
-const d = debounce(() => n++, 20); 
-assert.equal(typeof d, 'function', 'debounce должен вернуть функцию');
-assert.equal(typeof d.cancel, 'function', 'debounce должен иметь метод cancel');
-d(); 
-d(); 
-assert.equal(n, 0, 'Функция не должна выполниться сразу');
-d.cancel();
-assert.equal(typeof d.cancel, 'function', 'cancel должен быть функцией');`,
     solution: `export function debounce<T extends (...a: any[]) => any>(fn: T, delay = 200) {
   let timeoutId: NodeJS.Timeout | null = null;
   
@@ -329,17 +275,6 @@ assert.equal(typeof d.cancel, 'function', 'cancel должен быть функ
   // setState принимает значение или функцию (prev) => next
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert';
-import * as m from 'MODULE';
-const { createState } = m;
-const [get, set] = createState(0);
-assert.equal(get(), 0, 'начальное значение');
-set(5);
-assert.equal(get(), 5, 'set(5) заменяет значение');
-set(prev => prev + 1);
-assert.equal(get(), 6, 'функциональное обновление использует предыдущее значение');
-const [getObj] = createState({ a: 1 });
-assert.deepEqual(getObj(), { a: 1 }, 'работает с объектами');`,
     solution: `export function createState<T>(initial: T): [() => T, (value: T | ((prev: T) => T)) => void] {
   let state = initial;
   const get = () => state;
@@ -367,19 +302,6 @@ assert.deepEqual(getObj(), { a: 1 }, 'работает с объектами');`
   // unmount() — вызывает последний cleanup (один раз)
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert';
-import * as m from 'MODULE';
-const { createEffects } = m;
-const { effect, unmount } = createEffects();
-const log: string[] = [];
-effect(() => { log.push('run'); return () => { log.push('cleanup'); }; }, [1]);
-assert.deepEqual(log, ['run'], 'эффект выполняется при первом вызове');
-effect(() => { log.push('run'); return () => { log.push('cleanup'); }; }, [1]);
-assert.deepEqual(log, ['run'], 'зависимости не изменились — эффект не перезапускается');
-effect(() => { log.push('run2'); return () => { log.push('cleanup2'); }; }, [2]);
-assert.deepEqual(log, ['run', 'cleanup', 'run2'], 'при изменении зависимостей: cleanup предыдущего, затем новый эффект');
-unmount();
-assert.deepEqual(log, ['run', 'cleanup', 'run2', 'cleanup2'], 'unmount вызывает последний cleanup');`,
     solution: `export function createEffects() {
   let started = false;
   let lastDeps: unknown[] | undefined;
@@ -424,21 +346,6 @@ assert.deepEqual(log, ['run', 'cleanup', 'run2', 'cleanup2'], 'unmount вызы�
   // Иначе возвращается прошлый результат
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert';
-import * as m from 'MODULE';
-const { createMemo } = m;
-const memo = createMemo();
-let calls = 0;
-const compute = () => { calls++; return calls * 10; };
-const first = memo(compute, [1, 'a']);
-const second = memo(compute, [1, 'a']);
-assert.equal(calls, 1, 'при тех же зависимостях fn вызывается один раз');
-assert.equal(second, first, 'возвращается прошлый результат');
-const third = memo(compute, [2, 'a']);
-assert.equal(calls, 2, 'при изменении зависимостей значение пересчитывается');
-assert.equal(third, 20, 'возвращается новое значение');
-memo(compute, [2, 'a']);
-assert.equal(calls, 2, 'после пересчёта снова кэшируется');`,
     solution: `export function createMemo() {
   let lastDeps: unknown[] | undefined;
   let lastValue: unknown;
@@ -469,13 +376,6 @@ assert.equal(calls, 2, 'после пересчёта снова кэшируе�
   // Не копирует функции и циклические ссылки
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { deepClone } = m; 
-const a = {u: {v: 1}, arr: [1, 2]}; 
-const b = deepClone(a); 
-(b as any).u.v = 2; 
-assert.equal(a.u.v, 1);`,
     solution: `export function deepClone<T>(x: T): T {
   if (x === null || typeof x !== 'object') return x;
   
@@ -507,12 +407,6 @@ assert.equal(a.u.v, 1);`,
   // Пример: curry((a,b,c) => a+b+c)(1)(2)(3) → 6
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { curry } = m; 
-const add = (a: any, b: any, c: any) => a + b + c; 
-const cur: any = curry(add); 
-assert.equal(cur(1)(2)(3), 6);`,
     solution: `export function curry(fn: Function) {
   return function curried(...args: any[]) {
     if (args.length >= fn.length) {
@@ -539,10 +433,6 @@ assert.equal(cur(1)(2)(3), 6);`,
   // Декодируйте ключи и значения; "+" — пробел; сломанные %-последовательности не должны бросать ошибку
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert';
-import * as m from 'MODULE';
-const { parseQueryString } = m;
-assert.deepEqual(parseQueryString('?a=1&b=2&a=3'), { a: ['1', '3'], b: '2' });`,
     solution: `export function parseQueryString(qs: string): Record<string, string | string[]> {
   const decode = (s: string) => {
     try {
@@ -581,26 +471,6 @@ assert.deepEqual(parseQueryString('?a=1&b=2&a=3'), { a: ['1', '3'], b: '2' });`,
   // Возвращает функцию, снимающую обработчик
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert';
-import * as m from 'MODULE';
-const { delegate } = m;
-const listeners: Record<string, (e: any) => void> = {};
-const root: any = {
-  addEventListener: (t: string, h: (e: any) => void) => { listeners[t] = h; },
-  removeEventListener: (t: string, h: (e: any) => void) => { if (listeners[t] === h) delete listeners[t]; },
-};
-const li: any = { closest: (sel: string) => (sel === 'li.x' ? li : null), tag: 'li' };
-const span: any = { closest: () => null, tag: 'span' };
-const calls: any[] = [];
-const off = delegate(root, 'li.x', 'click', function (this: any) { calls.push(this); });
-assert.equal(typeof listeners.click, 'function', 'обработчик навешен на root');
-listeners.click({ target: li });
-assert.equal(calls.length, 1, 'срабатывает для подходящего элемента');
-assert.ok(calls[0] === li, 'this — найденный элемент');
-listeners.click({ target: span });
-assert.equal(calls.length, 1, 'не срабатывает для неподходящего элемента');
-off();
-assert.equal(listeners.click, undefined, 'отписка снимает обработчик');`,
     solution: `export function delegate(root: Element, selector: string, type: string, handler: (this: Element, ev: Event) => void) {
   const eventHandler = (event: Event) => {
     const target = event.target as Element | null;
@@ -626,14 +496,6 @@ assert.equal(listeners.click, undefined, 'отписка снимает обра
   // Поддерживает AbortController
   throw new Error('Not implemented');
 }`,
-    tests: `const orig = (global as any).fetch; 
-(global as any).fetch = async (_u: any) => new Response(JSON.stringify({ok: true}), {status: 200}); 
-import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { fetchJSON } = m; 
-const r = await fetchJSON('/ok'); 
-assert.equal(r.ok, true); 
-(global as any).fetch = orig;`,
     solution: `export async function fetchJSON(url: string, opts: RequestInit = {}) {
   try {
     const response = await fetch(url, {
@@ -673,17 +535,6 @@ assert.equal(r.ok, true);
   // При превышении размера удаляет наименее используемый элемент
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { LRUCache } = m; 
-const c = new LRUCache(2); 
-c.set('a', 1); 
-c.set('b', 2); 
-assert.equal(c.get('a'), 1, 'get("a") должен вернуть 1');
-c.set('c', 3); // должен вытеснить 'b'
-assert.equal(c.get('b'), undefined, 'get("b") должен вернуть undefined после eviction');
-assert.equal(c.get('c'), 3, 'get("c") должен вернуть 3');
-assert.equal(c.get('a'), 1, 'get("a") должен все еще вернуть 1');`,
     solution: `export class LRUCache<K, V> {
   private capacity: number;
   private cache: Map<K, V>;
@@ -732,10 +583,6 @@ assert.equal(c.get('a'), 1, 'get("a") должен все еще вернуть 
   // Не обрабатывает циклические ссылки
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { deepEqual } = m; 
-assert.equal(deepEqual({x: [1, {y: 2}]}, {x: [1, {y: 2}]}), true);`,
     solution: `export function deepEqual(a: any, b: any): boolean {
   if (a === b) return true;
   
@@ -790,10 +637,6 @@ assert.equal(deepEqual({x: [1, {y: 2}]}, {x: [1, {y: 2}]}), true);`,
   // Примеры: 1024 → "1 KB", 1536 → "1.5 KB", 1048576 → "1 MB"
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { formatBytes } = m; 
-assert.equal(formatBytes(1536), '1.5 KB');`,
     solution: `export function formatBytes(n: number): string {
   if (n === 0) return '0 Bytes';
   
@@ -818,15 +661,6 @@ assert.equal(formatBytes(1536), '1.5 KB');`,
   // Возвращает мемоизированную версию функции
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { memoize } = m; 
-let n = 0; 
-const f = (x: number) => {n++; return x * x}; 
-const mfn: any = memoize(f); 
-mfn(2); 
-mfn(2); 
-assert.equal(n, 1);`,
     solution: `export function memoize<T extends (...a: any[]) => any>(fn: T, keyFn?: (...a: any[]) => string): T {
   const cache = new Map<string, any>();
   
@@ -857,13 +691,6 @@ assert.equal(n, 1);`,
   // Примеры: flatten([1, [2, [3]]], 1) → [1, 2, [3]]; flatten([1, [2, [3]]], 2) → [1, 2, 3]
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { flatten } = m; 
-assert.deepEqual(flatten([1, [2, [3]]], 1), [1, 2, [3]], 'depth=1');
-assert.deepEqual(flatten([1, [2, [3]]], 2), [1, 2, 3], 'depth=2');
-assert.deepEqual(flatten([1, [2, [3, [4]]]]), [1, 2, 3, 4], 'по умолчанию — до конца');
-assert.deepEqual(flatten([1, [2]], 0), [1, [2]], 'depth=0 ничего не разворачивает');`,
     solution: `export function flatten(arr: any[], depth = Infinity): any[] {
   if (depth === 0) return arr;
   
@@ -894,12 +721,6 @@ assert.deepEqual(flatten([1, [2]], 0), [1, [2]], 'depth=0 ничего не ра
   // Пример: diffShallow({a:1, b:2}, {b:3, c:4}) → {added: ['c'], removed: ['a'], changed: ['b']}
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { diffShallow } = m; 
-const d = diffShallow({a: 1, b: 2}, {b: 3, c: 4}); 
-assert.equal(d.added[0], 'c'); 
-assert.equal(d.removed[0], 'a');`,
     solution: `export function diffShallow(a: any, b: any) {
   const added: string[] = [];
   const removed: string[] = [];
@@ -946,12 +767,6 @@ assert.equal(d.removed[0], 'a');`,
   // Пример: compose(f, g)(x) === f(g(x))
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { compose } = m; 
-const f = (x: number) => x + 1; 
-const g = (x: number) => x * 2; 
-assert.equal((compose(f, g) as any)(3), f(g(3)));`,
     solution: `export function compose(...fns: Function[]) {
   if (fns.length === 0) {
     return (arg: any) => arg;
@@ -999,17 +814,6 @@ assert.equal((compose(f, g) as any)(3), f(g(3)));`,
     throw new Error('Not implemented');
   }
 }`,
-    tests: `import { strict as assert } from 'assert';
-import * as m from 'MODULE';
-const { VirtualScroll } = m;
-const items = Array.from({ length: 1000 }, (_, i) => i);
-const vs = new VirtualScroll({ items, height: 400, itemHeight: 20 });
-assert.deepEqual(vs.getRange(), { start: 0, end: 20 }, 'в начале видны первые height / itemHeight элементов');
-assert.equal(vs.getTotalHeight(), 20000, 'общая высота списка');
-vs.setScrollTop(100);
-assert.deepEqual(vs.getRange(), { start: 5, end: 25 }, 'после прокрутки на 100 px');
-assert.deepEqual(vs.getVisibleItems().slice(0, 2), [5, 6], 'видимые элементы');
-assert.equal(vs.getOffsetTop(), 100, 'смещение первого видимого элемента');`,
     solution: `export class VirtualScroll {
   private scrollTop = 0;
   private items: any[];

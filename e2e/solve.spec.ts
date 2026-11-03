@@ -18,9 +18,16 @@ test.describe('решение задач', () => {
     await runInEditor(page)
     await expect(page.getByText('Все тесты пройдены!')).toBeVisible()
     await page.getByRole('button', { name: 'Выйти' }).click()
-    const total = chunk.hiddenTests!.match(/assert\./g)!.length
+    const total = chunk.checks.filter((c) => c.hidden).length
     await expect(page.getByText(`Скрытые проверки: ${total} из ${total}`)).toBeVisible()
     expect(errors).toEqual([])
+  })
+
+  test('«Показать тесты» описывает проверки читаемо, скрытые не раскрываются', async ({ page }) => {
+    await page.goto('/solve/fe_chunk')
+    await page.getByText('Показать тесты').click()
+    await expect(page.locator('details pre')).toContainText('chunk([1, 2, 3, 4, 5], 2) → [[1, 2], [3, 4], [5]]')
+    await expect(page.locator('details pre')).not.toContainText('нулевой размер')
   })
 
   test('стартовый шаблон не проходит тесты', async ({ page }) => {

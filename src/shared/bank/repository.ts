@@ -11,7 +11,7 @@ import type { UITask } from '@/entities/task/model/types'
 import { FRONTEND_TASKS } from '@/shared/api/tasks'
 import FRONTEND_QA from '@/shared/questions/frontend.json'
 import { KEYS, readJSON, removeKey, writeJSON } from '@/shared/storage/storage'
-import { QuestionSchema, TaskSchema, coerceQuestion, describeIssue } from './schema'
+import { QuestionSchema, TaskSchema, coerceQuestion, coerceTask, describeIssue } from './schema'
 
 export interface Bank {
   questions: Question[]
@@ -93,7 +93,7 @@ export function migrateLegacy(
   }
   if (Array.isArray(legacyTasks)) {
     for (const raw of legacyTasks) {
-      const parsed = TaskSchema.safeParse(raw)
+      const parsed = TaskSchema.safeParse(coerceTask(raw))
       if (parsed.success && !same(parsed.data, builtinT.get(parsed.data.id))) {
         o.tasks[parsed.data.id] = parsed.data
       }
@@ -112,7 +112,12 @@ function normalizeStored(builtin: Bank | undefined, stored: Overrides): Override
     const id = aliases.get(key) ?? aliases.get(parsed.data.id) ?? parsed.data.id
     questions[id] = { ...parsed.data, id }
   }
-  return { v: 1, questions, tasks: stored.tasks ?? {} }
+  const tasks: Record<string, UITask> = {}
+  for (const [key, raw] of Object.entries(stored.tasks ?? {})) {
+    const parsed = TaskSchema.safeParse(coerceTask(raw))
+    if (parsed.success) tasks[key] = parsed.data
+  }
+  return { v: 1, questions, tasks }
 }
 
 function loadOverrides(prof: Profession): Overrides {
@@ -223,7 +228,7 @@ export function importBank(prof: Profession, raw: unknown): ImportReport {
   }
 
   take(rawQuestions, (x) => QuestionSchema.safeParse(coerceQuestion(x)), knownQ, overrides.questions, report.questions, 'Вопрос')
-  take(rawTasks, (x) => TaskSchema.safeParse(x), knownT, overrides.tasks, report.tasks, 'Задача')
+  take(rawTasks, (x) => TaskSchema.safeParse(coerceTask(x)), knownT, overrides.tasks, report.tasks, 'Задача')
 
   const imported = report.questions.added + report.questions.updated + report.tasks.added + report.tasks.updated
   if (imported > 0) {

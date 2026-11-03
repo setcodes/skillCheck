@@ -1,5 +1,4 @@
 import type { TaskMeta } from './meta-types'
-import { t } from './meta-types'
 
 /** Подсказки, рубрики, типичные ошибки и скрытые тесты для исходных задач Frontend. */
 export const META_CORE: Record<string, TaskMeta> = {
@@ -20,12 +19,6 @@ export const META_CORE: Record<string, TaskMeta> = {
       'Дедупликация через сортировку или объект ломает порядок появления',
       'Включают ключи объекта с ложным значением',
     ],
-    hiddenTests: t('classNames', `
-assert.equal(classNames(), '', 'без аргументов — пустая строка');
-assert.equal(classNames(null, undefined, false, 0, ''), '', 'ложные значения пропускаются');
-assert.equal(classNames('a', 5, 'b'), 'a 5 b', 'числа допустимы');
-assert.equal(classNames(['a', ['b', ['c']]], 'b', 'd'), 'a b c d', 'вложенные массивы и дубли');
-assert.equal(classNames({ a: 1, b: 0, c: 'x', d: null }), 'a c', 'из объекта берутся ключи с истинным значением');`),
   },
 
   fe_isPalindrome: {
@@ -45,12 +38,6 @@ assert.equal(classNames({ a: 1, b: 0, c: 'x', d: null }), 'a c', 'из объе�
       'Забывают про вход, не являющийся строкой',
       'Сравнивают только половину строки с ошибкой на нечётной длине',
     ],
-    hiddenTests: t('isPalindrome', `
-assert.equal(isPalindrome(''), true, 'пустая строка — палиндром');
-assert.equal(isPalindrome('Level'), true, 'регистр не важен');
-assert.equal(isPalindrome('a b a'), true, 'пробелы игнорируются');
-assert.equal(isPalindrome(12321 as any), false, 'не строка — false');
-assert.equal(isPalindrome('ab'), false, 'не палиндром');`),
   },
 
   fe_uniqueBy: {
@@ -70,13 +57,6 @@ assert.equal(isPalindrome('ab'), false, 'не палиндром');`),
       'Остаётся последний элемент вместо первого',
       'Не поддерживают ключ-функцию',
     ],
-    hiddenTests: t('uniqueBy', `
-assert.deepEqual(uniqueBy([1, 2, 3, 4, 5, 6], (x: number) => x % 3), [1, 2, 3], 'ключ-функция; остаётся первый элемент группы');
-assert.deepEqual(uniqueBy([], 'id' as never), [], 'пустой массив');
-const first = { id: 1, v: 'first' };
-const second = { id: 1, v: 'second' };
-assert.ok(uniqueBy([first, second], 'id')[0] === first, 'остаётся первый встреченный объект');
-assert.equal(uniqueBy([{ k: undefined }, { k: undefined }, { k: null }], 'k').length, 2, 'undefined и null — разные ключи');`),
   },
 
   fe_chunk: {
@@ -96,14 +76,6 @@ assert.equal(uniqueBy([{ k: undefined }, { k: undefined }, { k: null }], 'k').le
       'Бесконечный цикл при size = 0',
       'Теряют последний неполный кусок',
     ],
-    hiddenTests: t('chunk', `
-assert.deepEqual(chunk([1, 2, 3], 5), [[1, 2, 3]], 'размер больше длины');
-assert.deepEqual(chunk([1, 2, 3], 1), [[1], [2], [3]], 'размер 1');
-assert.deepEqual(chunk([], 3), [], 'пустой массив');
-assert.deepEqual(chunk([1, 2], 0), [], 'нулевой размер не зацикливается');
-const src = [1, 2, 3, 4];
-chunk(src, 2);
-assert.deepEqual(src, [1, 2, 3, 4], 'исходный массив не меняется');`),
   },
 
   fe_sumBy: {
@@ -123,10 +95,6 @@ assert.deepEqual(src, [1, 2, 3, 4], 'исходный массив не меня
       'Конкатенация строк вместо сложения чисел',
       'Не поддерживают функцию-итератор',
     ],
-    hiddenTests: t('sumBy', `
-assert.equal(sumBy([{ a: 1 }, { a: 2 }], (x: any) => x.a * 10), 30, 'функция-итератор');
-assert.equal(sumBy([], 'a' as never), 0, 'пустой массив — 0');
-assert.equal(sumBy([{ a: -2 }, { a: 5 }], 'a' as never), 3, 'отрицательные числа');`),
   },
 
   fe_throttle: {
@@ -146,16 +114,6 @@ assert.equal(sumBy([{ a: -2 }, { a: 5 }], 'a' as never), 3, 'отрицател�
       'Теряют последний вызов в серии',
       'Не очищают предыдущий таймер — вызовов становится больше',
     ],
-    hiddenTests: t('throttle', `
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const calls: number[] = [];
-const th = throttle((x: number) => { calls.push(x); }, 40);
-th(1); th(2); th(3);
-assert.deepEqual(calls, [1], 'первый вызов выполняется сразу');
-await sleep(120);
-assert.deepEqual(calls, [1, 3], 'позже выполняется последний отложенный вызов с его аргументами');
-th(4);
-assert.deepEqual(calls, [1, 3, 4], 'после паузы следующий вызов снова выполняется сразу');`),
   },
 
   fe_safeGet: {
@@ -175,13 +133,6 @@ assert.deepEqual(calls, [1, 3, 4], 'после паузы следующий в�
       'Падение на null/undefined посреди пути',
       'try/catch вместо проверки каждого звена',
     ],
-    hiddenTests: t('safeGet', `
-assert.equal(safeGet({ a: { b: 0 } }, 'a.b', 9), 0, 'значение 0 не заменяется значением по умолчанию');
-assert.equal(safeGet({ a: '' }, 'a', 'x'), '', 'пустая строка сохраняется');
-assert.equal(safeGet({ a: false }, 'a', true), false, 'false сохраняется');
-assert.equal(safeGet(null, 'a.b', 'def'), 'def', 'null вместо объекта');
-assert.equal(safeGet({ a: [{ b: 5 }] }, 'a.0.b'), 5, 'индекс массива в пути');
-assert.equal(safeGet({ a: 1 }, 'a.b.c', 'def'), 'def', 'путь через не-объект');`),
   },
 
   fe_promiseAllSettled: {
@@ -201,14 +152,6 @@ assert.equal(safeGet({ a: 1 }, 'a.b.c', 'def'), 'def', 'путь через не
       'Забывают оборачивать отказ, получают необработанное отклонение',
       'Теряют порядок, записывая результаты по мере завершения',
     ],
-    hiddenTests: t('promiseAllSettled', `
-const r = await promiseAllSettled([Promise.reject(new Error('x')), Promise.resolve(2)]);
-assert.deepEqual(r.map((x: any) => x.status), ['rejected', 'fulfilled'], 'порядок как на входе');
-assert.equal((r[0] as any).reason.message, 'x', 'причина отказа в reason');
-assert.equal((r[1] as any).value, 2, 'значение в value');
-assert.deepEqual(await promiseAllSettled([]), [], 'пустой массив');
-const all = await promiseAllSettled([Promise.reject(1), Promise.reject(2)]);
-assert.equal(all.every((x: any) => x.status === 'rejected'), true, 'все отклонены — результат всё равно приходит');`),
   },
 
   fe_debounce: {
@@ -228,21 +171,6 @@ assert.equal(all.every((x: any) => x.status === 'rejected'), true, 'все от�
       'Не очищают предыдущий таймер — вызовов столько же, сколько нажатий',
       'cancel не обнуляет состояние',
     ],
-    hiddenTests: t('debounce', `
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const calls: any[] = [];
-const d: any = debounce(function (this: any, x: number) { calls.push([this && this.tag, x]); }, 30);
-const ctx = { tag: 'ctx', d };
-ctx.d(1); ctx.d(2); ctx.d(3);
-assert.equal(calls.length, 0, 'до паузы вызова нет');
-await sleep(90);
-assert.deepEqual(calls, [['ctx', 3]], 'один вызов с последними аргументами и исходным this');
-d(4); d.cancel();
-await sleep(90);
-assert.equal(calls.length, 1, 'после cancel вызова нет');
-d(5);
-await sleep(90);
-assert.equal(calls.length, 2, 'после cancel debounce снова работает');`),
   },
 
   fe_useState: {
@@ -262,19 +190,6 @@ assert.equal(calls.length, 2, 'после cancel debounce снова работ�
       'Общая переменная на уровне модуля — состояния перемешиваются',
       'Не поддерживают функциональное обновление',
     ],
-    hiddenTests: t('createState', `
-const [get, set] = createState(1);
-set((p: number) => p + 1);
-set((p: number) => p * 10);
-assert.equal(get(), 20, 'функциональные обновления применяются последовательно');
-const [g2, s2] = createState('a');
-assert.equal(g2(), 'a', 'начальное значение второго состояния');
-s2('b');
-assert.equal(g2(), 'b', 'второе состояние обновляется');
-assert.equal(get(), 20, 'состояния независимы');
-const [g3, s3] = createState<number>(5);
-s3(0);
-assert.equal(g3(), 0, 'значение 0 записывается корректно');`),
   },
 
   fe_useEffect: {
@@ -294,28 +209,6 @@ assert.equal(g3(), 0, 'значение 0 записывается коррек�
       'Сравнение зависимостей через === ломает NaN',
       'Пустой массив зависимостей обрабатывают так же, как отсутствие deps',
     ],
-    hiddenTests: t('createEffects', `
-const e2 = createEffects();
-let n = 0;
-e2.effect(() => { n++; });
-e2.effect(() => { n++; });
-assert.equal(n, 2, 'без deps эффект выполняется на каждый вызов');
-const e3 = createEffects();
-let runs = 0;
-let cleanups = 0;
-e3.effect(() => { runs++; return () => { cleanups++; }; }, []);
-e3.effect(() => { runs++; return () => { cleanups++; }; }, []);
-assert.equal(runs, 1, 'пустой массив deps — один запуск');
-assert.equal(cleanups, 0, 'cleanup до unmount не вызывается');
-e3.unmount();
-assert.equal(cleanups, 1, 'unmount вызывает cleanup');
-e3.unmount();
-assert.equal(cleanups, 1, 'повторный unmount не вызывает cleanup второй раз');
-const e4 = createEffects();
-const seen: number[] = [];
-e4.effect(() => { seen.push(1); }, [NaN]);
-e4.effect(() => { seen.push(2); }, [NaN]);
-assert.deepEqual(seen, [1], 'зависимости сравниваются через Object.is');`),
   },
 
   fe_useMemo: {
@@ -335,29 +228,6 @@ assert.deepEqual(seen, [1], 'зависимости сравниваются ч�
       'Забывают сравнить длину списка',
       'Сравнивают объекты по содержимому, хотя React сравнивает по ссылке',
     ],
-    hiddenTests: t('createMemo', `
-const memo = createMemo();
-let calls = 0;
-memo(() => { calls++; return 1; }, []);
-memo(() => { calls++; return 2; }, []);
-assert.equal(calls, 1, 'пустой массив зависимостей — вычисление один раз');
-const m2 = createMemo();
-let c2 = 0;
-m2(() => { c2++; return 1; }, [NaN]);
-m2(() => { c2++; return 1; }, [NaN]);
-assert.equal(c2, 1, 'NaN равен NaN по Object.is');
-const m3 = createMemo();
-let c3 = 0;
-m3(() => { c3++; return 1; }, [1]);
-m3(() => { c3++; return 1; }, [1, 2]);
-assert.equal(c3, 2, 'изменение длины списка зависимостей — пересчёт');
-const o = { v: 1 };
-const m4 = createMemo();
-let c4 = 0;
-m4(() => { c4++; return 1; }, [o]);
-o.v = 2;
-m4(() => { c4++; return 1; }, [o]);
-assert.equal(c4, 1, 'объект сравнивается по ссылке, а не по содержимому');`),
   },
 
   fe_deepClone: {
@@ -377,17 +247,6 @@ assert.equal(c4, 1, 'объект сравнивается по ссылке, а
       'Поверхностная копия через спред',
       'Date копируют как обычный объект — теряется тип',
     ],
-    hiddenTests: t('deepClone', `
-const date = new Date(2020, 1, 1);
-const src = { d: date, list: [{ n: 1 }], re: /ab+/gi, nul: null };
-const copy: any = deepClone(src);
-assert.ok(copy.d !== date && copy.d.getTime() === date.getTime(), 'Date копируется как новый объект');
-copy.list[0].n = 99;
-assert.equal(src.list[0].n, 1, 'объекты внутри массивов независимы');
-assert.ok(copy.re !== src.re && copy.re.source === 'ab+' && copy.re.flags === 'gi', 'RegExp копируется с флагами');
-assert.equal(copy.nul, null, 'null сохраняется');
-assert.equal(deepClone(5), 5, 'примитив возвращается как есть');
-assert.ok(Array.isArray(deepClone([1, [2]])), 'массив остаётся массивом');`),
   },
 
   fe_curry: {
@@ -407,16 +266,6 @@ assert.ok(Array.isArray(deepClone([1, [2]])), 'массив остаётся м�
       'Изменяют накопленный список аргументов — частичное применение ломается при повторном использовании',
       'Теряют this',
     ],
-    hiddenTests: t('curry', `
-const add = (a: number, b: number, c: number) => a + b + c;
-const cur: any = curry(add);
-assert.equal(cur(1, 2)(3), 6, 'несколько аргументов за раз: (1, 2)(3)');
-assert.equal(cur(1)(2, 3), 6, 'и (1)(2, 3)');
-assert.equal(cur(1, 2, 3), 6, 'все аргументы сразу');
-const part = cur(1);
-assert.equal(part(2)(3), 6, 'частичное применение');
-assert.equal(part(10)(20), 31, 'частичное применение можно переиспользовать');
-assert.equal((curry(() => 5) as any)(), 5, 'функция без аргументов вызывается сразу');`),
   },
 
   fe_parseQuery: {
@@ -436,19 +285,6 @@ assert.equal((curry(() => 5) as any)(), 5, 'функция без аргумен
       'Разбивают по "=" целиком — значение со знаком "=" обрезается',
       'Накопление в обычном объекте ломается на ключе constructor',
     ],
-    hiddenTests: t('parseQueryString', `
-assert.deepEqual(parseQueryString(''), {}, 'пустая строка');
-assert.deepEqual(parseQueryString('?'), {}, 'только знак вопроса');
-assert.deepEqual(parseQueryString('a=1&b=2'), { a: '1', b: '2' }, 'без ведущего ?');
-assert.deepEqual(parseQueryString('?a=1&a=2&a=3'), { a: ['1', '2', '3'] }, 'три значения подряд');
-assert.deepEqual(parseQueryString('?flag&x='), { flag: '', x: '' }, 'ключ без значения и пустое значение');
-assert.deepEqual(parseQueryString('?q=hello%20world&n=a+b'), { q: 'hello world', n: 'a b' }, 'декодирование %XX и +');
-assert.deepEqual(parseQueryString('?name=%D0%90%D0%BD%D0%BD%D0%B0'), { name: 'Анна' }, 'UTF-8');
-assert.deepEqual(parseQueryString('?a=%'), { a: '%' }, 'сломанная %-последовательность не бросает ошибку');
-assert.deepEqual(parseQueryString('?a=b=c'), { a: 'b=c' }, 'знак = внутри значения сохраняется');
-const tricky: any = parseQueryString('?constructor=1&toString=2');
-assert.deepEqual(Object.keys(tricky), ['constructor', 'toString'], 'служебные имена — обычные ключи');
-assert.equal(tricky.constructor, '1', 'значение constructor читается как строка');`),
   },
 
   fe_eventDelegate: {
@@ -468,25 +304,6 @@ assert.equal(tricky.constructor, '1', 'значение constructor читает
       'Вешают обработчик на каждый элемент — смысл делегирования теряется',
       'Не возвращают способ отписаться — утечка обработчиков',
     ],
-    hiddenTests: t('delegate', `
-const listeners: Record<string, (e: any) => void> = {};
-const root: any = {
-  addEventListener: (type: string, h: (e: any) => void) => { listeners[type] = h; },
-  removeEventListener: (type: string, h: (e: any) => void) => { if (listeners[type] === h) delete listeners[type]; },
-};
-const item: any = { closest: (s: string) => (s === '.item' ? item : null) };
-const nested: any = { closest: (s: string) => (s === '.item' ? item : null) };
-const seen: any[] = [];
-delegate(root, '.item', 'click', function (this: any, ev: any) { seen.push([this === item, ev.target === nested]); });
-listeners.click({ target: nested });
-assert.deepEqual(seen, [[true, true]], 'this — найденный элемент (closest), ev.target — реальный источник');
-let other = 0;
-delegate(root, '.x', 'keydown', () => { other++; });
-assert.equal(typeof listeners.keydown, 'function', 'разные типы событий получают свои обработчики');
-listeners.keydown({ target: item });
-assert.equal(other, 0, 'неподходящий селектор — обработчик не вызывается');
-listeners.click({ target: null });
-assert.equal(seen.length, 1, 'пустая цель не ломает обработчик');`),
   },
 
   fe_fetchJSON: {
@@ -506,24 +323,6 @@ assert.equal(seen.length, 1, 'пустая цель не ломает обраб
       'Затирают пользовательские заголовки своими',
       'Показывают пользователю AbortError как ошибку',
     ],
-    hiddenTests: t('fetchJSON', `
-const orig = (global as any).fetch;
-const calls: any[] = [];
-(global as any).fetch = async (url: string, opts: any) => { calls.push([url, opts]); return new Response(JSON.stringify({ n: 1 }), { status: 200 }); };
-const data = await fetchJSON('/a', { method: 'POST', headers: { 'X-Test': '1' } });
-assert.deepEqual(data, { n: 1 }, 'возвращает разобранный JSON');
-assert.equal(calls[0][1].method, 'POST', 'опции пробрасываются в fetch');
-assert.equal(calls[0][1].headers['X-Test'], '1', 'пользовательские заголовки сохраняются');
-assert.equal(calls[0][1].headers['Content-Type'], 'application/json', 'Content-Type по умолчанию — JSON');
-(global as any).fetch = async () => new Response('nope', { status: 500 });
-let msg = '';
-try { await fetchJSON('/x'); } catch (e: any) { msg = e.message; }
-assert.ok(msg.includes('500'), 'ответ не-2xx — ошибка со статусом');
-(global as any).fetch = async () => { const e: any = new Error('x'); e.name = 'AbortError'; throw e; };
-msg = '';
-try { await fetchJSON('/y'); } catch (e: any) { msg = e.message; }
-assert.equal(msg, 'Request was aborted', 'отмена отличается от обычной ошибки');
-(global as any).fetch = orig;`),
   },
 
   fe_LRU: {
@@ -543,23 +342,6 @@ assert.equal(msg, 'Request was aborted', 'отмена отличается от
       'Обновление существующего ключа ведёт к вытеснению соседа',
       'Проверка `if (value)` ломает значения 0 и пустую строку',
     ],
-    hiddenTests: t('LRUCache', `
-const c = new LRUCache<string, number>(2);
-c.set('a', 1); c.set('b', 2); c.set('a', 10); c.set('c', 3);
-assert.equal(c.get('b'), undefined, 'обновление ключа делает его самым свежим: вытесняется b');
-assert.equal(c.get('a'), 10, 'значение обновлено');
-const one = new LRUCache<string, number>(1);
-one.set('x', 1); one.set('y', 2);
-assert.equal(one.get('x'), undefined, 'ёмкость 1: первый элемент вытеснен');
-assert.equal(one.get('y'), 2, 'ёмкость 1: второй на месте');
-const g = new LRUCache<string, number>(2);
-g.set('a', 1); g.set('b', 2); g.get('a'); g.set('c', 3);
-assert.equal(g.get('b'), undefined, 'get делает ключ свежим');
-assert.equal(g.get('a'), 1, 'свежий ключ остался');
-assert.equal(g.get('zzz'), undefined, 'отсутствующий ключ');
-const f = new LRUCache<string, any>(1);
-f.set('k', 0);
-assert.equal(f.get('k'), 0, 'ложные значения хранятся');`),
   },
 
   fe_deepEqual: {
@@ -579,16 +361,6 @@ assert.equal(f.get('k'), 0, 'ложные значения хранятся');`)
       'Не проверяют число ключей — объект с лишним ключом считается равным',
       'Считают равными массив и объект с индексами в качестве ключей',
     ],
-    hiddenTests: t('deepEqual', `
-assert.equal(deepEqual({ a: 1, b: 2 }, { b: 2, a: 1 }), true, 'порядок ключей не важен');
-assert.equal(deepEqual({ a: 1 }, { a: 1, b: undefined }), false, 'разное число ключей');
-assert.equal(deepEqual([1, 2], [1, 2, 3]), false, 'длина массивов');
-assert.equal(deepEqual([1], { 0: 1 }), false, 'массив и объект различаются');
-assert.equal(deepEqual(null, undefined), false, 'null и undefined');
-assert.equal(deepEqual(new Date(5), new Date(5)), true, 'даты по значению');
-assert.equal(deepEqual(new Date(5), new Date(6)), false, 'разные даты');
-assert.equal(deepEqual({ a: { b: [1, { c: 2 }] } }, { a: { b: [1, { c: 3 }] } }), false, 'глубокое различие');
-assert.equal(deepEqual(1, '1' as any), false, 'разные типы');`),
   },
 
   fe_formatBytes: {
@@ -608,14 +380,6 @@ assert.equal(deepEqual(1, '1' as any), false, 'разные типы');`),
       'Ломается на 0 (логарифм нуля)',
       'toFixed без parseFloat оставляет хвостовые нули ("1.50 KB")',
     ],
-    hiddenTests: t('formatBytes', `
-assert.equal(formatBytes(0), '0 Bytes', 'ноль');
-assert.equal(formatBytes(1), '1 Bytes', 'один байт');
-assert.equal(formatBytes(1023), '1023 Bytes', 'граница перед KB');
-assert.equal(formatBytes(1024), '1 KB', 'ровно килобайт');
-assert.equal(formatBytes(1048576), '1 MB', 'ровно мегабайт');
-assert.equal(formatBytes(1234567), '1.18 MB', 'округление до двух знаков');
-assert.equal(formatBytes(1024 ** 3 * 2.5), '2.5 GB', 'гигабайты без хвостовых нулей');`),
   },
 
   fe_memoize: {
@@ -635,24 +399,6 @@ assert.equal(formatBytes(1024 ** 3 * 2.5), '2.5 GB', 'гигабайты без 
       'Ключ только из первого аргумента смешивает вызовы',
       'Теряют this вызова',
     ],
-    hiddenTests: t('memoize', `
-let calls = 0;
-const add = (a: number, b: number) => { calls++; return a + b; };
-const m1: any = memoize(add);
-assert.equal(m1(1, 2), 3, 'результат верный');
-assert.equal(m1(1, 2), 3, 'повторный вызов');
-assert.equal(m1(2, 1), 3, 'другой порядок аргументов');
-assert.equal(calls, 2, 'наборы аргументов (1,2) и (2,1) — разные записи кэша');
-let u = 0;
-const undef: any = memoize(() => { u++; return undefined; });
-undef(); undef();
-assert.equal(u, 1, 'результат undefined тоже кэшируется');
-let k = 0;
-const byId: any = memoize((o: { id: number }) => { k++; return o.id; }, (o: any) => String(o.id));
-byId({ id: 1 }); byId({ id: 1 });
-assert.equal(k, 1, 'пользовательская функция ключа');
-const ctx = { base: 10, f: memoize(function (this: any, x: number) { return this.base + x; }) };
-assert.equal(ctx.f(1), 11, 'this сохраняется');`),
   },
 
   fe_flatten: {
@@ -672,14 +418,6 @@ assert.equal(ctx.f(1), 11, 'this сохраняется');`),
       'Используют arr.flat(depth) — задача про реализацию',
       'Мутируют исходный массив',
     ],
-    hiddenTests: t('flatten', `
-assert.deepEqual(flatten([]), [], 'пустой массив');
-assert.deepEqual(flatten([[], [[]], 1]), [1], 'пустые вложенные массивы исчезают');
-assert.deepEqual(flatten([[1, 2], [3, [4, [5]]]], 2), [1, 2, 3, 4, [5]], 'depth = 2');
-const src = [1, [2]];
-flatten(src);
-assert.deepEqual(src, [1, [2]], 'исходный массив не меняется');
-assert.deepEqual(flatten([1, 2, 3]), [1, 2, 3], 'плоский массив не меняется');`),
   },
 
   fe_diffShallow: {
@@ -699,14 +437,6 @@ assert.deepEqual(flatten([1, 2, 3]), [1, 2, 3], 'плоский массив н�
       'Учитывают changed для added/removed ключей',
       'Пытаются сравнивать вложенные объекты глубоко — задача про shallow',
     ],
-    hiddenTests: t('diffShallow', `
-const r = diffShallow({ a: 1, b: 2, c: 3 }, { a: 1, b: 20, d: 4 });
-assert.deepEqual(r, { added: ['d'], removed: ['c'], changed: ['b'] }, 'added, removed и changed');
-assert.deepEqual(diffShallow({}, {}), { added: [], removed: [], changed: [] }, 'пустые объекты');
-const o = { x: 1 };
-assert.deepEqual(diffShallow({ k: o }, { k: o }).changed, [], 'та же ссылка — не изменено');
-assert.deepEqual(diffShallow({ k: { x: 1 } }, { k: { x: 1 } }).changed, ['k'], 'сравнение поверхностное: разные ссылки — изменено');
-assert.deepEqual(diffShallow({ a: undefined }, {}), { added: [], removed: ['a'], changed: [] }, 'ключ со значением undefined считается ключом');`),
   },
 
   fe_compose: {
@@ -726,14 +456,6 @@ assert.deepEqual(diffShallow({ a: undefined }, {}), { added: [], removed: ['a'],
       'Теряют аргументы — передают только первый',
       'Падают на пустом списке функций',
     ],
-    hiddenTests: t('compose', `
-assert.equal((compose() as any)(7), 7, 'без функций — тождественная');
-const add = (a: number, b: number) => a + b;
-const dbl = (x: number) => x * 2;
-const inc = (x: number) => x + 1;
-assert.equal((compose(inc, dbl, add) as any)(1, 2), 7, 'справа налево; самая правая принимает несколько аргументов');
-assert.equal((compose(dbl) as any)(4), 8, 'одна функция');
-assert.equal((compose(dbl, inc) as any)(1), 4, 'порядок важен: сначала inc, потом dbl');`),
   },
 
   fe_virtualScroll: {
@@ -753,16 +475,5 @@ assert.equal((compose(dbl, inc) as any)(1), 4, 'порядок важен: сн�
       'Не ограничивают scrollTop — индексы выходят за массив',
       'Копируют весь массив на каждый кадр вместо slice окна',
     ],
-    hiddenTests: t('VirtualScroll', `
-const vs = new VirtualScroll({ items: Array.from({ length: 100 }, (_, i) => i), height: 50, itemHeight: 20 });
-vs.setScrollTop(10);
-assert.deepEqual(vs.getRange(), { start: 0, end: 3 }, 'частично видимая строка входит в диапазон');
-vs.setScrollTop(-100);
-assert.equal(vs.getRange().start, 0, 'отрицательная прокрутка ограничивается нулём');
-vs.setScrollTop(1e9);
-assert.deepEqual(vs.getRange(), { start: 97, end: 100 }, 'прокрутка ограничивается концом списка');
-assert.deepEqual(new VirtualScroll({ items: [], height: 100, itemHeight: 10 }).getVisibleItems(), [], 'пустой список');
-const few = new VirtualScroll({ items: [1, 2], height: 1000, itemHeight: 10 });
-assert.deepEqual(few.getVisibleItems(), [1, 2], 'элементов меньше, чем помещается');`),
   },
 }
