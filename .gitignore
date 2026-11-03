@@ -145,3 +145,8 @@ storybook-static/
 # Temporary folders
 tmp/
 temp/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/

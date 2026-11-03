@@ -9,7 +9,7 @@ import { Switch } from '@/shared/ui/switch'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuSeparator, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { useApp } from '@/app/providers/AppProvider'
-import { createSession, loadSession, saveSession, clearSession, mapTaskScore } from '@/shared/api/mock'
+import { createSession, restoreSession, saveSession, clearSession, mapTaskScore, advanceSession, toggleRunning, resetClock, buildReport } from '@/shared/api/mock'
 import { getQuestions, getTasks } from '@/shared/bank'
 import type { Profession } from '@/entities/profession/model/types'
 import type { MockSessionState, MockItem, MockTaskItem, MockTheoryItem } from '@/entities/mock/model/types'
@@ -23,7 +23,7 @@ import { crossedThresholds, formatSeconds } from '@/shared/lib/timer'
 
 export default function MockPage(){
   const { prof } = useApp()
-  const [s, setS] = useState<MockSessionState | null>(()=> loadSession())
+  const [s, setS] = useState<MockSessionState | null>(()=> restoreSession())
   const [theoryCount, setTheoryCount] = useState(12)
   const [taskCount, setTaskCount] = useState(8)
   const [durationMin, setDurationMin] = useState(90)
@@ -63,16 +63,8 @@ export default function MockPage(){
   useEffect(()=>{ if(s) saveSession(s) }, [s])
   useEffect(()=>{
     if(!s?.running || s.finished) return
-    const id = setInterval(()=>{
-      setS(prev=>{
-        if(!prev || prev.finished || !prev.running) return prev
-        const rem = prev.remainingSec - 1
-        if(rem <= 0){
-          return { ...prev, remainingSec: 0, running: false, finished: true }
-        }
-        return { ...prev, remainingSec: rem }
-      })
-    }, 1000)
+    // тик чаще секунды: время берётся из Date.now(), поэтому дрейфа и «замирания» нет
+    const id = setInterval(()=> setS(prev=> prev ? advanceSession(prev, Date.now()) : prev), 250)
     return ()=> clearInterval(id)
   }, [s?.running, s?.finished, s?.id])
 
@@ -295,7 +287,7 @@ export default function MockPage(){
                     variant="outline"
                     size="sm"
                     className="inline-flex items-center gap-1"
-                    onClick={()=> s.config.allowPause && setS(prev=> prev? ({...prev, running: !prev.running}) : prev)}
+                    onClick={()=> s.config.allowPause && setS(prev=> prev? toggleRunning(prev, Date.now()) : prev)}
                     disabled={!s.config.allowPause}
                     title={s.config.allowPause? '' : 'Пауза отключена'}
                   >
@@ -305,7 +297,7 @@ export default function MockPage(){
                     variant="outline"
                     size="sm"
                     className="inline-flex items-center gap-1"
-                    onClick={()=> setS(prev=> prev? ({...prev, remainingSec: prev.config.durationSec, running: false}) : prev)}
+                    onClick={()=> setS(prev=> prev? resetClock(prev, Date.now()) : prev)}
                   >
                     <RotateCcw className="h-3 w-3" /> Сброс
                   </Button>
@@ -364,13 +356,7 @@ export default function MockPage(){
           <CardHeader>
             {isReview && (
               (()=>{
-                const tasks = s.items.filter(it=> it.type==='task') as MockTaskItem[]
-                const theory = s.items.filter(it=> it.type==='theory') as MockTheoryItem[]
-                const tasksAvg = tasks.length ? (tasks.reduce((sum,i)=> sum + (i.autoScore||0),0) / tasks.length) : 0
-                const theoryAvg = theory.length ? (theory.reduce((sum,i)=> sum + (i.selfScore||0),0) / theory.length) : 0
-                const final0to5 = (tasksAvg * s.config.weightTasks) + (theoryAvg * (1 - s.config.weightTasks))
-                const finalPct = Math.round((final0to5/5)*100)
-                const level = finalPct>=85 ? 'Senior' : finalPct>=65 ? 'Middle' : 'Junior-'
+                const { tasksAvg, theoryAvg, finalPct, level, topics } = buildReport(s)
                 return (
                   <div className="mb-3 p-4 bg-muted rounded-lg flex items-center justify-between">
                     <div className="space-y-1">
@@ -386,6 +372,14 @@ export default function MockPage(){
                       <div className="text-2xl font-semibold">{finalPct}%</div>
                       <div className="text-sm">Уровень: <span className="font-medium">{level}</span></div>
                       <div className="text-xs text-muted-foreground">Практика: {tasksAvg.toFixed(1)} / Теория: {theoryAvg.toFixed(1)} • Вес практики: {(s.config.weightTasks*100).toFixed(0)}%</div>
+                      {topics.length>0 && (
+                        <div className="pt-2">
+                          <div className="text-xs font-medium mb-1">Теория по темам (от слабых к сильным)</div>
+                          <ul className="text-xs text-muted-foreground space-y-0.5" aria-label="Результаты по темам">
+                            {topics.map(t=> <li key={t.topic}>{t.topic}: {t.avg.toFixed(1)} из 5 ({t.count})</li>)}
+                          </ul>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button variant="outline" onClick={()=>{ clearSession(); setS(null) }}>
