@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react'
 import type { UserRole } from '@/entities/user/model/types'
 import type { Profession } from '@/entities/profession/model/types'
+import { DEFAULT_PROFESSION, isProfessionEnabled } from '@/entities/profession/model/constants'
 
 interface AppContextType {
   role: UserRole
@@ -23,9 +24,10 @@ export function AppProvider({ children }: AppProviderProps) {
   const [role, setRole] = useState<UserRole>(() => 
     (localStorage.getItem('role') as UserRole) || 'interviewer'
   )
-  const [prof, setProf] = useState<Profession>(() => 
-    (localStorage.getItem('prof') as Profession) || 'frontend'
-  )
+  const [prof, setProf] = useState<Profession>(() => {
+    const saved = localStorage.getItem('prof')
+    return isProfessionEnabled(saved) ? saved : DEFAULT_PROFESSION
+  })
   const [selectedProf, setSelectedProf] = useState<Profession | null>(null)
 
   const saveRole = (newRole: UserRole) => {
@@ -34,6 +36,7 @@ export function AppProvider({ children }: AppProviderProps) {
   }
 
   const saveProf = (newProf: Profession) => {
+    if (!isProfessionEnabled(newProf)) return
     setProf(newProf)
     localStorage.setItem('prof', newProf)
   }
