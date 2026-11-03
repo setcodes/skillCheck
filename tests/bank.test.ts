@@ -102,6 +102,49 @@ describe('банк: встроенные данные и overlay', () => {
 
 const withAlias = (qs: { aliases?: string[] }[]) => qs.find((q) => q.aliases?.length) as { id: string; aliases: string[] }
 
+describe('задачи: импорт в прежнем формате (tests / hiddenTests)', () => {
+  const legacyTask = {
+    id: 'custom_legacy',
+    level: 'junior',
+    title: 'legacy',
+    exportName: 'f',
+    description: 'старый формат',
+    starter: 'export function f() {}',
+    tests: "import * as m from 'MODULE'; const { f } = m; assert.equal(f(), 1);",
+    hiddenTests: "import * as m from 'MODULE'; const { f } = m; assert.equal(f(), 2);",
+  }
+
+  it('tests и hiddenTests превращаются в сценарные проверки', async () => {
+    const bank = await load()
+    const r = bank.importBank('frontend', { tasks: [legacyTask] })
+    expect(r.tasks).toEqual({ added: 1, updated: 0, rejected: 0 })
+    const task = bank.getTasks('frontend').find((t) => t.id === 'custom_legacy')!
+    expect(task.checks.map((c) => [c.type, !!c.hidden])).toEqual([['script', false], ['script', true]])
+    expect(task).not.toHaveProperty('tests')
+  })
+
+  it('задача без проверок отклоняется с понятным сообщением', async () => {
+    const bank = await load()
+    const { tests: _t, hiddenTests: _h, ...noChecks } = legacyTask
+    const r = bank.importBank('frontend', { tasks: [noChecks] })
+    expect(r.tasks.rejected).toBe(1)
+    expect(r.errors[0]).toMatch(/Задача #1: checks/)
+  })
+
+  it('новый формат (checks) принимается как есть', async () => {
+    const bank = await load()
+    const { tests: _t, hiddenTests: _h, ...rest } = legacyTask
+    const r = bank.importBank('frontend', { tasks: [{ ...rest, checks: [{ type: 'call', title: 'один', args: [], expect: { equals: 1 } }] }] })
+    expect(r.tasks.added).toBe(1)
+  })
+
+  it('сохранённый ранее overlay с задачей в прежнем формате приводится к новому', async () => {
+    localStorage.setItem('bank:v2:frontend', JSON.stringify({ v: 1, questions: {}, tasks: { custom_legacy: legacyTask } }))
+    const bank = await load()
+    expect(bank.getTasks('frontend').find((t) => t.id === 'custom_legacy')?.checks).toHaveLength(2)
+  })
+})
+
 describe('миграция старого формата bank:<prof>:*', () => {
   it('своё добавленное переносится, копии встроенных не затеняют банк, исходник сохраняется в резерве', async () => {
     const first = await load()

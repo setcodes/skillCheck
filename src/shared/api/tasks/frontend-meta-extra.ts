@@ -1,5 +1,4 @@
 import type { TaskMeta } from './meta-types'
-import { t } from './meta-types'
 
 /** Подсказки, рубрики, типичные ошибки и скрытые тесты для задач из расширения банка. */
 export const META_EXTRA: Record<string, TaskMeta> = {
@@ -20,10 +19,6 @@ export const META_EXTRA: Record<string, TaskMeta> = {
       'Проверка `if (!result[key])` перепутает служебные имена с существующими группами',
       'Мутируют исходный массив',
     ],
-    hiddenTests: t('groupBy', `
-const byLength = groupBy(['a', 'bb', 'cc'], 'length' as never);
-assert.deepEqual(byLength, { 1: ['a'], 2: ['bb', 'cc'] }, 'числовые ключи приводятся к строке');
-assert.deepEqual(groupBy([5, 3, 4, 8], (n: number) => (n % 2 === 0 ? 'even' : 'odd')), { odd: [5, 3], even: [4, 8] }, 'порядок внутри групп сохраняется');`),
   },
 
   fe_once: {
@@ -43,12 +38,6 @@ assert.deepEqual(groupBy([5, 3, 4, 8], (n: number) => (n % 2 === 0 ? 'even' : 'o
       'Теряют this',
       'Повторно выполняют fn после ошибки в первом вызове',
     ],
-    hiddenTests: t('once', `
-const o = once(() => ({ made: true }));
-assert.ok(o() === o(), 'возвращается один и тот же результат (та же ссылка)');
-const withArgs = once((a: number, b: number) => a + b);
-assert.equal(withArgs(1, 2), 3, 'первый вызов использует свои аргументы');
-assert.equal(withArgs(10, 20), 3, 'аргументы повторных вызовов игнорируются');`),
   },
 
   fe_wordFrequency: {
@@ -68,10 +57,6 @@ assert.equal(withArgs(10, 20), 3, 'аргументы повторных выз�
       'Разбиение по пробелам оставляет знаки препинания в словах',
       'Сортировка только по счёту — порядок при равенстве нестабилен',
     ],
-    hiddenTests: t('wordFrequency', `
-assert.deepEqual(wordFrequency('Hello hello HELLO world'), [['hello', 3], ['world', 1]], 'регистр не важен');
-assert.deepEqual(wordFrequency('ёж Ёж'), [['ёж', 2]], 'кириллица и ё');
-assert.deepEqual(wordFrequency('a-b a_b'), [['a', 2], ['b', 2]], 'дефис и подчёркивание — разделители');`),
   },
 
   fe_flattenObject: {
@@ -91,9 +76,6 @@ assert.deepEqual(wordFrequency('a-b a_b'), [['a', 2], ['b', 2]], 'дефис и 
       'Массивы разворачивают как объекты',
       'Лишняя точка в начале пути на верхнем уровне',
     ],
-    hiddenTests: t('flattenObject', `
-assert.deepEqual(flattenObject({ a: { b: { c: { d: 1 } } } }), { 'a.b.c.d': 1 }, 'глубокая вложенность');
-assert.deepEqual(flattenObject({ x: { y: 1 }, z: { w: 2 } }), { 'x.y': 1, 'z.w': 2 }, 'несколько веток');`),
   },
 
   fe_promiseAll: {
@@ -113,10 +95,6 @@ assert.deepEqual(flattenObject({ x: { y: 1 }, z: { w: 2 } }), { 'x.y': 1, 'z.w':
       'Пустой массив — промис никогда не завершается',
       'Последовательное ожидание (await в цикле) вместо параллельного',
     ],
-    hiddenTests: t('promiseAll', `
-const delay = (ms: number, value?: any) => new Promise((r) => setTimeout(() => r(value), ms));
-assert.deepEqual(await promiseAll([Promise.resolve(1), 2, delay(5, 3)]), [1, 2, 3], 'смесь промисов и значений');
-assert.deepEqual(await promiseAll([delay(20, 'a'), delay(1, 'b'), delay(10, 'c')]), ['a', 'b', 'c'], 'порядок входа при разных задержках');`),
   },
 
   fe_myBind: {
@@ -136,12 +114,6 @@ assert.deepEqual(await promiseAll([delay(20, 'a'), delay(1, 'b'), delay(10, 'c')
       'Теряют предзаданные аргументы',
       'Используют fn.bind — задача про реализацию',
     ],
-    hiddenTests: t('myBind', `
-function sum(this: any, a: number, b: number, c: number) { return this.base + a + b + c; }
-const bound = myBind(sum, { base: 100 }, 1);
-assert.equal(bound(2, 3), 106, 'предзаданный и переданные аргументы');
-assert.equal(bound(10, 20), 131, 'функцию можно вызывать повторно');
-assert.equal(typeof myBind(() => 1, null)(), 'number', 'возвращается результат вызова');`),
   },
 
   fe_buildTree: {
@@ -161,15 +133,6 @@ assert.equal(typeof myBind(() => 1, null)(), 'number', 'возвращается
       'Один проход: родитель ещё не создан, когда встречается ребёнок',
       'Мутируют входные объекты, добавляя им children',
     ],
-    hiddenTests: t('buildTree', `
-const N = 10000;
-const chain = Array.from({ length: N }, (_, i) => ({ id: i + 1, parentId: i === 0 ? null : i, name: 'n' })).reverse();
-const tree = buildTree(chain);
-assert.equal(tree.length, 1, 'длинная цепочка в обратном порядке даёт один корень');
-let depth = 0;
-let node: any = tree[0];
-while (node) { depth++; node = node.children[0]; }
-assert.equal(depth, N, 'глубина цепочки сохранена (без рекурсии по стеку)');`),
   },
 
   fe_buildPostsView: {
@@ -189,13 +152,6 @@ assert.equal(depth, N, 'глубина цепочки сохранена (без
       'Посты без комментариев получают undefined вместо 0',
       'Результат собирается в другом порядке',
     ],
-    hiddenTests: t('buildPostsView', `
-const users = [{ id: 1, name: 'A' }];
-const posts = [{ id: 1, userId: 1, title: 'T' }];
-const result = buildPostsView(posts, [], users);
-assert.ok(result[0] !== (posts[0] as any), 'результат — новые объекты');
-assert.deepEqual(Object.keys(result[0]).sort(), ['commentsCount', 'id', 'title', 'userName'], 'только нужные поля');
-assert.equal(result[0].commentsCount, 0, 'без комментариев — 0');`),
   },
 
   fe_retry: {
@@ -215,13 +171,6 @@ assert.equal(result[0].commentsCount, 0, 'без комментариев — 0'
       'Не выходят после успеха — лишние вызовы',
       'Не ловят синхронное исключение внутри fn',
     ],
-    hiddenTests: t('retry', `
-let sync = 0;
-let msg = '';
-try { await retry(() => { sync++; throw new Error('sync'); }, 2); } catch (e: any) { msg = e.message; }
-assert.equal(msg, 'sync', 'синхронное исключение тоже считается неудачной попыткой');
-assert.equal(sync, 2, 'обе попытки использованы');
-assert.equal(await retry(async () => 0, 3), 0, 'ложный результат 0 возвращается как успех');`),
   },
 
   fe_eventEmitter: {
@@ -241,23 +190,6 @@ assert.equal(await retry(async () => 0, 3), 0, 'ложный результат 
       'once не снимается при ошибке в обработчике',
       'emit без подписчиков бросает ошибку',
     ],
-    hiddenTests: t('createEmitter', `
-const em = createEmitter();
-const got: any[] = [];
-em.on('e', (...args: any[]) => got.push(args));
-em.emit('e', 1, 'two', { three: 3 });
-assert.deepEqual(got, [[1, 'two', { three: 3 }]], 'emit передаёт все аргументы');
-const em2 = createEmitter();
-let hits = 0;
-em2.on('a', () => hits++);
-em2.emit('b');
-assert.equal(hits, 0, 'события изолированы друг от друга');
-const em3 = createEmitter();
-let fired = 0;
-const off = em3.once('e', () => fired++);
-off();
-em3.emit('e');
-assert.equal(fired, 0, 'once можно отписать до срабатывания');`),
   },
 
   fe_promisePool: {
@@ -277,15 +209,6 @@ assert.equal(fired, 0, 'once можно отписать до срабатыва
       'Пакеты по limit штук с ожиданием всего пакета — слоты простаивают',
       'После ошибки продолжают запускать новые задачи',
     ],
-    hiddenTests: t('promisePool', `
-const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-let running = 0;
-let peak = 0;
-const order: number[] = [];
-const tasks = [0, 1, 2, 3].map((i) => async () => { order.push(i); running++; peak = Math.max(peak, running); await sleep(5); running--; return i; });
-assert.deepEqual(await promisePool(tasks, 1), [0, 1, 2, 3], 'limit 1: результаты по порядку');
-assert.equal(peak, 1, 'limit 1: ровно одна задача одновременно');
-assert.deepEqual(order, [0, 1, 2, 3], 'limit 1: задачи стартуют по очереди');`),
   },
 
   fe_deepMerge: {
@@ -305,11 +228,6 @@ assert.deepEqual(order, [0, 1, 2, 3], 'limit 1: задачи стартуют п
       'Мутируют target — в результат утекают общие ссылки на вложенные объекты',
       'Сливают массивы поэлементно вместо замены',
     ],
-    hiddenTests: t('deepMerge', `
-assert.deepEqual(deepMerge({ a: { b: { c: 1, d: 2 } } }, { a: { b: { c: 10 }, e: 3 } }), { a: { b: { c: 10, d: 2 }, e: 3 } }, 'слияние на трёх уровнях');
-assert.deepEqual(deepMerge({}, { x: { y: 1 } }), { x: { y: 1 } }, 'слияние в пустой объект');
-const date = new Date(1);
-assert.ok(deepMerge({ d: 1 }, { d: date }).d instanceof Date, 'не-обычные объекты (Date) заменяют значение');`),
   },
 
   fe_createStore: {
@@ -329,20 +247,5 @@ assert.ok(deepMerge({ d: 1 }, { d: date }).d instanceof Date, 'не-обычны
       'Итерируют живой набор — отписка в процессе пропускает подписчиков',
       'Вызывают подписчиков до обновления состояния',
     ],
-    hiddenTests: t('createStore', `
-const reducer = (s: { n: number }, a: { type: string }) => (a.type === 'inc' ? { n: s.n + 1 } : s);
-const store = createStore(reducer, { n: 0 });
-const before = store.getState();
-store.dispatch({ type: 'noop' });
-assert.ok(store.getState() === before, 'без изменений ссылка на состояние та же');
-const calls: string[] = [];
-store.subscribe(() => calls.push('a'));
-store.subscribe(() => calls.push('b'));
-store.dispatch({ type: 'inc' });
-assert.deepEqual(calls, ['a', 'b'], 'подписчики уведомляются в порядке подписки');
-const off = store.subscribe(() => calls.push('c'));
-off(); off();
-store.dispatch({ type: 'inc' });
-assert.deepEqual(calls, ['a', 'b', 'a', 'b'], 'повторная отписка безопасна, отписавшийся не вызывается');`),
   },
 }

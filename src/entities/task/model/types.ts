@@ -1,3 +1,5 @@
+import type { Check } from './checks'
+
 export type TaskLevel = 'junior' | 'middle' | 'senior'
 
 export interface UITask {
@@ -7,7 +9,8 @@ export interface UITask {
   exportName: string
   description: string
   starter: string
-  tests: string
+  /** проверки решения: декларативные вызовы и сценарии; hidden — скрытые от кандидата */
+  checks: Check[]
   language?: 'javascript' | 'typescript'
   solution?: string // Эталонное решение для интервьюера
   /** три подсказки от общего направления к почти готовой идее */
@@ -15,8 +18,6 @@ export interface UITask {
   /** критерии оценки для интервьюера; веса в сумме дают 100 */
   rubric?: { criterion: string; weight: number }[]
   commonMistakes?: string[]
-  /** проверки, которых кандидат не видит (граничные случаи, производительность) */
-  hiddenTests?: string
 }
 
 export interface TaskSolution {

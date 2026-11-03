@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Check } from '@/entities/task/model/checks'
 import type { Question } from '@/entities/question/model/types'
 import { TOPIC_IDS } from '@/entities/question/model/topics'
 import type { UITask } from '@/entities/task/model/types'
@@ -36,6 +37,36 @@ export const QuestionSchema = z.object({
   author: z.string().optional(),
 }) satisfies z.ZodType<Question, unknown>
 
+const expectation = z.union([
+  z.object({ equals: z.unknown() }).strict(),
+  z.object({ resolves: z.unknown() }).strict(),
+  z.object({ throws: z.union([z.string(), z.literal(true)]) }).strict(),
+  z.object({ rejects: z.union([z.string(), z.literal(true)]) }).strict(),
+  z.object({ satisfies: nonEmpty }).strict(),
+])
+const jsExpr = z.object({ $js: nonEmpty }).strict()
+const argList = z.union([z.array(z.unknown()), jsExpr])
+
+export const CheckSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('call'),
+    title: nonEmpty,
+    fn: nonEmpty.optional(),
+    args: argList,
+    then: argList.optional(),
+    expect: expectation,
+    unchanged: z.boolean().optional(),
+    maxMs: z.number().positive().optional(),
+    hidden: z.boolean().optional(),
+  }),
+  z.object({
+    type: z.literal('script'),
+    title: z.string().optional(),
+    code: nonEmpty,
+    hidden: z.boolean().optional(),
+  }),
+]) satisfies z.ZodType<Check, unknown>
+
 export const TaskSchema = z.object({
   id: nonEmpty,
   level: z.enum(['junior', 'middle', 'senior']),
@@ -43,14 +74,28 @@ export const TaskSchema = z.object({
   exportName: nonEmpty,
   description: nonEmpty,
   starter: z.string(),
-  tests: nonEmpty,
+  checks: z.array(CheckSchema).min(1),
   language: z.enum(['javascript', 'typescript']).optional(),
   solution: z.string().optional(),
   hints: z.array(nonEmpty).optional(),
   rubric: z.array(z.object({ criterion: nonEmpty, weight: z.number().min(0).max(100) })).optional(),
   commonMistakes: z.array(nonEmpty).optional(),
-  hiddenTests: z.string().optional(),
 }) satisfies z.ZodType<UITask>
+
+/**
+ * Приводит задачу из любого формата к текущему: в прежнем формате проверки — строки `tests` и `hiddenTests`
+ * с кодом assert, они становятся сценарными проверками.
+ */
+export function coerceTask(raw: unknown): unknown {
+  if (!raw || typeof raw !== 'object') return raw
+  const r = raw as Record<string, unknown>
+  if (Array.isArray(r.checks)) return raw
+  const { tests, hiddenTests, ...rest } = r
+  const checks: unknown[] = []
+  if (typeof tests === 'string' && tests.trim()) checks.push({ type: 'script', code: tests })
+  if (typeof hiddenTests === 'string' && hiddenTests.trim()) checks.push({ type: 'script', hidden: true, code: hiddenTests })
+  return { ...rest, checks }
+}
 
 const LEGACY_LEVEL: Record<string, string> = { junior: 'junior', middle: 'middle', mid: 'middle', senior: 'senior' }
 const NUM_TO_LEVEL = ['junior', 'middle', 'senior']

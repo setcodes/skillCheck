@@ -11,6 +11,7 @@ import type { UITask } from '@/entities/task/model/types'
 import type { UserRole } from '@/entities/user/model/types'
 import type { Solution } from '../model/useSolutions'
 import { detectLanguage, languageLabel } from '../lib/language'
+import { describeChecks } from '@/shared/runner/describe-checks'
 import { HintsPanel } from './HintsPanel'
 import { ReferenceSolution } from './ReferenceSolution'
 import { ResultsPanel } from './ResultsPanel'
@@ -129,7 +130,7 @@ export function TaskWorkspace(p: Props) {
             onSend={p.onSendScore}
           />
         )}
-        <ResultsPanel results={solution.lastResult ?? []} tests={task.tests} role={role} />
+        <ResultsPanel results={solution.lastResult ?? []} tests={describeChecks(task.checks, task.exportName)} role={role} />
       </div>
     </>
   )

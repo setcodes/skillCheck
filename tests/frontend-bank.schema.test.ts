@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { FRONTEND_TASKS as FE } from '@/shared/api/tasks'
 import questions from '@/shared/questions/frontend.json'
-import { QuestionSchema, describeIssue } from '@/shared/bank/schema'
+import { QuestionSchema, TaskSchema, describeIssue } from '@/shared/bank/schema'
 
 const QS = questions as unknown[]
 
@@ -31,7 +31,7 @@ describe('Frontend: задачи', () => {
   })
   it('у каждой задачи есть starter, tests, solution, exportName', () => {
     for (const t of FE) {
-      for (const k of ['starter', 'tests', 'solution', 'exportName', 'description'] as const) {
+      for (const k of ['starter', 'solution', 'exportName', 'description'] as const) {
         expect((t[k] ?? '').trim().length > 0, `${t.id}.${k}`).toBe(true)
       }
     }
@@ -72,7 +72,8 @@ describe('Frontend: методические материалы задач', () 
       expect(t.rubric?.length, `${t.id}: рубрика`).toBeLessThanOrEqual(5)
       expect(t.rubric?.reduce((s, r) => s + r.weight, 0), `${t.id}: сумма весов`).toBe(100)
       expect(t.commonMistakes?.length, `${t.id}: типичные ошибки`).toBeGreaterThanOrEqual(2)
-      expect((t.hiddenTests ?? '').trim().length, `${t.id}: скрытые проверки`).toBeGreaterThan(0)
+      expect(t.checks.some((c) => c.hidden), `${t.id}: скрытые проверки`).toBe(true)
+      expect(t.checks.some((c) => !c.hidden), `${t.id}: видимые проверки`).toBe(true)
     }
   })
   it('подсказки не повторяют друг друга и постепенно становятся конкретнее', () => {
@@ -82,7 +83,17 @@ describe('Frontend: методические материалы задач', () 
       expect(c.length, `${t.id}: третья подсказка конкретнее первой`).toBeGreaterThan(a.length * 0.6)
     }
   })
-  it('скрытые проверки отличаются от видимых', () => {
-    for (const t of FE) expect(t.hiddenTests, t.id).not.toBe(t.tests)
+  it('все задачи проходят схему, у каждой проверки валидны', () => {
+    for (const t of FE) {
+      const r = TaskSchema.safeParse(t)
+      expect(r.success, `${t.id}: ${r.success ? '' : describeIssue(r.error)}`).toBe(true)
+    }
+  })
+  it('большая часть чистых функций описана декларативно, сценарии — только для состояния, таймеров и моков', () => {
+    const declarative = FE.filter((t) => t.checks.every((c) => c.type === 'call'))
+    expect(declarative.length).toBeGreaterThanOrEqual(15)
+    for (const t of FE.filter((x) => x.checks.some((c) => c.type === 'script'))) {
+      expect(t.checks.filter((c) => c.type === 'script').length, `${t.id}: сценарная задача`).toBeGreaterThanOrEqual(2)
+    }
   })
 })
