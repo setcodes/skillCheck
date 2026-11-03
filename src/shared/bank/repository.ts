@@ -8,7 +8,7 @@ import type { Profession } from '@/entities/profession/model/types'
 import type { Question } from '@/entities/question/model/types'
 import { levelNumber } from '@/entities/question/model/topics'
 import type { UITask } from '@/entities/task/model/types'
-import { FE } from '@/shared/api/tasks/frontend'
+import { FRONTEND_TASKS } from '@/shared/api/tasks'
 import FRONTEND_QA from '@/shared/questions/frontend.json'
 import { KEYS, readJSON, removeKey, writeJSON } from '@/shared/storage/storage'
 import { QuestionSchema, TaskSchema, coerceQuestion, describeIssue } from './schema'
@@ -34,7 +34,7 @@ export const MAX_IMPORT_BYTES = 2 * 1024 * 1024
 
 // Замороженные профессии (backend-java, analyst, devops) лежат в /frozen и в сборку не входят
 const BUILTIN: Partial<Record<Profession, Bank>> = {
-  frontend: { questions: FRONTEND_QA as Question[], tasks: FE },
+  frontend: { questions: FRONTEND_QA as Question[], tasks: FRONTEND_TASKS },
 }
 
 const emptyOverrides = (): Overrides => ({ v: 1, questions: {}, tasks: {} })

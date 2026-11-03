@@ -177,7 +177,7 @@ assert.equal(sumBy([{a: 2}, {a: 3}], 'a'), 5);`,
 
   { 
     id: 'fe_throttle', 
-    level: 'junior', 
+    level: 'middle', 
     title: 'throttle(fn, delay)', 
     exportName: 'throttle',
     description: 'Не чаще чем раз в delay мс (trailing=true).',
@@ -746,7 +746,7 @@ assert.equal(deepEqual({x: [1, {y: 2}]}, {x: [1, {y: 2}]}), true);`,
 
   { 
     id: 'fe_formatBytes', 
-    level: 'senior', 
+    level: 'middle', 
     title: 'formatBytes(n)', 
     exportName: 'formatBytes',
     description: 'Форматировать байты: 1536 → "1.5 KB".',
@@ -813,7 +813,7 @@ assert.equal(n, 1);`,
 
   { 
     id: 'fe_flatten', 
-    level: 'senior', 
+    level: 'middle', 
     title: 'flatten(arr, depth=Infinity)', 
     exportName: 'flatten',
     description: 'Флэттенинг массива до глубины.',
@@ -902,7 +902,7 @@ assert.equal(d.removed[0], 'a');`,
 
   { 
     id: 'fe_compose', 
-    level: 'senior', 
+    level: 'middle', 
     title: 'compose(...fns)', 
     exportName: 'compose',
     description: 'Композиция функций справа налево.',

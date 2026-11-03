@@ -1,0 +1,477 @@
+[
+  {
+    "id": "quiz-new-returns-function",
+    "version": 1,
+    "title": "new и конструктор, возвращающий функцию",
+    "level": "middle",
+    "topic": "js-core",
+    "tags": [
+      "new",
+      "closures"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "function Counter() {\n  let n = 0;\n  return () => console.log(n++);\n}\n\nconst a = new Counter();\na();\na();\na.n = 10;\na();\n\nconst b = new Counter();\nb();",
+    "options": [
+      "0\n1\n10\n0",
+      "0\n1\n2\n0",
+      "0\n1\n10\n1",
+      "0\n1\n2\n3"
+    ],
+    "correct": 1,
+    "output": [
+      "0",
+      "1",
+      "2",
+      "0"
+    ],
+    "explanation": "Если конструктор возвращает **объект**, `new` отдаёт именно его, а не созданный экземпляр. Функция — тоже объект, поэтому `a` — это возвращённая стрелка. Переменная `n` живёт в замыкании и снаружи недоступна: `a.n = 10` создаёт отдельное свойство на объекте-функции и счётчик не затрагивает, поэтому третий вызов печатает `2`. Второй `new Counter()` создаёт новое замыкание со своим `n`.",
+    "pitfalls": [
+      "new с возвращаемым объектом",
+      "приватность замыкания",
+      "свойство функции не связано с переменной замыкания"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-let-loop-array",
+    "version": 1,
+    "title": "let в цикле не спасает, если значение — ссылка",
+    "level": "senior",
+    "topic": "js-core",
+    "tags": [
+      "closures",
+      "loops"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "for (let acc = []; acc.length < 3; acc.push(1)) {\n  setTimeout(() => console.log(acc.length));\n}",
+    "options": [
+      "3\n3\n3",
+      "0\n1\n2",
+      "1\n2\n3",
+      "0\n0\n0"
+    ],
+    "correct": 0,
+    "output": [
+      "3",
+      "3",
+      "3"
+    ],
+    "explanation": "`let` создаёт новую привязку на каждой итерации, но копирует в неё **значение** предыдущей. Здесь значение — ссылка на массив, поэтому все привязки указывают на один и тот же массив. Таймеры срабатывают после цикла, когда в массиве уже три элемента. С числом (`let i = 0`) правило «у каждой итерации своя копия» работает, с массивом или объектом — нет. Починка — копировать данные: `const copy = [...acc]` внутри цикла.",
+    "pitfalls": [
+      "let копирует значение, а не данные",
+      "ссылка на общий массив"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-var-vs-let-timeouts",
+    "version": 1,
+    "title": "var и let в цикле с таймерами",
+    "level": "junior",
+    "topic": "js-core",
+    "tags": [
+      "closures",
+      "loops",
+      "scope"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "for (var i = 0; i < 3; i++) setTimeout(() => console.log('var', i));\nfor (let j = 0; j < 3; j++) setTimeout(() => console.log('let', j));",
+    "options": [
+      "var 3\nvar 3\nvar 3\nlet 0\nlet 1\nlet 2",
+      "var 0\nvar 1\nvar 2\nlet 0\nlet 1\nlet 2",
+      "var 3\nvar 3\nvar 3\nlet 3\nlet 3\nlet 3",
+      "let 0\nlet 1\nlet 2\nvar 3\nvar 3\nvar 3"
+    ],
+    "correct": 0,
+    "output": [
+      "var 3",
+      "var 3",
+      "var 3",
+      "let 0",
+      "let 1",
+      "let 2"
+    ],
+    "explanation": "`var` — одна переменная на всю функцию, к моменту срабатывания таймеров цикл закончен и `i === 3`. У `let` в заголовке цикла своя привязка на каждую итерацию, поэтому каждый колбэк видит своё значение. Таймеры выполняются в порядке регистрации: сначала три `var`, затем три `let`.",
+    "pitfalls": [
+      "одна переменная var против привязки на итерацию",
+      "порядок таймеров"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-event-loop-order",
+    "version": 1,
+    "title": "Порядок: синхронный код, микрозадачи и таймер",
+    "level": "middle",
+    "topic": "async",
+    "tags": [
+      "event-loop",
+      "microtasks"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "console.log('A');\nsetTimeout(() => console.log('B'), 0);\nPromise.resolve().then(() => console.log('C')).then(() => console.log('D'));\nqueueMicrotask(() => console.log('E'));\n(async () => {\n  console.log('F');\n  await null;\n  console.log('G');\n})();\nconsole.log('H');",
+    "options": [
+      "A\nF\nH\nB\nC\nE\nG\nD",
+      "A\nB\nC\nD\nE\nF\nG\nH",
+      "A\nF\nH\nC\nE\nG\nD\nB",
+      "A\nF\nH\nC\nD\nE\nG\nB"
+    ],
+    "correct": 2,
+    "output": [
+      "A",
+      "F",
+      "H",
+      "C",
+      "E",
+      "G",
+      "D",
+      "B"
+    ],
+    "explanation": "Сначала весь синхронный код: `A`, `F` (async-функция выполняется синхронно до первого `await`), `H`. Затем микрозадачи в порядке постановки: `C`, `E`, `G` (остаток async-функции после `await`) и вторая ссылка цепочки — `D` ставится в очередь только после выполнения `C`, поэтому идёт последней. И лишь после всех микрозадач — макрозадача `setTimeout`: `B`.",
+    "pitfalls": [
+      "async-функция синхронна до первого await",
+      "каждое звено цепочки — отдельный тик",
+      "микрозадачи полностью раньше таймера"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-hoisting-tdz",
+    "version": 1,
+    "title": "Всплытие и временная мёртвая зона",
+    "level": "junior",
+    "topic": "js-core",
+    "tags": [
+      "hoisting",
+      "tdz"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "console.log(typeof a, typeof b);\nvar a = 1;\nfunction b() {}\n\ntry {\n  console.log(c);\n} catch (e) {\n  console.log(e.name);\n}\nlet c = 2;",
+    "options": [
+      "undefined function\nReferenceError",
+      "undefined undefined\nundefined",
+      "ReferenceError\nReferenceError",
+      "number function\nReferenceError"
+    ],
+    "correct": 0,
+    "output": [
+      "undefined function",
+      "ReferenceError"
+    ],
+    "explanation": "`var` всплывает и инициализируется значением `undefined`, поэтому `typeof a` — `\"undefined\"`. Функция-объявление доступна целиком, `typeof b` — `\"function\"`. `let` и `const` тоже создаются заранее, но до строки объявления находятся во временной мёртвой зоне — обращение выбрасывает `ReferenceError`.",
+    "pitfalls": [
+      "var инициализируется undefined",
+      "function declaration доступна целиком",
+      "let в TDZ"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-this-extracted-method",
+    "version": 1,
+    "title": "this при потере контекста",
+    "level": "middle",
+    "topic": "js-core",
+    "tags": [
+      "this",
+      "bind"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "'use strict';\nconst user = {\n  name: 'Ann',\n  hello() {\n    return this.name;\n  },\n};\nconst hello = user.hello;\nconst bound = user.hello.bind({ name: 'Bob' });\n\nconsole.log(user.hello());\ntry {\n  console.log(hello());\n} catch (e) {\n  console.log(e.name);\n}\nconsole.log(bound());\nconsole.log(user.hello.call({ name: 'Cid' }));",
+    "options": [
+      "Ann\nundefined\nBob\nCid",
+      "Ann\nTypeError\nAnn\nAnn",
+      "Ann\nTypeError\nBob\nAnn",
+      "Ann\nTypeError\nBob\nCid"
+    ],
+    "correct": 3,
+    "output": [
+      "Ann",
+      "TypeError",
+      "Bob",
+      "Cid"
+    ],
+    "explanation": "`this` определяется в момент вызова. `user.hello()` — слева от точки `user`. Вызов `hello()` без объекта в строгом режиме даёт `this === undefined`, и `this.name` бросает `TypeError`. `bind` возвращает функцию с прибитым контекстом — `Bob`. `call` вызывает сразу и с явным `this` — `Cid`.",
+    "pitfalls": [
+      "this определяется вызовом",
+      "строгий режим: undefined вместо глобального объекта",
+      "bind и call"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-coercion-mix",
+    "version": 1,
+    "title": "Приведение типов и сравнения",
+    "level": "junior",
+    "topic": "js-core",
+    "tags": [
+      "coercion",
+      "equality"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "console.log(\n  [typeof null, [] + [], [] == false, NaN === NaN, 0.1 + 0.2 === 0.3].join('|')\n);",
+    "options": [
+      "null||false|true|true",
+      "object||true|false|false",
+      "object|[]|false|false|true",
+      "object||false|false|false"
+    ],
+    "correct": 1,
+    "output": [
+      "object||true|false|false"
+    ],
+    "explanation": "`typeof null` — `\"object\"` (историческая ошибка языка). `[] + []` — пустая строка: оба массива приводятся к `\"\"`. `[] == false`: оба приводятся к числу, `0 == 0` — `true`. `NaN` не равен даже самому себе. `0.1 + 0.2` в двоичной плавающей точке даёт `0.30000000000000004`, строгое равенство с `0.3` ложно.",
+    "pitfalls": [
+      "typeof null",
+      "== приводит типы",
+      "NaN !== NaN",
+      "погрешность float"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-sort-mutates",
+    "version": 1,
+    "title": "sort мутирует и сортирует как строки",
+    "level": "junior",
+    "topic": "js-core",
+    "tags": [
+      "arrays",
+      "mutation"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "const nums = [10, 2, 1];\nconst sorted = nums.sort();\nconst copy = [...nums].sort((a, b) => a - b);\n\nconsole.log(nums === sorted);\nconsole.log(nums.join());\nconsole.log(copy.join());",
+    "options": [
+      "true\n1,10,2\n1,2,10",
+      "false\n1,2,10\n1,2,10",
+      "true\n1,2,10\n1,2,10",
+      "false\n10,2,1\n1,2,10"
+    ],
+    "correct": 0,
+    "output": [
+      "true",
+      "1,10,2",
+      "1,2,10"
+    ],
+    "explanation": "`sort` **мутирует** массив и возвращает его же, поэтому `nums === sorted` — `true`. Без компаратора элементы сравниваются как строки: `\"10\" < \"2\"`, получается `1,10,2`. Копия `[...nums]` сортируется отдельно с числовым компаратором — `1,2,10`. В React такая мутация состояния ещё и не вызовет перерисовку.",
+    "pitfalls": [
+      "sort мутирует и возвращает тот же массив",
+      "сортировка по умолчанию строковая"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-shallow-copy",
+    "version": 1,
+    "title": "Поверхностная копия массива объектов",
+    "level": "junior",
+    "topic": "js-core",
+    "tags": [
+      "arrays",
+      "copy"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "const users = [{ name: 'a' }];\nconst copy = [...users];\n\ncopy[0].name = 'b';\ncopy.push({ name: 'c' });\n\nconsole.log(users.length, users[0].name);",
+    "options": [
+      "2 b",
+      "1 a",
+      "1 b",
+      "2 a"
+    ],
+    "correct": 2,
+    "output": [
+      "1 b"
+    ],
+    "explanation": "Спред копирует только верхний уровень: новый массив, но те же объекты внутри. `copy[0].name = \"b\"` меняет общий объект и виден в `users`. А `copy.push` добавляет элемент только в копию, поэтому длина `users` остаётся `1`. Глубокая копия — `structuredClone`.",
+    "pitfalls": [
+      "поверхностная копия делит вложенные объекты",
+      "push меняет только копию"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-async-await-order",
+    "version": 1,
+    "title": "Порядок вызова async-функций",
+    "level": "middle",
+    "topic": "async",
+    "tags": [
+      "async-await",
+      "event-loop"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "async function f() {\n  console.log(1);\n  await g();\n  console.log(2);\n}\nasync function g() {\n  console.log(3);\n}\n\nf();\nconsole.log(4);",
+    "options": [
+      "1\n2\n3\n4",
+      "1\n3\n2\n4",
+      "1\n3\n4\n2",
+      "4\n1\n3\n2"
+    ],
+    "correct": 2,
+    "output": [
+      "1",
+      "3",
+      "4",
+      "2"
+    ],
+    "explanation": "Тело async-функции выполняется синхронно до первого `await`: `1`, затем вызов `g()` тоже выполняется синхронно и печатает `3`. `await` отдаёт управление наружу, поэтому следующим идёт синхронный `4`, а остаток `f` — `2` — выполнится микрозадачей после текущего синхронного кода.",
+    "pitfalls": [
+      "async синхронна до await",
+      "код после await — микрозадача"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-class-getter-own-property",
+    "version": 1,
+    "title": "Геттер класса и собственные свойства",
+    "level": "middle",
+    "topic": "js-core",
+    "tags": [
+      "classes",
+      "prototype"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "class Box {\n  constructor() {\n    this.x = 1;\n  }\n  get y() {\n    return this.x + 1;\n  }\n}\n\nconst box = new Box();\nbox.x = 5;\nconsole.log(box.y, Object.keys(box).join(), 'y' in box, box.hasOwnProperty('y'));",
+    "options": [
+      "2 x,y true true",
+      "6 x true false",
+      "6 x,y true true",
+      "2 x false false"
+    ],
+    "correct": 1,
+    "output": [
+      "6 x true false"
+    ],
+    "explanation": "Геттер читает актуальный `this.x`, поэтому `box.y === 6`. Геттер определён на прототипе класса, а не на экземпляре: собственные ключи — только `x`, `\"y\" in box` — `true` (оператор `in` ищет по цепочке прототипов), а `hasOwnProperty(\"y\")` — `false`.",
+    "pitfalls": [
+      "геттер живёт на прототипе",
+      "in и hasOwnProperty различаются"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-nan-and-map",
+    "version": 1,
+    "title": "NaN, Map и поиск в массиве",
+    "level": "senior",
+    "topic": "js-core",
+    "tags": [
+      "equality",
+      "map"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "const m = new Map();\nm.set(NaN, 'nan');\nm.set({}, 'obj');\n\nconsole.log(m.get(NaN), m.get({}), [NaN].includes(NaN), [NaN].indexOf(NaN));",
+    "options": [
+      "nan undefined true -1",
+      "undefined undefined false -1",
+      "nan obj true 0",
+      "nan undefined false -1"
+    ],
+    "correct": 0,
+    "output": [
+      "nan undefined true -1"
+    ],
+    "explanation": "`Map` и `includes` сравнивают через алгоритм SameValueZero, в котором `NaN` равен `NaN` — поэтому `m.get(NaN)` находит значение и `includes` возвращает `true`. Объекты сравниваются по ссылке: литерал `{}` в `get` — другой объект, результат `undefined`. А `indexOf` использует строгое равенство, где `NaN !== NaN`, и возвращает `-1`.",
+    "pitfalls": [
+      "SameValueZero против ===",
+      "объекты в Map по ссылке"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-default-params",
+    "version": 1,
+    "title": "Параметры по умолчанию",
+    "level": "middle",
+    "topic": "js-core",
+    "tags": [
+      "functions",
+      "defaults"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "function f(a, b = a + 1, c = b * 2) {\n  return [a, b, c].join();\n}\n\nconsole.log(f(1));\nconsole.log(f(1, undefined, 5));\nconsole.log(f(1, null));",
+    "options": [
+      "1,2,4\n1,2,5\n1,2,4",
+      "1,2,4\n1,,5\n1,null,0",
+      "1,2,4\n1,2,5\n1,,0",
+      "1,2,4\n1,2,5\n1,null,null"
+    ],
+    "correct": 2,
+    "output": [
+      "1,2,4",
+      "1,2,5",
+      "1,,0"
+    ],
+    "explanation": "Значение по умолчанию подставляется только для `undefined`, и может зависеть от предыдущих параметров. `f(1)`: `b = 2`, `c = 4`. `f(1, undefined, 5)`: `b` снова по умолчанию (`2`), `c = 5`. `f(1, null)`: `null` — явное значение, `b = null`, а `c = null * 2 = 0`; `join` превращает `null` в пустую строку — `1,,0`.",
+    "pitfalls": [
+      "default только для undefined",
+      "null — это значение",
+      "join и null"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-promise-chains-interleave",
+    "version": 1,
+    "title": "Две цепочки промисов",
+    "level": "senior",
+    "topic": "async",
+    "tags": [
+      "promises",
+      "microtasks"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "Promise.resolve()\n  .then(() => console.log('a1'))\n  .then(() => console.log('a2'));\n\nPromise.resolve()\n  .then(() => console.log('b1'))\n  .then(() => console.log('b2'));\n\nconsole.log('sync');",
+    "options": [
+      "sync\na1\na2\nb1\nb2",
+      "a1\na2\nb1\nb2\nsync",
+      "sync\na1\nb1\na2\nb2",
+      "sync\nb1\nb2\na1\na2"
+    ],
+    "correct": 2,
+    "output": [
+      "sync",
+      "a1",
+      "b1",
+      "a2",
+      "b2"
+    ],
+    "explanation": "Каждое звено `.then` — отдельный тик очереди микрозадач. Сначала синхронный `sync`. Затем в очереди стоят первые звенья обеих цепочек: `a1`, `b1`. Второе звено каждой цепочки ставится только после выполнения первого — поэтому после `a1` в очередь попадает `a2` (за `b1`), и порядок получается чередующимся: `a1, b1, a2, b2`.",
+    "pitfalls": [
+      "каждое then — один тик",
+      "цепочки чередуются, а не идут по очереди"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "quiz-finally-return",
+    "version": 1,
+    "title": "return и finally",
+    "level": "middle",
+    "topic": "js-core",
+    "tags": [
+      "errors",
+      "control-flow"
+    ],
+    "prompt": "Что выведет код?",
+    "code": "function f() {\n  try {\n    return 'try';\n  } finally {\n    console.log('finally');\n  }\n}\n\nconsole.log(f());",
+    "options": [
+      "finally\ntry",
+      "try\nfinally",
+      "finally",
+      "try"
+    ],
+    "correct": 0,
+    "output": [
+      "finally",
+      "try"
+    ],
+    "explanation": "`finally` выполняется всегда, в том числе после `return` из `try`: значение возврата вычисляется, затем выполняется `finally`, и только потом функция возвращает результат. Поэтому сначала печатается `finally`, затем `try`.",
+    "pitfalls": [
+      "finally выполняется до фактического возврата"
+    ],
+    "reviewedAt": null
+  }
+]

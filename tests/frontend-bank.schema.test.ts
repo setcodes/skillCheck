@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { FE } from '@/shared/api/tasks/frontend'
+import { FRONTEND_TASKS as FE } from '@/shared/api/tasks'
 import questions from '@/shared/questions/frontend.json'
 import { QuestionSchema, describeIssue } from '@/shared/bank/schema'
 
@@ -36,9 +36,12 @@ describe('Frontend: задачи', () => {
       }
     }
   })
-  it('в каждом уровне есть задачи', () => {
+  it('всего задач не меньше 38', () => {
+    expect(FE.length).toBeGreaterThanOrEqual(38)
+  })
+  it('в каждом уровне не меньше 8 задач', () => {
     for (const l of ['junior', 'middle', 'senior']) {
-      expect(FE.filter((t) => t.level === l).length, l).toBeGreaterThan(0)
+      expect(FE.filter((t) => t.level === l).length, l).toBeGreaterThanOrEqual(8)
     }
   })
 })

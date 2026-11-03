@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { ArrowLeft, BookOpen, Clock, Code as CodeIcon, FileSearch, Import as ImportIcon, Users } from 'lucide-react'
+import { ArrowLeft, BookOpen, Clock, Code as CodeIcon, FileSearch, HelpCircle, Import as ImportIcon, Users } from 'lucide-react'
 import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/shared/ui/button'
 import { TimerMenu } from '@/shared/ui/timer-menu'
@@ -44,6 +44,7 @@ export function WorkspaceLayout() {
     { to: '/interview', label: 'Режим интервью', icon: Users, show: role === 'interviewer' },
     { to: '/theory', label: 'Теория', icon: BookOpen, show: true },
     { to: '/cases', label: 'Кейсы', icon: FileSearch, show: true },
+    { to: '/quiz', label: 'Что выведет код?', icon: HelpCircle, show: true },
     { to: '/data', label: 'Импорт / Экспорт', icon: ImportIcon, show: role === 'interviewer' },
   ].filter((t) => t.show)
 
