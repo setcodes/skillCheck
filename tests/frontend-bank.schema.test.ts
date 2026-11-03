@@ -42,3 +42,20 @@ describe('Frontend: задачи', () => {
     }
   })
 })
+
+describe('Frontend: развёрнутые ответы', () => {
+  const parsed = (questions as unknown[]).map((q) => QuestionSchema.parse(q))
+  const withFull = parsed.filter((q) => q.answer.full)
+
+  it('у вопросов с полным ответом есть чек-лист «должно прозвучать»', () => {
+    expect(withFull.length).toBeGreaterThanOrEqual(95)
+    expect(withFull.filter((q) => q.answer.mustMention.length === 0).map((q) => q.id)).toEqual([])
+  })
+  it('полный ответ длиннее краткого', () => {
+    for (const q of withFull) expect(q.answer.full!.length, q.id).toBeGreaterThanOrEqual(q.answer.short.length)
+  })
+  it('покрыты ключевые темы: сеть, безопасность, производительность, асинхронность, состояние', () => {
+    const count = (t: string) => parsed.filter((q) => q.topic === t).length
+    for (const t of ['browser-network', 'security', 'performance', 'async', 'state']) expect(count(t), t).toBeGreaterThanOrEqual(5)
+  })
+})

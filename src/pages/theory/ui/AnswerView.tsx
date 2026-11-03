@@ -1,4 +1,5 @@
 import type { Question } from '@/entities/question/model/types'
+import { MiniMarkdown } from '@/shared/ui/mini-markdown'
 
 function List({ title, items, tone }: { title: string; items: string[]; tone?: 'warn' }) {
   if (items.length === 0) return null
@@ -25,9 +26,12 @@ export function AnswerView({ q }: { q: Question }) {
       {q.reviewedAt == null && (
         <p className="text-xs text-muted-foreground">Ответ ещё не вычитан</p>
       )}
-      <div className="p-3 bg-muted rounded-lg">
-        <p className="text-sm font-medium whitespace-pre-wrap">{answer.short}</p>
-        {hasFull && <p className="text-sm whitespace-pre-wrap mt-2">{answer.full}</p>}
+      <div className="p-3 bg-muted rounded-lg text-sm">
+        {hasFull ? (
+          <MiniMarkdown text={answer.full!} />
+        ) : (
+          <p className="font-medium whitespace-pre-wrap">{answer.short}</p>
+        )}
       </div>
       <List title="Должно прозвучать" items={answer.mustMention} />
       <List title="Типичные ошибки" items={answer.commonMistakes} />

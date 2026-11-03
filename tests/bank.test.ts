@@ -100,38 +100,37 @@ describe('банк: встроенные данные и overlay', () => {
   })
 })
 
+const withAlias = (qs: { aliases?: string[] }[]) => qs.find((q) => q.aliases?.length) as { id: string; aliases: string[] }
+
 describe('миграция старого формата bank:<prof>:*', () => {
-  it('в overlay попадает только правка пользователя; старые копии встроенных не затеняют банк', async () => {
+  it('своё добавленное переносится, копии встроенных не затеняют банк, исходник сохраняется в резерве', async () => {
     const first = await load()
     const builtin = first.getQuestions('frontend')
-    const legacy = (b: (typeof builtin)[number]) => ({
+    const legacyOf = (b: (typeof builtin)[number]) => ({
       id: b.aliases![0], title: b.title, category: 'JavaScript', difficulty: 2, bucket: 'screening',
-      prompt: b.prompt, answer: b.answer.short,
+      prompt: b.prompt, answer: 'устаревший ответ из старой копии',
     })
-    const edited = { ...legacy(builtin[0]), answer: 'правка пользователя' }
     const custom = { id: 'legacy-custom', title: 'Свой', category: 'React', difficulty: 3, bucket: 'deep', prompt: 'P', answer: 'A' }
-    localStorage.setItem(
-      'bank:frontend:questions',
-      JSON.stringify([edited, ...builtin.slice(1).map(legacy), custom])
-    )
+    const legacyList = [...builtin.filter((b) => b.aliases?.length).map(legacyOf), custom]
+    localStorage.setItem('bank:frontend:questions', JSON.stringify(legacyList))
     const bank = await load()
     const merged = bank.getQuestions('frontend')
-    expect(merged.find((x) => x.id === builtin[0].id)?.answer.short).toBe('правка пользователя')
     expect(merged.find((x) => x.id === 'legacy-custom')).toMatchObject({ level: 'senior', topic: 'react' })
+    expect(merged.some((x) => x.answer.short === 'устаревший ответ из старой копии')).toBe(false)
     expect(localStorage.getItem('bank:frontend:questions')).toBeNull()
-    const overrides = JSON.parse(localStorage.getItem('bank:v2:frontend')!)
-    expect(Object.keys(overrides.questions).sort()).toEqual([builtin[0].id, 'legacy-custom'].sort())
+    expect(Object.keys(JSON.parse(localStorage.getItem('bank:v2:frontend')!).questions)).toEqual(['legacy-custom'])
+    expect(JSON.parse(localStorage.getItem('bank:legacy-backup:frontend')!).questions).toHaveLength(legacyList.length)
   })
 
   it('overlay, записанный в прежней схеме, приводится к новой и переносится на новые id', async () => {
     const first = await load()
-    const target = first.getQuestions('frontend')[3]
+    const target = withAlias(first.getQuestions('frontend'))
     localStorage.setItem(
       'bank:v2:frontend',
       JSON.stringify({
         v: 1,
         questions: {
-          [target.aliases![0]]: { id: target.aliases![0], title: 'T', category: 'CSS', difficulty: 1, bucket: 'screening', prompt: 'P', answer: 'Старая правка' },
+          [target.aliases[0]]: { id: target.aliases[0], title: 'T', category: 'CSS', difficulty: 1, bucket: 'screening', prompt: 'P', answer: 'Старая правка' },
         },
         tasks: {},
       })
@@ -144,8 +143,8 @@ describe('миграция старого формата bank:<prof>:*', () => {
 describe('миграция сохранённых id', () => {
   it('черновики оценок, мост оценок и мок-сессия переезжают на новые id', async () => {
     const bank = await load()
-    const q0 = bank.getQuestions('frontend')[0]
-    const old = q0.aliases![0]
+    const q0 = withAlias(bank.getQuestions('frontend'))
+    const old = q0.aliases[0]
     localStorage.setItem('theory.drafts.v1.frontend', JSON.stringify({ [old]: { score: 4 } }))
     localStorage.setItem(
       'bridge.theoryScores.v1',
@@ -163,8 +162,8 @@ describe('миграция сохранённых id', () => {
 
   it('canonicalQuestionId знает прежние id', async () => {
     const bank = await load()
-    const q0 = bank.getQuestions('frontend')[0]
-    expect(bank.canonicalQuestionId('frontend', q0.aliases![0])).toBe(q0.id)
+    const q0 = withAlias(bank.getQuestions('frontend'))
+    expect(bank.canonicalQuestionId('frontend', q0.aliases[0])).toBe(q0.id)
     expect(bank.canonicalQuestionId('frontend', 'unknown')).toBe('unknown')
   })
 })
