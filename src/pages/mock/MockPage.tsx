@@ -18,6 +18,7 @@ import { useToast } from '@/shared/hooks/use-sonner'
 import { CodeEditor } from '@/features/code-editor/ui'
 import type { CodeEditorHandle } from '@/features/code-editor/ui/CodeEditor'
 import { runModuleWithLogs } from '@/shared/api/runner'
+import { answerText } from '@/entities/question/model/answer'
 import { crossedThresholds, formatSeconds } from '@/shared/lib/timer'
 
 export default function MockPage(){
@@ -455,7 +456,7 @@ export default function MockPage(){
                       <pre className={reveal[it.id] ?
                         "p-2 bg-muted rounded text-xs whitespace-pre-wrap" :
                         "p-2 bg-muted rounded text-xs whitespace-pre-wrap hidden print:block"
-                      }>{qMap[(it as MockTheoryItem).questionId]?.answer || '-'}</pre>
+                      }>{qMap[(it as MockTheoryItem).questionId] ? answerText(qMap[(it as MockTheoryItem).questionId]) : '-'}</pre>
                       {!reveal[it.id] && (
                         <Button className="print:hidden" variant="outline" size="sm" onClick={()=> setReveal(r=>({...r, [it.id]: true}))}>Показать ответ</Button>
                       )}

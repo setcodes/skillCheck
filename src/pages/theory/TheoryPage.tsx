@@ -18,6 +18,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { clearAllEvaluations, KEYS, readJSON, writeJSON } from '@/shared/storage/storage';
 import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants';
 import { useToast } from '@/shared/hooks/use-sonner';
+import { AnswerView } from './ui/AnswerView';
+import { levelLabel, levelNumber, topicLabel, LEVELS } from '@/entities/question/model/topics';
 import { Send, CheckCircle, Trash2 } from 'lucide-react';
 
 export default function Theory() {
@@ -26,38 +28,32 @@ export default function Theory() {
 	const ALL = useQuestions(prof);
 	const cats = useMemo(() => {
 		const set = new Set<string>();
-		for (const q of (ALL || [])) set.add((q?.category as string) || 'Разное');
+		for (const q of ALL) set.add(topicLabel(q.topic));
 		return Array.from(set).sort();
 	}, [prof, ALL]);
 	
 	const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 	
-	// Отладочная информация
-	useEffect(() => {
-		console.log('Selected categories changed:', selectedCategories);
-	}, [selectedCategories]);
-	
-	const list = useMemo(() => {
-		return (ALL || [])
-			.filter((q: any) => {
-				if (selectedCategories.length === 0) return true;
-				return selectedCategories.includes((q?.category as string) || 'Разное');
-			})
-			.sort((a: any, b: any) => {
-				const ad = Number.isFinite(a?.difficulty) ? a.difficulty : 0;
-				const bd = Number.isFinite(b?.difficulty) ? b.difficulty : 0;
-				const dt = ad - bd;
-				if (dt !== 0) return dt;
-				const at = String(a?.title || '');
-				const bt = String(b?.title || '');
-				return at.localeCompare(bt);
-			});
-	}, [ALL, selectedCategories]);
+	const list = useMemo(
+		() =>
+			ALL.filter((q) => selectedCategories.length === 0 || selectedCategories.includes(topicLabel(q.topic))).sort(
+				(a, b) =>
+					LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.title.localeCompare(b.title)
+			),
+		[ALL, selectedCategories]
+	);
 
 	// Right panel: select question and evaluate
 	const navigate = useNavigate();
 	const { questionId } = useParams();
-	const cur = useMemo(() => ALL.find((q: any) => q.id === questionId) ?? ALL[0], [ALL, questionId]);
+	const cur = useMemo(
+		() => ALL.find((q) => q.id === questionId || q.aliases?.includes(questionId ?? '')) ?? ALL[0],
+		[ALL, questionId]
+	);
+	// старые ссылки по прежним id ведут на актуальный адрес
+	useEffect(() => {
+		if (cur && questionId && questionId !== cur.id) navigate(`/theory/${encodeURIComponent(cur.id)}`, { replace: true });
+	}, [cur, questionId, navigate]);
 	const setCurQ = (id: string) => navigate(`/theory/${encodeURIComponent(id)}`);
 
 	// Draft per-question evaluation (persisted locally)
@@ -91,8 +87,8 @@ export default function Theory() {
 			prof,
 			questionId: cur.id,
 			title: cur.title,
-			category: cur.category,
-			difficulty: cur.difficulty,
+			category: topicLabel(cur.topic),
+			difficulty: levelNumber(cur.level),
 			score: drafts[cur.id]?.score ?? 0,
 			comment: drafts[cur.id]?.comment || '',
 		};
@@ -138,7 +134,7 @@ export default function Theory() {
 					</CardHeader>
 					<CardContent className="flex-1 overflow-hidden">
 						<div className="h-full overflow-y-auto space-y-4 pr-1">
-							{list.map((q: any) => (
+							{list.map((q) => (
 								<Card
 									key={q.id}
 									className={`${cur?.id === q.id ? 'border-primary ring-1 ring-primary' : ''} cursor-pointer transition-colors`}
@@ -148,8 +144,8 @@ export default function Theory() {
 										<div className="flex items-start justify-between gap-4">
 											<CardTitle className="text-lg flex-1">{q?.title || 'Без названия'}</CardTitle>
 											<QuestionTags
-												category={q.category || 'Mixed'}
-												difficulty={q.difficulty || 1}
+												topic={q.topic}
+												level={q.level}
 												className="flex-shrink-0"
 											/>
 										</div>
@@ -185,7 +181,7 @@ export default function Theory() {
 									<>
 										<div className="font-medium">{cur.title}</div>
 										<div className="text-muted-foreground">
-											{cur.category} • сложность {cur.difficulty}
+											{topicLabel(cur.topic)} • {levelLabel(cur.level)}
 										</div>
 									</>
 								) : (
@@ -248,9 +244,7 @@ export default function Theory() {
 					<CardContent className="flex-1 overflow-hidden">
 						{cur && role === 'interviewer' ? (
 							<div className="h-full overflow-y-auto">
-								<div className="p-3 bg-muted rounded-lg">
-									<pre className="text-sm whitespace-pre-wrap">{cur.answer}</pre>
-								</div>
+								<AnswerView q={cur} />
 							</div>
 						) : (
 							<p className="text-sm text-muted-foreground">

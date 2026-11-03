@@ -2,6 +2,7 @@ import type { Profession } from '@/entities/profession/model/types'
 import type { TheoryQuestion } from '@/entities/question/model/types'
 import type { UITask } from '@/entities/task/model/types'
 import { getQuestions, getTasks } from '@/shared/bank'
+import { levelNumber, topicLabel } from '@/entities/question/model/topics'
 import type { MockSessionConfig, MockSessionState, MockItem, MockTheoryItem, MockTaskItem } from '@/entities/mock/model/types'
 
 const LS_KEY = 'mock.session.v1'
@@ -14,6 +15,8 @@ export function loadSession(): MockSessionState | null{
   return null
 }
 export function clearSession(){ try{ localStorage.removeItem(LS_KEY) }catch{} }
+
+const levelOf = (l: string) => (l === 'middle' || l === 'senior' ? l : 'junior') as 'junior' | 'middle' | 'senior'
 
 function rng(seed: number){ let x = seed >>> 0; return ()=> (x = (x*1664525 + 1013904223) >>> 0) / 0x100000000 }
 
@@ -35,13 +38,17 @@ export function createSession(prof: Profession, cfg: Partial<Omit<MockSessionCon
   const qs = getQuestions(prof)
   const ts = getTasks(prof).filter((t:any)=> t.level===level)
   // naive diversity: sample categories for questions
-  const theory = pickN(qs, theoryCount, rnd).map<MockTheoryItem>((q,i)=>({
+  // вопросы выбранного уровня; если их мало — добираем ближайшими по уровню
+  const byLevel = [...qs].sort((a, b) => Math.abs(levelNumber(a.level) - levelNumber(levelOf(level))) - Math.abs(levelNumber(b.level) - levelNumber(levelOf(level))))
+  const same = byLevel.filter((q) => q.level === level)
+  const pool = same.length >= theoryCount ? same : byLevel.slice(0, Math.max(theoryCount, same.length))
+  const theory = pickN(pool, theoryCount, rnd).map<MockTheoryItem>((q,i)=>({
     id: `theory-${i}`,
     type: 'theory',
     questionId: q.id,
     title: q.title,
-    category: (q as any).category,
-    difficulty: (q as any).difficulty,
+    category: topicLabel(q.topic),
+    difficulty: levelNumber(q.level),
     prompt: q.prompt,
   }))
   const tasks = pickN(ts, taskCount, rnd).map<MockTaskItem>((t,i)=>({
