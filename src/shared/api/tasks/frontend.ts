@@ -316,33 +316,37 @@ assert.equal(typeof d.cancel, 'function', 'cancel должен быть функ
 }`
   },
 
-  { 
-    id: 'fe_useState', 
-    level: 'middle', 
-    title: 'useState(initial)', 
-    exportName: 'useState',
-    description: 'Реализовать useState хук с функциональными обновлениями.',
-    starter: `export function useState<T>(initial: T): [T, (value: T | ((prev: T) => T)) => void] {
-  // TODO: Реализуйте useState хук
-  // Принимает начальное значение
-  // Возвращает [state, setState]
-  // setState может принимать значение или функцию
+  {
+    id: 'fe_useState',
+    level: 'middle',
+    title: 'createState(initial)',
+    exportName: 'createState',
+    description: 'Мини-аналог useState без React: вернуть пару [getState, setState]. setState принимает значение или функцию от предыдущего значения.',
+    starter: `export function createState<T>(initial: T): [() => T, (value: T | ((prev: T) => T)) => void] {
+  // TODO: Реализуйте createState
+  // Возвращает [getState, setState]
+  // getState() всегда отдаёт актуальное значение
+  // setState принимает значение или функцию (prev) => next
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { useState } = m; 
-const [count, setCount] = useState(0); 
-setCount(5); 
-assert.equal(count, 5); 
-setCount(prev => prev + 1); 
-assert.equal(count, 6);`,
-    solution: `export function useState<T>(initial: T): [T, (value: T | ((prev: T) => T)) => void] {
+    tests: `import { strict as assert } from 'assert';
+import * as m from 'MODULE';
+const { createState } = m;
+const [get, set] = createState(0);
+assert.equal(get(), 0, 'начальное значение');
+set(5);
+assert.equal(get(), 5, 'set(5) заменяет значение');
+set(prev => prev + 1);
+assert.equal(get(), 6, 'функциональное обновление использует предыдущее значение');
+const [getObj] = createState({ a: 1 });
+assert.deepEqual(getObj(), { a: 1 }, 'работает с объектами');`,
+    solution: `export function createState<T>(initial: T): [() => T, (value: T | ((prev: T) => T)) => void] {
   let state = initial;
-  const setState = (value: T | ((prev: T) => T)) => {
+  const get = () => state;
+  const set = (value: T | ((prev: T) => T)) => {
     state = typeof value === 'function' ? (value as (prev: T) => T)(state) : value;
   };
-  return [state, setState];
+  return [get, set];
 }`
   },
 
@@ -374,28 +378,48 @@ assert.equal(calls, 1);`,
 }`
   },
 
-  { 
-    id: 'fe_useMemo', 
-    level: 'middle', 
-    title: 'useMemo(fn, deps)', 
-    exportName: 'useMemo',
-    description: 'Мемоизация вычислений с зависимостями.',
-    starter: `export function useMemo<T>(fn: () => T, deps: any[]): T {
-  // TODO: Реализуйте useMemo хук
-  // Мемоизирует результат функции
-  // Пересчитывает только при изменении зависимостей
+  {
+    id: 'fe_useMemo',
+    level: 'middle',
+    title: 'createMemo() → memo(fn, deps)',
+    exportName: 'createMemo',
+    description: 'Мини-аналог useMemo без React: createMemo() возвращает функцию memo(fn, deps), которая пересчитывает значение только при изменении зависимостей (сравнение по Object.is).',
+    starter: `export function createMemo() {
+  // TODO: Реализуйте createMemo
+  // Возвращает функцию memo(fn, deps)
+  // fn вызывается только если deps изменились (по Object.is) с прошлого вызова
+  // Иначе возвращается прошлый результат
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { useMemo } = m; 
-let calls = 0; 
-const expensive = useMemo(() => { calls++; return 42; }, []); 
-const result = useMemo(() => { calls++; return 42; }, []); 
-assert.equal(calls, 1);`,
-    solution: `export function useMemo<T>(fn: () => T, deps: any[]): T {
-  // Упрощенная реализация - в реальности нужен более сложный механизм
-  return fn();
+    tests: `import { strict as assert } from 'assert';
+import * as m from 'MODULE';
+const { createMemo } = m;
+const memo = createMemo();
+let calls = 0;
+const compute = () => { calls++; return calls * 10; };
+const first = memo(compute, [1, 'a']);
+const second = memo(compute, [1, 'a']);
+assert.equal(calls, 1, 'при тех же зависимостях fn вызывается один раз');
+assert.equal(second, first, 'возвращается прошлый результат');
+const third = memo(compute, [2, 'a']);
+assert.equal(calls, 2, 'при изменении зависимостей значение пересчитывается');
+assert.equal(third, 20, 'возвращается новое значение');
+memo(compute, [2, 'a']);
+assert.equal(calls, 2, 'после пересчёта снова кэшируется');`,
+    solution: `export function createMemo() {
+  let lastDeps: unknown[] | undefined;
+  let lastValue: unknown;
+  return function memo<T>(fn: () => T, deps: unknown[]): T {
+    const changed =
+      !lastDeps ||
+      lastDeps.length !== deps.length ||
+      deps.some((d, i) => !Object.is(d, lastDeps![i]));
+    if (changed) {
+      lastValue = fn();
+      lastDeps = deps;
+    }
+    return lastValue as T;
+  };
 }`
   },
 
@@ -511,47 +535,47 @@ assert.deepEqual(parseQueryString('?a=1&b=2&a=3'), {a: ['1', '3'], b: '2'});`,
 }`
   },
 
-  { 
-    id: 'fe_eventDelegate', 
-    level: 'middle', 
-    title: 'delegate(root, selector, type, handler)', 
+  {
+    id: 'fe_eventDelegate',
+    level: 'middle',
+    title: 'delegate(root, selector, type, handler)',
     exportName: 'delegate',
-    description: 'Событие на root + .closest(selector).',
+    description: 'Делегирование событий: один обработчик на root, срабатывает для потомков, подходящих под selector (через .closest()). Вернуть функцию отписки. В тестах используются лёгкие заглушки элементов.',
     starter: `export function delegate(root: Element, selector: string, type: string, handler: (this: Element, ev: Event) => void) {
   // TODO: Реализуйте делегирование событий
-  // Привязывает обработчик к root элементу
-  // Срабатывает только для элементов, соответствующих selector
-  // Использует .closest() для проверки
+  // Привязывает ОДИН обработчик к root
+  // Вызывает handler (с this = найденный элемент) только если event.target.closest(selector) нашёл элемент
+  // Возвращает функцию, снимающую обработчик
   throw new Error('Not implemented');
 }`,
-    tests: `import { strict as assert } from 'assert'; 
-import * as m from 'MODULE'; 
-const { delegate } = m; 
-const root = document.createElement('div'); 
-root.innerHTML = '<ul><li class="x">A</li></ul>'; 
-document.body.appendChild(root); 
-let ok = false; 
-const off = delegate(root, 'li.x', 'click', function() { 
-  ok = (this as any).classList.contains('x'); 
-}); 
-root.querySelector('li')!.dispatchEvent(new MouseEvent('click', {bubbles: true})); 
-off(); 
-assert.equal(ok, true);`,
+    tests: `import { strict as assert } from 'assert';
+import * as m from 'MODULE';
+const { delegate } = m;
+const listeners: Record<string, (e: any) => void> = {};
+const root: any = {
+  addEventListener: (t: string, h: (e: any) => void) => { listeners[t] = h; },
+  removeEventListener: (t: string, h: (e: any) => void) => { if (listeners[t] === h) delete listeners[t]; },
+};
+const li: any = { closest: (sel: string) => (sel === 'li.x' ? li : null), tag: 'li' };
+const span: any = { closest: () => null, tag: 'span' };
+const calls: any[] = [];
+const off = delegate(root, 'li.x', 'click', function (this: any) { calls.push(this); });
+assert.equal(typeof listeners.click, 'function', 'обработчик навешен на root');
+listeners.click({ target: li });
+assert.equal(calls.length, 1, 'срабатывает для подходящего элемента');
+assert.ok(calls[0] === li, 'this — найденный элемент');
+listeners.click({ target: span });
+assert.equal(calls.length, 1, 'не срабатывает для неподходящего элемента');
+off();
+assert.equal(listeners.click, undefined, 'отписка снимает обработчик');`,
     solution: `export function delegate(root: Element, selector: string, type: string, handler: (this: Element, ev: Event) => void) {
   const eventHandler = (event: Event) => {
-    const target = event.target as Element;
-    const closest = target.closest(selector);
-    
-    if (closest) {
-      handler.call(closest, event);
-    }
+    const target = event.target as Element | null;
+    const match = target?.closest(selector);
+    if (match) handler.call(match, event);
   };
-  
   root.addEventListener(type, eventHandler);
-  
-  return () => {
-    root.removeEventListener(type, eventHandler);
-  };
+  return () => root.removeEventListener(type, eventHandler);
 }`
   },
 
@@ -797,13 +821,16 @@ assert.equal(n, 1);`,
   // TODO: Реализуйте флэттенинг массива
   // Принимает массив и глубину
   // Возвращает плоский массив
-  // Пример: flatten([1, [2, [3]]], 2) → [1, 2, [3]]
+  // Примеры: flatten([1, [2, [3]]], 1) → [1, 2, [3]]; flatten([1, [2, [3]]], 2) → [1, 2, 3]
   throw new Error('Not implemented');
 }`,
     tests: `import { strict as assert } from 'assert'; 
 import * as m from 'MODULE'; 
 const { flatten } = m; 
-assert.deepEqual(flatten([1, [2, [3]]], 2), [1, 2, [3]]);`,
+assert.deepEqual(flatten([1, [2, [3]]], 1), [1, 2, [3]], 'depth=1');
+assert.deepEqual(flatten([1, [2, [3]]], 2), [1, 2, 3], 'depth=2');
+assert.deepEqual(flatten([1, [2, [3, [4]]]]), [1, 2, 3, 4], 'по умолчанию — до конца');
+assert.deepEqual(flatten([1, [2]], 0), [1, [2]], 'depth=0 ничего не разворачивает');`,
     solution: `export function flatten(arr: any[], depth = Infinity): any[] {
   if (depth === 0) return arr;
   
