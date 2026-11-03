@@ -5,21 +5,22 @@
 // поэтому новые вопросы/исправления в релизе доходят до всех, а локальные правки не теряются.
 
 import type { Profession } from '@/entities/profession/model/types'
-import type { TheoryQuestion } from '@/entities/question/model/types'
+import type { Question } from '@/entities/question/model/types'
+import { levelNumber } from '@/entities/question/model/topics'
 import type { UITask } from '@/entities/task/model/types'
 import { FE } from '@/shared/api/tasks/frontend'
-import FRONTEND_QA from '@/shared/questions/frontend-qa-100.json'
+import FRONTEND_QA from '@/shared/questions/frontend.json'
 import { KEYS, readJSON, removeKey, writeJSON } from '@/shared/storage/storage'
-import { QuestionSchema, TaskSchema, coerceQuestion } from './schema'
+import { QuestionSchema, TaskSchema, coerceQuestion, describeIssue } from './schema'
 
 export interface Bank {
-  questions: TheoryQuestion[]
+  questions: Question[]
   tasks: UITask[]
 }
 
 export interface Overrides {
   v: 1
-  questions: Record<string, TheoryQuestion>
+  questions: Record<string, Question>
   tasks: Record<string, UITask>
 }
 
@@ -33,13 +34,13 @@ export const MAX_IMPORT_BYTES = 2 * 1024 * 1024
 
 // Замороженные профессии (backend-java, analyst, devops) лежат в /frozen и в сборку не входят
 const BUILTIN: Partial<Record<Profession, Bank>> = {
-  frontend: { questions: FRONTEND_QA as TheoryQuestion[], tasks: FE },
+  frontend: { questions: FRONTEND_QA as Question[], tasks: FE },
 }
 
 const emptyOverrides = (): Overrides => ({ v: 1, questions: {}, tasks: {} })
 
-const sortQuestions = (a: TheoryQuestion, b: TheoryQuestion) =>
-  a.difficulty - b.difficulty || a.title.localeCompare(b.title)
+const sortQuestions = (a: Question, b: Question) =>
+  levelNumber(a.level) - levelNumber(b.level) || a.topic.localeCompare(b.topic) || a.id.localeCompare(b.id)
 
 export function mergeById<T extends { id: string }>(
   builtin: T[],
@@ -59,6 +60,24 @@ export function mergeBank(builtin: Bank, o: Overrides): Bank {
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
 
+/** Карта «прежний id → актуальный id» по полю aliases встроенных вопросов. */
+export function aliasMap(questions: Question[]): Map<string, string> {
+  const m = new Map<string, string>()
+  for (const q of questions) for (const a of q.aliases ?? []) m.set(a, q.id)
+  return m
+}
+
+function resolveAlias(questions: Question[], id: string): string {
+  return aliasMap(questions).get(id) ?? id
+}
+
+// Старый формат хранил полную копию банка: если ответ совпадает с короткой формулировкой
+// встроенного вопроса, пользователь его не менял.
+function isUntouchedLegacyCopy(builtin: Question, raw: unknown): boolean {
+  const r = raw as { answer?: unknown; prompt?: unknown }
+  return typeof r?.answer === 'string' && r.answer === builtin.answer.short && r.prompt === builtin.prompt
+}
+
 // Старый формат: полный банк целиком в `bank:<prof>:questions|tasks`.
 // Превращаем в overlay: сохраняем только то, что отличается от встроенного.
 export function migrateLegacy(
@@ -71,10 +90,15 @@ export function migrateLegacy(
   const builtinT = new Map(builtin.tasks.map((t) => [t.id, t]))
   if (Array.isArray(legacyQuestions)) {
     for (const raw of legacyQuestions) {
-      const parsed = QuestionSchema.safeParse(raw)
-      if (parsed.success && !same(parsed.data, builtinQ.get(parsed.data.id))) {
-        o.questions[parsed.data.id] = parsed.data
+      const parsed = QuestionSchema.safeParse(coerceQuestion(raw))
+      if (!parsed.success) continue
+      const id = resolveAlias(builtin.questions, parsed.data.id)
+      const candidate = { ...parsed.data, id }
+      // старая копия встроенного вопроса (до миграции схемы) — не правка пользователя
+      if (builtinQ.has(id) && (id !== parsed.data.id || !same(candidate, builtinQ.get(id)))) {
+        if (isUntouchedLegacyCopy(builtinQ.get(id)!, raw)) continue
       }
+      if (!same(candidate, builtinQ.get(id))) o.questions[id] = candidate
     }
   }
   if (Array.isArray(legacyTasks)) {
@@ -88,9 +112,22 @@ export function migrateLegacy(
   return o
 }
 
+// Overlay мог быть записан до смены схемы вопроса: приводим к текущей и переносим на актуальные id.
+function normalizeStored(builtin: Bank | undefined, stored: Overrides): Overrides {
+  const aliases = aliasMap(builtin?.questions ?? [])
+  const questions: Record<string, Question> = {}
+  for (const [key, raw] of Object.entries(stored.questions ?? {})) {
+    const parsed = QuestionSchema.safeParse(coerceQuestion(raw))
+    if (!parsed.success) continue
+    const id = aliases.get(key) ?? aliases.get(parsed.data.id) ?? parsed.data.id
+    questions[id] = { ...parsed.data, id }
+  }
+  return { v: 1, questions, tasks: stored.tasks ?? {} }
+}
+
 function loadOverrides(prof: Profession): Overrides {
   const stored = readJSON<Overrides | null>(KEYS.bankOverrides(prof), null)
-  if (stored && stored.v === 1) return stored
+  if (stored && stored.v === 1) return normalizeStored(BUILTIN[prof], stored)
   const builtin = BUILTIN[prof]
   const legacyQ = readJSON<unknown>(KEYS.legacyBankQuestions(prof), null)
   const legacyT = readJSON<unknown>(KEYS.legacyBankTasks(prof), null)
@@ -136,6 +173,11 @@ export function getBank(prof: Profession): Bank {
 export const getQuestions = (prof: Profession) => getBank(prof).questions
 export const getTasks = (prof: Profession) => getBank(prof).tasks
 
+/** Актуальный id вопроса по прежнему (для старых ссылок и сохранённых данных). */
+export function canonicalQuestionId(prof: Profession, id: string): string {
+  return aliasMap(BUILTIN[prof]?.questions ?? []).get(id) ?? id
+}
+
 export function resetBank(prof: Profession): void {
   removeKey(KEYS.bankOverrides(prof))
   removeKey(KEYS.legacyBankQuestions(prof))
@@ -169,7 +211,7 @@ export function importBank(prof: Profession, raw: unknown): ImportReport {
 
   const take = <T extends { id: string }>(
     list: unknown,
-    parse: (x: unknown) => { success: true; data: T } | { success: false; error: { message: string } },
+    parse: (x: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } },
     known: Set<string>,
     into: Record<string, T>,
     stat: ImportReport['questions'],
@@ -180,7 +222,7 @@ export function importBank(prof: Profession, raw: unknown): ImportReport {
       const parsed = parse(item)
       if (!parsed.success) {
         stat.rejected++
-        if (report.errors.length < 10) report.errors.push(`${label} #${i + 1}: ${parsed.error.message}`)
+        if (report.errors.length < 10) report.errors.push(`${label} #${i + 1}: ${describeIssue(parsed.error)}`)
         return
       }
       if (known.has(parsed.data.id)) stat.updated++

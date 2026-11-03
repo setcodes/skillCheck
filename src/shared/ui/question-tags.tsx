@@ -1,64 +1,46 @@
-import React from 'react';
-import { Badge } from '@/shared/ui/badge';
-import { cn } from '@/shared/lib/utils';
+import { Badge } from '@/shared/ui/badge'
+import { cn } from '@/shared/lib/utils'
+import { levelLabel, topicLabel } from '@/entities/question/model/topics'
+import type { Level } from '@/entities/question/model/types'
 
 interface QuestionTagsProps {
-  category: string;
-  difficulty: number;
-  className?: string;
+  topic: string
+  level: Level
+  className?: string
 }
 
-// Маппинг категорий на цвета
-const CATEGORY_CONFIG = {
-  'Linux': { color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  'Docker': { color: 'bg-cyan-100 text-cyan-800 border-cyan-200' },
-  'Kubernetes': { color: 'bg-purple-100 text-purple-800 border-purple-200' },
-  'CI/CD': { color: 'bg-green-100 text-green-800 border-green-200' },
-  'Cloud': { color: 'bg-sky-100 text-sky-800 border-sky-200' },
-  'Security': { color: 'bg-red-100 text-red-800 border-red-200' },
-  'Monitoring': { color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  'Containers': { color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
-  'Networking': { color: 'bg-teal-100 text-teal-800 border-teal-200' },
-  'Git/CI': { color: 'bg-gray-100 text-gray-800 border-gray-200' },
-  'IaC': { color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  'Modern DevOps': { color: 'bg-pink-100 text-pink-800 border-pink-200' },
-  'Performance': { color: 'bg-amber-100 text-amber-800 border-amber-200' },
-  'GitOps': { color: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  'Mixed': { color: 'bg-slate-100 text-slate-800 border-slate-200' },
-};
+const TOPIC_COLORS: Record<string, string> = {
+  'js-core': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  async: 'bg-amber-100 text-amber-800 border-amber-200',
+  typescript: 'bg-blue-100 text-blue-800 border-blue-200',
+  html: 'bg-orange-100 text-orange-800 border-orange-200',
+  css: 'bg-purple-100 text-purple-800 border-purple-200',
+  a11y: 'bg-teal-100 text-teal-800 border-teal-200',
+  react: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  state: 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'browser-network': 'bg-sky-100 text-sky-800 border-sky-200',
+  performance: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  security: 'bg-red-100 text-red-800 border-red-200',
+  testing: 'bg-lime-100 text-lime-800 border-lime-200',
+  architecture: 'bg-pink-100 text-pink-800 border-pink-200',
+  algorithms: 'bg-slate-100 text-slate-800 border-slate-200',
+}
 
-// Маппинг уровней сложности
-const DIFFICULTY_CONFIG = {
-  1: { label: 'Junior', color: 'bg-green-100 text-green-800 border-green-200' },
-  2: { label: 'Middle', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  3: { label: 'Senior', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  4: { label: 'Expert', color: 'bg-red-100 text-red-800 border-red-200' },
-};
+const LEVEL_COLORS: Record<Level, string> = {
+  junior: 'bg-green-100 text-green-800 border-green-200',
+  middle: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  senior: 'bg-orange-100 text-orange-800 border-orange-200',
+}
 
-export function QuestionTags({ category, difficulty, className }: QuestionTagsProps) {
-  const categoryConfig = CATEGORY_CONFIG[category as keyof typeof CATEGORY_CONFIG] || 
-    { color: 'bg-gray-100 text-gray-800 border-gray-200' };
-  
-  const difficultyConfig = DIFFICULTY_CONFIG[difficulty as keyof typeof DIFFICULTY_CONFIG] || 
-    { label: 'Unknown', color: 'bg-gray-100 text-gray-800 border-gray-200' };
-
+export function QuestionTags({ topic, level, className }: QuestionTagsProps) {
   return (
-    <div className={cn("flex flex-wrap gap-2", className)}>
-      {/* Тематика */}
-      <Badge 
-        variant="outline" 
-        className={cn(categoryConfig.color)}
-      >
-        {category}
+    <div className={cn('flex flex-wrap gap-2', className)}>
+      <Badge variant="outline" className={cn(TOPIC_COLORS[topic] ?? 'bg-gray-100 text-gray-800 border-gray-200')}>
+        {topicLabel(topic)}
       </Badge>
-
-      {/* Уровень сложности */}
-      <Badge 
-        variant="outline" 
-        className={cn(difficultyConfig.color)}
-      >
-        {difficultyConfig.label}
+      <Badge variant="outline" className={cn(LEVEL_COLORS[level])}>
+        {levelLabel(level)}
       </Badge>
     </div>
-  );
+  )
 }

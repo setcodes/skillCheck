@@ -1,18 +1,40 @@
 import { z } from 'zod'
-import type { TheoryQuestion } from '@/entities/question/model/types'
+import type { Question } from '@/entities/question/model/types'
+import { TOPIC_IDS } from '@/entities/question/model/topics'
 import type { UITask } from '@/entities/task/model/types'
 
 const nonEmpty = z.string().trim().min(1)
+const kebab = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'только a-z, 0-9 и дефис')
+const stringList = z.array(nonEmpty).default([])
+
+export const QUESTION_ID_RE = /^[a-z0-9][a-z0-9_-]*$/
 
 export const QuestionSchema = z.object({
-  id: nonEmpty,
-  title: nonEmpty,
-  category: nonEmpty,
-  difficulty: z.number().int().min(1).max(5),
-  bucket: z.enum(['screening', 'deep', 'architecture']),
+  id: z.string().regex(QUESTION_ID_RE, 'id: только a-z, 0-9, "-" и "_"'),
+  aliases: z.array(z.string()).optional(),
+  version: z.number().int().min(1).default(1),
+  title: nonEmpty.max(140),
   prompt: nonEmpty,
-  answer: nonEmpty,
-}) satisfies z.ZodType<TheoryQuestion>
+  level: z.enum(['junior', 'middle', 'senior']),
+  kind: z.enum(['screening', 'deep', 'practical', 'architecture']),
+  topic: z.enum(TOPIC_IDS),
+  tags: z.array(kebab).default([]),
+  answer: z.object({
+    short: nonEmpty,
+    full: nonEmpty.optional(),
+    mustMention: stringList,
+    commonMistakes: stringList,
+    redFlags: stringList,
+  }),
+  followUps: stringList,
+  sources: stringList,
+  reviewedAt: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'формат YYYY-MM-DD')
+    .nullable()
+    .default(null),
+  author: z.string().optional(),
+}) satisfies z.ZodType<Question, unknown>
 
 export const TaskSchema = z.object({
   id: nonEmpty,
@@ -26,23 +48,51 @@ export const TaskSchema = z.object({
   solution: z.string().optional(),
 }) satisfies z.ZodType<UITask>
 
-// Принимаем и «простой» формат: { id, level, category, question, answer }
-const LEVEL_TO_DIFFICULTY: Record<string, number> = { junior: 1, middle: 2, mid: 2, senior: 3 }
+const LEGACY_LEVEL: Record<string, string> = { junior: 'junior', middle: 'middle', mid: 'middle', senior: 'senior' }
+const NUM_TO_LEVEL = ['junior', 'middle', 'senior']
+const LEGACY_KINDS = ['screening', 'deep', 'architecture', 'practical']
+const LEGACY_CATEGORY_TO_TOPIC: Record<string, string> = {
+  javascript: 'js-core',
+  typescript: 'typescript',
+  html: 'html',
+  css: 'css',
+  react: 'react',
+  'state management': 'state',
+  architecture: 'architecture',
+  algorithms: 'algorithms',
+}
 
+// Любые входные форматы приводим к виду, который понимает QuestionSchema:
+//  1) уже новый формат (answer — объект) — не трогаем
+//  2) прежний банк: { difficulty, bucket, category, answer: string }
+//  3) простой: { id, level, category, question, answer }
 export function coerceQuestion(raw: unknown): unknown {
   if (!raw || typeof raw !== 'object') return raw
   const r = raw as Record<string, unknown>
+  if (r.answer && typeof r.answer === 'object') return raw
+
   const text = String(r.question ?? r.prompt ?? r.title ?? '')
+  const level =
+    typeof r.difficulty === 'number'
+      ? NUM_TO_LEVEL[Math.min(Math.max(r.difficulty, 1), 3) - 1]
+      : (LEGACY_LEVEL[String(r.level ?? '').toLowerCase()] ?? 'middle')
+  const bucket = String(r.bucket ?? '').toLowerCase()
+  const category = String(r.category ?? '').toLowerCase()
   return {
     id: r.id ?? undefined,
     title: r.title ?? text,
-    category: r.category ?? 'General',
-    difficulty:
-      typeof r.difficulty === 'number'
-        ? r.difficulty
-        : (LEVEL_TO_DIFFICULTY[String(r.level ?? '').toLowerCase()] ?? 2),
-    bucket: r.bucket ?? 'screening',
     prompt: r.prompt ?? text,
-    answer: r.answer ?? '',
+    level,
+    kind: LEGACY_KINDS.includes(bucket) ? bucket : 'screening',
+    topic: typeof r.topic === 'string' ? r.topic : (LEGACY_CATEGORY_TO_TOPIC[category] ?? 'general'),
+    answer: { short: String(r.answer ?? '') },
   }
+}
+
+/** Короткое человекочитаемое описание первой ошибки валидации. */
+export function describeIssue(error: { issues: { path: PropertyKey[]; message: string }[] }): string {
+  const i = error.issues[0]
+  if (!i) return 'неверный формат'
+  const path = i.path.map(String).join('.')
+  return path ? `${path}: ${i.message}` : i.message
 }

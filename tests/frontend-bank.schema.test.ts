@@ -1,26 +1,27 @@
 import { describe, it, expect } from 'vitest'
 import { FE } from '@/shared/api/tasks/frontend'
-import questions from '@/shared/questions/frontend-qa-100.json'
+import questions from '@/shared/questions/frontend.json'
+import { QuestionSchema, describeIssue } from '@/shared/bank/schema'
 
-type Q = { id: string; title: string; category: string; difficulty: number; bucket: string; prompt: string; answer: string }
-const QS = questions as Q[]
+const QS = questions as unknown[]
 
 describe('Frontend: вопросы', () => {
-  it('id уникальны', () => {
-    expect(new Set(QS.map((q) => q.id)).size).toBe(QS.length)
-  })
-  it('обязательные поля заполнены', () => {
-    for (const q of QS) {
-      for (const k of ['id', 'title', 'category', 'prompt', 'answer'] as const) {
-        expect(typeof q[k] === 'string' && q[k].trim().length > 0, `${q.id}.${k}`).toBe(true)
-      }
+  it('все вопросы проходят схему', () => {
+    for (const raw of QS) {
+      const r = QuestionSchema.safeParse(raw)
+      expect(r.success, `${(raw as { id: string }).id}: ${r.success ? '' : describeIssue(r.error)}`).toBe(true)
     }
   })
-  it('difficulty 1–3, bucket из списка', () => {
-    for (const q of QS) {
-      expect([1, 2, 3], q.id).toContain(q.difficulty)
-      expect(['screening', 'deep', 'architecture'], q.id).toContain(q.bucket)
-    }
+  it('id и alias уникальны и не пересекаются', () => {
+    const parsed = QS.map((q) => QuestionSchema.parse(q))
+    const ids = parsed.map((q) => q.id)
+    const aliases = parsed.flatMap((q) => q.aliases ?? [])
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(new Set(aliases).size).toBe(aliases.length)
+    expect(aliases.filter((a) => ids.includes(a))).toEqual([])
+  })
+  it('id начинается с fe-<тема>-', () => {
+    for (const q of QS.map((x) => QuestionSchema.parse(x))) expect(q.id.startsWith(`fe-${q.topic}-`), q.id).toBe(true)
   })
 })
 

@@ -1,0 +1,2202 @@
+[
+  {
+    "id": "fe-algorithms-001",
+    "aliases": [
+      "algo_01"
+    ],
+    "version": 1,
+    "title": "Что такое сложность O(n), O(log n), O(n log n)?",
+    "prompt": "Что такое сложность O(n), O(log n), O(n log n)?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "algorithms",
+    "tags": [],
+    "answer": {
+      "short": "Асимптотическая оценка роста времени/памяти от размера входа.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-algorithms-002",
+    "aliases": [
+      "algo_02"
+    ],
+    "version": 1,
+    "title": "Два указателя — где полезно?",
+    "prompt": "Два указателя — где полезно?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "algorithms",
+    "tags": [],
+    "answer": {
+      "short": "Пары/палиндромы/слияние, линейные решения на отсортированных массивах/строках.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-algorithms-003",
+    "aliases": [
+      "algo_03"
+    ],
+    "version": 1,
+    "title": "BFS vs DFS — различия и применение?",
+    "prompt": "BFS vs DFS — различия и применение?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "algorithms",
+    "tags": [],
+    "answer": {
+      "short": "BFS — кратчайшие пути в невзвешенных графах; DFS — обход/циклы/топосорт.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-algorithms-004",
+    "aliases": [
+      "algo_04"
+    ],
+    "version": 1,
+    "title": "Эффективная реализация LRU?",
+    "prompt": "Эффективная реализация LRU?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "algorithms",
+    "tags": [],
+    "answer": {
+      "short": "HashMap + двусвязный список: O(1) get/set; вытеснение 'старого'.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-algorithms-005",
+    "aliases": [
+      "algo_05"
+    ],
+    "version": 1,
+    "title": "Когда нужен heap/priority queue на фронте?",
+    "prompt": "Когда нужен heap/priority queue на фронте?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "algorithms",
+    "tags": [],
+    "answer": {
+      "short": "Планировщики, топ‑K, Dijkstra, merge K отсортированных.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-001",
+    "aliases": [
+      "arch_01"
+    ],
+    "version": 1,
+    "title": "Почему модульность важна и чем плохи глобальные си...",
+    "prompt": "Почему модульность важна и чем плохи глобальные синглтоны?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "Снижает связанность и упрощает тесты; синглтоны создают скрытые зависимости.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-002",
+    "aliases": [
+      "arch_02"
+    ],
+    "version": 1,
+    "title": "Что такое FSD/feature‑based структура?",
+    "prompt": "Что такое FSD/feature‑based структура?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "Слои entities/features/widgets/pages, public API модулей, правила импортов.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-performance-001",
+    "aliases": [
+      "arch_03"
+    ],
+    "version": 1,
+    "title": "Ключевые веб‑метрики (LCP/CLS/FID/TTI) и улучшения...",
+    "prompt": "Ключевые веб‑метрики (LCP/CLS/FID/TTI) и улучшения?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "performance",
+    "tags": [],
+    "answer": {
+      "short": "Оптимизация критического пути: split, lazy, preconnect, оптимизация изображений, виртуализация.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-003",
+    "aliases": [
+      "arch_04"
+    ],
+    "version": 1,
+    "title": "Когда оправдан микрофронтенд?",
+    "prompt": "Когда оправдан микрофронтенд?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "Независимые релизы/команды; цена — сложность сборки, общих зависимостей, коммуникаций.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-004",
+    "aliases": [
+      "arch_05"
+    ],
+    "version": 1,
+    "title": "Как организовать i18n в SPA?",
+    "prompt": "Как организовать i18n в SPA?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "Каталоги сообщений, ICU, динамическая загрузка, валидация ключей, fallbacks.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-005",
+    "aliases": [
+      "arch_06"
+    ],
+    "version": 1,
+    "title": "Варианты деплоя SPA и trade‑offs?",
+    "prompt": "Варианты деплоя SPA и trade‑offs?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "CDN (CSR), SSR (TTFB/SEO), Edge SSR (гео/кэш); выбирать по метрикам и SLA.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-security-001",
+    "aliases": [
+      "arch_07"
+    ],
+    "version": 1,
+    "title": "CSP/Trusted Types/SRI — основные принципы?",
+    "prompt": "CSP/Trusted Types/SRI — основные принципы?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "security",
+    "tags": [],
+    "answer": {
+      "short": "Nonce+strict-dynamic, политики TT, SRI на CDN, отчёты, постепенное включение.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-006",
+    "aliases": [
+      "arch_08"
+    ],
+    "version": 1,
+    "title": "Стратегии кэширования (HTTP/SW) для SPA?",
+    "prompt": "Стратегии кэширования (HTTP/SW) для SPA?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "Stale‑while‑revalidate, versioned assets, runtime‑кэш API, аккуратная инвалидация.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-007",
+    "aliases": [
+      "arch_09"
+    ],
+    "version": 1,
+    "title": "Наблюдаемость фронта — что собирать?",
+    "prompt": "Наблюдаемость фронта — что собирать?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "RUM, ошибки/трейсинг, sourcemaps, алерты по SLO, бюджеты в CI.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-architecture-008",
+    "aliases": [
+      "arch_10"
+    ],
+    "version": 1,
+    "title": "Подход к фича‑флагам и экспериментации?",
+    "prompt": "Подход к фича‑флагам и экспериментации?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "architecture",
+    "tags": [],
+    "answer": {
+      "short": "Аудитируемые флаги, трекинг, канареечные релизы, безопасные откаты.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-001",
+    "aliases": [
+      "css_01"
+    ],
+    "version": 1,
+    "title": "Относительные vs абсолютные единицы (px, em, rem, ...",
+    "prompt": "Относительные vs абсолютные единицы (px, em, rem, %)?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "px — постоянная; em — от шрифта родителя; rem — от root; % — от контекста (например, ширина контейнера).",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-002",
+    "aliases": [
+      "css_02"
+    ],
+    "version": 1,
+    "title": "Как выровнять элементы во flex по осям?",
+    "prompt": "Как выровнять элементы во flex по осям?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "justify-content — главная ось, align-items — поперечная; align-self — для элемента.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-003",
+    "aliases": [
+      "css_03"
+    ],
+    "version": 1,
+    "title": "Grid: auto-fill vs auto-fit?",
+    "prompt": "Grid: auto-fill vs auto-fit?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "auto-fit сжимает пустые треки до 0 (minmax), auto-fill оставляет слоты.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-004",
+    "aliases": [
+      "css_04"
+    ],
+    "version": 1,
+    "title": "Специфичность и порядок каскада?",
+    "prompt": "Специфичность и порядок каскада?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "!important > inline > id > class/attr/pseudo-class > element; при равенстве позже объявленное правило побеждает.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-browser-network-001",
+    "aliases": [
+      "css_05"
+    ],
+    "version": 1,
+    "title": "Как минимизировать reflow/paint?",
+    "prompt": "Как минимизировать reflow/paint?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "browser-network",
+    "tags": [],
+    "answer": {
+      "short": "transform/opacity вместо top/left, contain/content-visibility, умеренно will-change, избегать тяжёлых теней/фильтров.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-005",
+    "aliases": [
+      "css_06"
+    ],
+    "version": 1,
+    "title": "Container queries — когда полезны?",
+    "prompt": "Container queries — когда полезны?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "Для компонентов, которые подстраиваются под размер контейнера, а не вьюпорта.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-006",
+    "aliases": [
+      "css_07"
+    ],
+    "version": 1,
+    "title": "Что такое logical properties и зачем?",
+    "prompt": "Что такое logical properties и зачем?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "margin-inline/padding-block и т.п. — учитывают направление письма, упрощают i18n.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-007",
+    "aliases": [
+      "css_08"
+    ],
+    "version": 1,
+    "title": "Липкий заголовок таблицы без обёрток?",
+    "prompt": "Липкий заголовок таблицы без обёрток?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "position: sticky; top:0 на th/thead; фон и z-index для перекрытий.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-008",
+    "aliases": [
+      "css_09"
+    ],
+    "version": 1,
+    "title": "CSS Modules vs CSS-in-JS — когда что?",
+    "prompt": "CSS Modules vs CSS-in-JS — когда что?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "Modules — проще/быстрее; CSS-in-JS — динамические темы/скоуп, но дороже по перфомансу.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-performance-002",
+    "aliases": [
+      "css_10"
+    ],
+    "version": 1,
+    "title": "Как контролировать CLS из-за изображений/шрифтов?",
+    "prompt": "Как контролировать CLS из-за изображений/шрифтов?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "performance",
+    "tags": [],
+    "answer": {
+      "short": "Размеры изображений, резерв места, font-display, preloading критичных ресурсов.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-009",
+    "aliases": [
+      "css_11"
+    ],
+    "version": 1,
+    "title": "Grid subgrid — основные кейсы?",
+    "prompt": "Grid subgrid — основные кейсы?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "Единая сетка для вложенных компонентов, согласование колонок/рядов.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-010",
+    "aliases": [
+      "css_12"
+    ],
+    "version": 1,
+    "title": ":has() vs :nth-child() — различия?",
+    "prompt": ":has() vs :nth-child() — различия?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "`:has()` — условный 'родительский' селектор; мощный, но потенциально затратный; :nth-child — позиционный.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-011",
+    "aliases": [
+      "css_13"
+    ],
+    "version": 1,
+    "title": "@media print — на что обратить внимание?",
+    "prompt": "@media print — на что обратить внимание?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "Скрыть UI-хром, настроить размеры/разрывы, контраст, отключить анимации/тёмные фоны.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-012",
+    "aliases": [
+      "css_14"
+    ],
+    "version": 1,
+    "title": "Критический CSS и загрузка шрифтов — стратегия?",
+    "prompt": "Критический CSS и загрузка шрифтов — стратегия?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "Inline critical CSS, preload шрифтов, минимизация вариативных осей, кэширование.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-css-013",
+    "aliases": [
+      "css_15"
+    ],
+    "version": 1,
+    "title": "Организация тем без вспышек (FART)?",
+    "prompt": "Организация тем без вспышек (FART)?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "css",
+    "tags": [],
+    "answer": {
+      "short": "prefers-color-scheme + ранний инлайн‑скрипт выбора темы + CSS custom properties.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-001",
+    "aliases": [
+      "html_01"
+    ],
+    "version": 1,
+    "title": "Doctype и режимы рендеринга",
+    "prompt": "Для чего служит doctype и что будет, если его не указать?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "Doctype включает стандартный режим рендеринга; без него возможен quirks mode и расхождения в бокс‑модели.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-002",
+    "aliases": [
+      "html_02"
+    ],
+    "version": 1,
+    "title": "Разница между блочными и строчными/строчно‑блочным...",
+    "prompt": "Разница между блочными и строчными/строчно‑блочными элементами?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "Блочные занимают всю строку; inline‑block ведёт себя как inline, но допускает размеры; inline не принимает width/height.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-003",
+    "aliases": [
+      "html_03"
+    ],
+    "version": 1,
+    "title": "Для чего нужны семантические теги header/main/arti...",
+    "prompt": "Для чего нужны семантические теги header/main/article/aside/footer?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "Улучшают доступность, структуру документа и SEO; помогают скринридерам и поиску.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-004",
+    "aliases": [
+      "html_04"
+    ],
+    "version": 1,
+    "title": "Как правильно связать label и input?",
+    "prompt": "Как правильно связать label и input?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "<label for=id> с соответствующим id на <input> или обёртка input внутри label — для доступности.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-005",
+    "aliases": [
+      "html_05"
+    ],
+    "version": 1,
+    "title": "Чем отличаются defer и async у <script>?",
+    "prompt": "Чем отличаются defer и async у <script>?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "async выполняет сразу после загрузки (в непредсказуемом порядке), defer — после парсинга, в порядке вхождения.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-006",
+    "aliases": [
+      "html_06"
+    ],
+    "version": 1,
+    "title": "Что такое Shadow DOM и зачем он нужен?",
+    "prompt": "Что такое Shadow DOM и зачем он нужен?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "Изоляция разметки/стилей веб‑компонента, предотвращение конфликтов CSS, инкапсуляция.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-a11y-001",
+    "aliases": [
+      "html_07"
+    ],
+    "version": 1,
+    "title": "Как сделать доступное модальное окно?",
+    "prompt": "Как сделать доступное модальное окно?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "a11y",
+    "tags": [],
+    "answer": {
+      "short": "role='dialog', aria-modal='true', фокус‑ловушка, возврат фокуса, закрытие по Esc, aria-labelledby/aria-describedby.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-007",
+    "aliases": [
+      "html_08"
+    ],
+    "version": 1,
+    "title": "Разница между type='button'|'submit'|'reset' у <bu...",
+    "prompt": "Разница между type='button'|'submit'|'reset' у <button>?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "submit отправляет форму; reset сбрасывает; button ничего не делает по умолчанию — явно указывайте type.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-008",
+    "aliases": [
+      "html_09"
+    ],
+    "version": 1,
+    "title": "Когда использовать <picture>/srcset/sizes?",
+    "prompt": "Когда использовать <picture>/srcset/sizes?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "Для адаптивных изображений/форматов (webp/avif), улучшения LCP и экономии трафика.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-performance-003",
+    "aliases": [
+      "html_10"
+    ],
+    "version": 1,
+    "title": "Как организовать lazy‑loading изображений и iframe...",
+    "prompt": "Как организовать lazy‑loading изображений и iframes?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "performance",
+    "tags": [],
+    "answer": {
+      "short": "loading='lazy', decoding='async', fetchpriority, placeholder/skeleton, IntersectionObserver для кастомных кейсов.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-security-002",
+    "aliases": [
+      "html_11"
+    ],
+    "version": 1,
+    "title": "Какие политики безопасности важны для HTML?",
+    "prompt": "Какие политики безопасности важны для HTML?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "security",
+    "tags": [],
+    "answer": {
+      "short": "CSP (nonce, strict-dynamic), Trusted Types, SRI, COOP/COEP, Permissions Policy.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-html-009",
+    "aliases": [
+      "html_12"
+    ],
+    "version": 1,
+    "title": "Что такое 'accessible name computation' и почему в...",
+    "prompt": "Что такое 'accessible name computation' и почему важно?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "html",
+    "tags": [],
+    "answer": {
+      "short": "Правила вычисления доступного имени из aria/текста; влияет на озвучку и тестируемость.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-001",
+    "aliases": [
+      "js_01"
+    ],
+    "version": 1,
+    "title": "Разница var/let/const и область видимости?",
+    "prompt": "Разница var/let/const и область видимости?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "var — функциональная + hoist; let/const — блочная; const запрещает переназначение binding.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-002",
+    "aliases": [
+      "js_02"
+    ],
+    "version": 1,
+    "title": "Что такое замыкание?",
+    "prompt": "Что такое замыкание?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Функция 'помнит' окружение, доступ к переменным внешней функции после её завершения.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-003",
+    "aliases": [
+      "js_03"
+    ],
+    "version": 1,
+    "title": "== vs ===?",
+    "prompt": "== vs ===?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "=== без приведения типа; == выполняет неявные преобразования.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-004",
+    "aliases": [
+      "js_04"
+    ],
+    "version": 1,
+    "title": "Всплытие событий и его остановка?",
+    "prompt": "Всплытие событий и его остановка?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Событие поднимается к document; e.stopPropagation()/stopImmediatePropagation().",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-005",
+    "aliases": [
+      "js_05"
+    ],
+    "version": 1,
+    "title": "Для чего 'use strict'?",
+    "prompt": "Для чего 'use strict'?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Строгий режим: запрет неявных глобальных, изменения в this и пр.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-async-001",
+    "aliases": [
+      "js_06"
+    ],
+    "version": 1,
+    "title": "Event loop: microtasks vs macrotasks — порядок?",
+    "prompt": "Event loop: microtasks vs macrotasks — порядок?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "async",
+    "tags": [],
+    "answer": {
+      "short": "Синхронно → microtasks (promises) → render → macrotasks; microtasks опустошаются полностью.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-006",
+    "aliases": [
+      "js_07"
+    ],
+    "version": 1,
+    "title": "Что такое 'this' и bind/call/apply?",
+    "prompt": "Что такое 'this' и bind/call/apply?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "'this' определяется вызовом; bind/call/apply меняют контекст; стрелки берут из внешней области.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-007",
+    "aliases": [
+      "js_08"
+    ],
+    "version": 1,
+    "title": "Shallow vs deep copy объектов?",
+    "prompt": "Shallow vs deep copy объектов?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Поверхностная копирует верхний уровень; глубокая — все вложенности (JSON.* ограничен).",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-008",
+    "aliases": [
+      "js_09"
+    ],
+    "version": 1,
+    "title": "Мемоизация — зачем?",
+    "prompt": "Мемоизация — зачем?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Кеширование результатов по аргументам для дорогих вычислений.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-009",
+    "aliases": [
+      "js_10"
+    ],
+    "version": 1,
+    "title": "Мегаморфные коллсайты — почему плохо?",
+    "prompt": "Мегаморфные коллсайты — почему плохо?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Сбивают inline caches/JIT, ухудшают перфоманс.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-010",
+    "aliases": [
+      "js_11"
+    ],
+    "version": 1,
+    "title": "WeakMap/WeakSet — когда использовать?",
+    "prompt": "WeakMap/WeakSet — когда использовать?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Ключи‑объекты без препятствий GC: приватные данные, кэши.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-011",
+    "aliases": [
+      "js_12"
+    ],
+    "version": 1,
+    "title": "Debounce и throttle — различия?",
+    "prompt": "Debounce и throttle — различия?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Debounce откладывает до паузы; throttle ограничивает частоту.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-012",
+    "aliases": [
+      "js_13"
+    ],
+    "version": 1,
+    "title": "Генераторы/итераторы — применение?",
+    "prompt": "Генераторы/итераторы — применение?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Создание ленивых последовательностей, кооперативная многозадачность.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-013",
+    "aliases": [
+      "js_14"
+    ],
+    "version": 1,
+    "title": "ESM vs CJS — отличия?",
+    "prompt": "ESM vs CJS — отличия?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "ESM статичен, tree‑shaking/top‑level await; CJS — динамический require.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-014",
+    "aliases": [
+      "js_15"
+    ],
+    "version": 1,
+    "title": "Proxy/Reflect — зачем?",
+    "prompt": "Proxy/Reflect — зачем?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Перехват операций, построение реактивности/валидации/логов.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-async-002",
+    "aliases": [
+      "js_16"
+    ],
+    "version": 1,
+    "title": "Почему await добавляет microtask?",
+    "prompt": "Почему await добавляет microtask?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "async",
+    "tags": [],
+    "answer": {
+      "short": "Продолжение в microtasks; рендер между микрозадач и макрозадач возможен.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-015",
+    "aliases": [
+      "js_17"
+    ],
+    "version": 1,
+    "title": "IEEE‑754: как работать с деньгами?",
+    "prompt": "IEEE‑754: как работать с деньгами?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Использовать целые (в центах) или decimal/BigInt библиотеки, аккуратное округление.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-async-003",
+    "aliases": [
+      "js_18"
+    ],
+    "version": 1,
+    "title": "Паттерны ошибок в async‑коде?",
+    "prompt": "Паттерны ошибок в async‑коде?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "async",
+    "tags": [],
+    "answer": {
+      "short": "try/catch, тайм‑ауты, отмена (AbortController), централизованный логгинг/ретраи.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-async-004",
+    "aliases": [
+      "js_19"
+    ],
+    "version": 1,
+    "title": "MessageChannel vs setTimeout(0)?",
+    "prompt": "MessageChannel vs setTimeout(0)?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "async",
+    "tags": [],
+    "answer": {
+      "short": "MessageChannel планирует раньше таймера; меньше дрейфа; иногда ближе к microtask checkpoint.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-js-core-016",
+    "aliases": [
+      "js_20"
+    ],
+    "version": 1,
+    "title": "Intl.Segmenter — польза?",
+    "prompt": "Intl.Segmenter — польза?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "js-core",
+    "tags": [],
+    "answer": {
+      "short": "Корректная работа с графемами (эмодзи/диакритика) вместо посимвольной.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-001",
+    "aliases": [
+      "react_01"
+    ],
+    "version": 1,
+    "title": "Контролируемые vs неконтролируемые формы?",
+    "prompt": "Контролируемые vs неконтролируемые формы?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Контролируемые через state; неконтролируемые — через ref/DOM.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-002",
+    "aliases": [
+      "react_02"
+    ],
+    "version": 1,
+    "title": "Зачем ключи в списках?",
+    "prompt": "Зачем ключи в списках?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Стабилизируют элементы для diff; ключ должен быть стабильным и уникальным.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-003",
+    "aliases": [
+      "react_03"
+    ],
+    "version": 1,
+    "title": "Как избежать props drilling?",
+    "prompt": "Как избежать props drilling?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Контекст, стор, композиция.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-004",
+    "aliases": [
+      "react_04"
+    ],
+    "version": 1,
+    "title": "useEffect vs useLayoutEffect?",
+    "prompt": "useEffect vs useLayoutEffect?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "useEffect после коммита; useLayoutEffect синхронно до покраски для измерений.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-005",
+    "aliases": [
+      "react_05"
+    ],
+    "version": 1,
+    "title": "Оптимизация больших списков?",
+    "prompt": "Оптимизация больших списков?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Виртуализация, memo, мемо‑селекторы, корректные ключи.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-006",
+    "aliases": [
+      "react_06"
+    ],
+    "version": 1,
+    "title": "Suspense — когда уместен?",
+    "prompt": "Suspense — когда уместен?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Ожидание данных/ленивых модулей; локальные границы.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-007",
+    "aliases": [
+      "react_07"
+    ],
+    "version": 1,
+    "title": "Обработка ошибок в компонентах?",
+    "prompt": "Обработка ошибок в компонентах?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Error Boundaries + централизованный логгинг; try/catch в эффектах.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-008",
+    "aliases": [
+      "react_08"
+    ],
+    "version": 1,
+    "title": "Как избежать stale в эффектах?",
+    "prompt": "Как избежать stale в эффектах?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Правильные зависимости, функциональные set, refs, мемо‑коллбеки.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-009",
+    "aliases": [
+      "react_09"
+    ],
+    "version": 1,
+    "title": "Concurrent Rendering и transitions — что дают?",
+    "prompt": "Concurrent Rendering и transitions — что дают?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Прерываемые обновления и плавные переходы (startTransition/useDeferredValue).",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-010",
+    "aliases": [
+      "react_10"
+    ],
+    "version": 1,
+    "title": "SSR/SSG/ISR — выбор?",
+    "prompt": "SSR/SSG/ISR — выбор?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Баланс TTFB/динамики/кэша; SSR для динамики/SEO, SSG/ISR для статичного и редких изменений.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-011",
+    "aliases": [
+      "react_11"
+    ],
+    "version": 1,
+    "title": "Модалки и фокус‑менеджмент?",
+    "prompt": "Модалки и фокус‑менеджмент?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Portal, focus trap, aria‑атрибуты, возврат фокуса, Esc.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-performance-004",
+    "aliases": [
+      "react_12"
+    ],
+    "version": 1,
+    "title": "Антипаттерны производительности?",
+    "prompt": "Антипаттерны производительности?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "performance",
+    "tags": [],
+    "answer": {
+      "short": "Гигантские контексты, анонимные функции в рендере, тяжёлые эффекты.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-012",
+    "aliases": [
+      "react_13"
+    ],
+    "version": 1,
+    "title": "Контролы с внутренним и внешним состоянием?",
+    "prompt": "Контролы с внутренним и внешним состоянием?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Режимы controlled/uncontrolled, единый источник истины, события commit.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-013",
+    "aliases": [
+      "react_14"
+    ],
+    "version": 1,
+    "title": "Когда применять Portals?",
+    "prompt": "Когда применять Portals?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Для слоёв над иерархией (модалки/тосты/тултипы).",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-014",
+    "aliases": [
+      "react_15"
+    ],
+    "version": 1,
+    "title": "Оптимизация контекста от перерисовок?",
+    "prompt": "Оптимизация контекста от перерисовок?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Дробить контексты, мему значения, использовать селекторы/контекст‑селекторы.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-015",
+    "aliases": [
+      "react_16"
+    ],
+    "version": 1,
+    "title": "React Query — ключевые практики?",
+    "prompt": "React Query — ключевые практики?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Грамотные ключи, stale/cacheTime, invalidateQueries, фоновая ресинхронизация.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-react-016",
+    "aliases": [
+      "react_17"
+    ],
+    "version": 1,
+    "title": "Hydration mismatch — как избежать?",
+    "prompt": "Hydration mismatch — как избежать?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "react",
+    "tags": [],
+    "answer": {
+      "short": "Убрать недетерминизм до монтирования, рендерить условное позже, одинаковые данные на сервере/клиенте.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-testing-001",
+    "aliases": [
+      "react_18"
+    ],
+    "version": 1,
+    "title": "Как правильно тестировать компоненты (RTL)?",
+    "prompt": "Как правильно тестировать компоненты (RTL)?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "testing",
+    "tags": [],
+    "answer": {
+      "short": "Тестировать поведение/доступность, MSW для сети, меньше снапшотов.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-001",
+    "aliases": [
+      "state_01"
+    ],
+    "version": 1,
+    "title": "Когда достаточно локального состояния?",
+    "prompt": "Когда достаточно локального состояния?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Если состояние не шарится широко и влияет только на локальные узлы.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-002",
+    "aliases": [
+      "state_02"
+    ],
+    "version": 1,
+    "title": "Однонаправленный поток данных — зачем?",
+    "prompt": "Однонаправленный поток данных — зачем?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Упрощает рассуждения и отладку: изменения через явные события.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-003",
+    "aliases": [
+      "state_03"
+    ],
+    "version": 1,
+    "title": "Redux Toolkit — плюсы?",
+    "prompt": "Redux Toolkit — плюсы?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Меньше бойлерплейта, Immer, полезные дефолты и сериализуемые проверки.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-004",
+    "aliases": [
+      "state_04"
+    ],
+    "version": 1,
+    "title": "Zustand: как избежать лишних ререндеров?",
+    "prompt": "Zustand: как избежать лишних ререндеров?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Селекторы + shallow, разделение стора, вычисления вне стора.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-005",
+    "aliases": [
+      "state_05"
+    ],
+    "version": 1,
+    "title": "React Query: cacheTime vs staleTime?",
+    "prompt": "React Query: cacheTime vs staleTime?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "staleTime — свежесть; cacheTime — время удержания в памяти после unmount.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-006",
+    "aliases": [
+      "state_06"
+    ],
+    "version": 1,
+    "title": "Recoil/Jotai — идея атомов/селекторов?",
+    "prompt": "Recoil/Jotai — идея атомов/селекторов?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Атомы — минимальные части состояния; селекторы — производные.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-007",
+    "aliases": [
+      "state_07"
+    ],
+    "version": 1,
+    "title": "Глобальный стор в микрофронтендах?",
+    "prompt": "Глобальный стор в микрофронтендах?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Изоляция, события/каналы, слабая связанность, контрактные API.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-state-008",
+    "aliases": [
+      "state_08"
+    ],
+    "version": 1,
+    "title": "Согласованность кэша после мутаций?",
+    "prompt": "Согласованность кэша после мутаций?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "state",
+    "tags": [],
+    "answer": {
+      "short": "Optimistic update, инвалидация, patch‑операции, фоновый refetch.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-001",
+    "aliases": [
+      "ts_01"
+    ],
+    "version": 1,
+    "title": "type vs interface?",
+    "prompt": "type vs interface?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "interface сливается декларативно; type — гибкие union/intersection/условные типы.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-002",
+    "aliases": [
+      "ts_02"
+    ],
+    "version": 1,
+    "title": "Тип never — где нужен?",
+    "prompt": "Тип never — где нужен?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Невозможные значения; исчерпывающие switch/функции, которые не возвращают.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-003",
+    "aliases": [
+      "ts_03"
+    ],
+    "version": 1,
+    "title": "Зачем generics?",
+    "prompt": "Зачем generics?",
+    "level": "junior",
+    "kind": "screening",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Переиспользуемость и безопасность без any.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-004",
+    "aliases": [
+      "ts_04"
+    ],
+    "version": 1,
+    "title": "Structural typing — что это?",
+    "prompt": "Structural typing — что это?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Совместимость по форме, а не по имени; 'утинная' типизация.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-005",
+    "aliases": [
+      "ts_05"
+    ],
+    "version": 1,
+    "title": "Partial/Required/Pick/Omit — примеры?",
+    "prompt": "Partial/Required/Pick/Omit — примеры?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Partial делает поля опциональными, Required — обязательными, Pick/Omit — выбор/исключение.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-006",
+    "aliases": [
+      "ts_06"
+    ],
+    "version": 1,
+    "title": "Как описать перегрузки функций?",
+    "prompt": "Как описать перегрузки функций?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Несколько сигнатур + одна реализация, совместимая со всеми.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-007",
+    "aliases": [
+      "ts_07"
+    ],
+    "version": 1,
+    "title": "Discriminated union — сужение?",
+    "prompt": "Discriminated union — сужение?",
+    "level": "middle",
+    "kind": "deep",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Общий дискриминатор + исчерпывающий switch/guards.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-008",
+    "aliases": [
+      "ts_08"
+    ],
+    "version": 1,
+    "title": "Ковариантность/контравариантность параметров?",
+    "prompt": "Ковариантность/контравариантность параметров?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Возвращаемые типы ковариантны; параметры — контравариантны; важно для коллбеков.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-009",
+    "aliases": [
+      "ts_09"
+    ],
+    "version": 1,
+    "title": "unknown vs any?",
+    "prompt": "unknown vs any?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "unknown требует сужения; any выключает проверки и небезопасен.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-010",
+    "aliases": [
+      "ts_10"
+    ],
+    "version": 1,
+    "title": "Типобезопасный ответ API с ошибками?",
+    "prompt": "Типобезопасный ответ API с ошибками?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Union {status:'ok'|'err', ...} и исчерпывающий switch без assertions.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-011",
+    "aliases": [
+      "ts_11"
+    ],
+    "version": 1,
+    "title": "Template literal types — когда удобны?",
+    "prompt": "Template literal types — когда удобны?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Формирование строковых API (классы, ключи данных, маршруты).",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  },
+  {
+    "id": "fe-typescript-012",
+    "aliases": [
+      "ts_12"
+    ],
+    "version": 1,
+    "title": "Строгий словарь без произвольных ключей?",
+    "prompt": "Строгий словарь без произвольных ключей?",
+    "level": "senior",
+    "kind": "architecture",
+    "topic": "typescript",
+    "tags": [],
+    "answer": {
+      "short": "Record + ключи‑литералы, as const, readonly, ограничение индексной сигнатурой.",
+      "mustMention": [],
+      "commonMistakes": [],
+      "redFlags": []
+    },
+    "followUps": [],
+    "sources": [],
+    "reviewedAt": null
+  }
+]
