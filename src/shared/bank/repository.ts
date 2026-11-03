@@ -71,13 +71,6 @@ function resolveAlias(questions: Question[], id: string): string {
   return aliasMap(questions).get(id) ?? id
 }
 
-// Старый формат хранил полную копию банка: если ответ совпадает с короткой формулировкой
-// встроенного вопроса, пользователь его не менял.
-function isUntouchedLegacyCopy(builtin: Question, raw: unknown): boolean {
-  const r = raw as { answer?: unknown; prompt?: unknown }
-  return typeof r?.answer === 'string' && r.answer === builtin.answer.short && r.prompt === builtin.prompt
-}
-
 // Старый формат: полный банк целиком в `bank:<prof>:questions|tasks`.
 // Превращаем в overlay: сохраняем только то, что отличается от встроенного.
 export function migrateLegacy(
@@ -92,13 +85,10 @@ export function migrateLegacy(
     for (const raw of legacyQuestions) {
       const parsed = QuestionSchema.safeParse(coerceQuestion(raw))
       if (!parsed.success) continue
-      const id = resolveAlias(builtin.questions, parsed.data.id)
-      const candidate = { ...parsed.data, id }
-      // старая копия встроенного вопроса (до миграции схемы) — не правка пользователя
-      if (builtinQ.has(id) && (id !== parsed.data.id || !same(candidate, builtinQ.get(id)))) {
-        if (isUntouchedLegacyCopy(builtinQ.get(id)!, raw)) continue
-      }
-      if (!same(candidate, builtinQ.get(id))) o.questions[id] = candidate
+      // Старый формат целиком копировал встроенный банк, отличить правку от копии нельзя —
+      // вопросы со встроенными id не переносим (исходный файл сохраняется в резервной копии).
+      if (builtinQ.has(parsed.data.id) || builtinQ.has(resolveAlias(builtin.questions, parsed.data.id))) continue
+      o.questions[parsed.data.id] = parsed.data
     }
   }
   if (Array.isArray(legacyTasks)) {
@@ -134,6 +124,7 @@ function loadOverrides(prof: Profession): Overrides {
   if (!builtin || (legacyQ == null && legacyT == null)) return emptyOverrides()
   const migrated = migrateLegacy(builtin, legacyQ, legacyT)
   if (writeJSON(KEYS.bankOverrides(prof), migrated)) {
+    writeJSON(KEYS.legacyBackup(prof), { questions: legacyQ, tasks: legacyT })
     removeKey(KEYS.legacyBankQuestions(prof))
     removeKey(KEYS.legacyBankTasks(prof))
   }

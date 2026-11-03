@@ -151,9 +151,9 @@ export default function Theory() {
 										</div>
 									</CardHeader>
 									<CardContent>
-										<p className="text-sm text-muted-foreground mb-4">
-											{q?.prompt || q?.title || '—'}
-										</p>
+										{q.prompt.replace(/\?$/, '') !== q.title.replace(/\?$/, '') && (
+											<p className="text-sm text-muted-foreground mb-4">{q.prompt}</p>
+										)}
 										{/* Эталонный ответ убран из списка. Доступен в правой подсказке. */}
 									</CardContent>
 								</Card>

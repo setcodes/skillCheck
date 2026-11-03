@@ -66,6 +66,7 @@ export const KEYS = {
   bankOverrides: (prof: string) => `bank:v2:${prof}`,
   legacyBankQuestions: (prof: string) => `bank:${prof}:questions`,
   legacyBankTasks: (prof: string) => `bank:${prof}:tasks`,
+  legacyBackup: (prof: string) => `bank:legacy-backup:${prof}`,
   taskTimer: (prof: string, taskId: string) => `task.timer.v2.${prof}.${taskId}`,
 } as const
 
