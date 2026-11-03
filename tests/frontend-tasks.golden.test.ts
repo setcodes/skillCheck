@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { FE } from '@/shared/api/tasks/frontend'
+import { FRONTEND_TASKS as FE } from '@/shared/api/tasks'
 import { runInSandbox } from '@/shared/runner/core'
 
 // Задачи, у которых эталонное решение не проходит собственные тесты. Сейчас таких нет:

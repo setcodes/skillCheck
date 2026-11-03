@@ -60,6 +60,7 @@ export const KEYS = {
   interviewTimer: 'interview.timer.v2',
   solutions: 'solutions.v4',
   mockSession: 'mock.session.v1',
+  quizProgress: 'quiz.progress.v1',
   taskScoresBridge: 'bridge.taskScores.v1',
   theoryScoresBridge: 'bridge.theoryScores.v1',
   theoryDrafts: (prof: string) => `theory.drafts.v1.${prof}`,
@@ -75,5 +76,6 @@ export function clearAllEvaluations(professions: readonly string[]): void {
   removeKey(KEYS.taskScoresBridge)
   removeKey(KEYS.theoryScoresBridge)
   removeKey(KEYS.solutions)
+  removeKey(KEYS.quizProgress)
   for (const prof of professions) removeKey(KEYS.theoryDrafts(prof))
 }

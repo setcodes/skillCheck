@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { QuestionSchema, describeIssue } from '../src/shared/bank/schema'
 import { CaseSchema } from '../src/shared/bank/case-schema'
+import { QuizSchema } from '../src/shared/bank/quiz-schema'
 import { FRONTEND_TOPICS, LEVELS } from '../src/entities/question/model/topics'
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -84,6 +85,23 @@ for (const file of list(path.join(root, 'src/shared/cases'))) {
   })
 }
 
+// --- задачи на предсказание вывода ---
+let quizTotal = 0
+for (const file of list(path.join(root, 'src/shared/quiz'))) {
+  const rel = path.relative(root, file)
+  const arr = readArray(file)
+  if (!arr) continue
+  const ids = new Set<string>()
+  arr.forEach((raw, i) => {
+    const parsed = QuizSchema.safeParse(raw)
+    const label = `${rel} #${i + 1}${(raw as { id?: string })?.id ? ` (${(raw as { id: string }).id})` : ''}`
+    if (!parsed.success) return err(`${label}: ${describeIssue(parsed.error)}`)
+    quizTotal++
+    if (ids.has(parsed.data.id)) err(`${label}: дубликат id`)
+    ids.add(parsed.data.id)
+  })
+}
+
 // --- замороженные профессии: только базовая проверка старого формата ---
 let frozen = 0
 for (const file of list(path.join(root, 'frozen/questions'))) {
@@ -111,7 +129,7 @@ for (const t of FRONTEND_TOPICS) {
   console.log(t.label.padEnd(34) + LEVELS.map((l) => String(row[l] ?? 0).padStart(8)).join('') + String(sum).padStart(8))
   if (sum < 5 && t.id !== 'general') warn(`тема «${t.label}»: вопросов ${sum} (< 5)`)
 }
-console.log(`\nАктивных вопросов: ${total}, кейсов: ${casesTotal}, замороженных: ${frozen}`)
+console.log(`\nАктивных вопросов: ${total}, кейсов: ${casesTotal}, quiz: ${quizTotal}, замороженных: ${frozen}`)
 for (const w of warnings) console.log(`${c.y}⚠ ${w}${c.x}`)
 for (const e of errors) console.log(`${c.r}✗ ${e}${c.x}`)
 if (errors.length) {

@@ -9,6 +9,7 @@ import HomePage from '@/pages/home/HomePage'
 const SolvePage = lazy(() => import('@/pages/solve/SolvePage'))
 const TheoryPage = lazy(() => import('@/pages/theory/TheoryPage'))
 const CasesPage = lazy(() => import('@/pages/cases/CasesPage'))
+const QuizPage = lazy(() => import('@/pages/quiz/QuizPage'))
 const MockPage = lazy(() => import('@/pages/mock/MockPage'))
 const InterviewPage = lazy(() => import('@/pages/interview/InterviewPage'))
 const DataHubPage = lazy(() => import('@/pages/data-hub/DataHubPage'))
@@ -24,6 +25,7 @@ export default function App() {
             <Route path="/solve/:taskId?" element={<SolvePage />} />
             <Route path="/theory/:questionId?" element={<TheoryPage />} />
             <Route path="/cases/:caseId?" element={<CasesPage />} />
+            <Route path="/quiz/:quizId?" element={<QuizPage />} />
             <Route path="/mock" element={<MockPage />} />
             <Route path="/interview" element={<InterviewPage />} />
             <Route path="/data" element={<DataHubPage />} />
