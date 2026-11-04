@@ -29,7 +29,7 @@ export function AnswerView({ q }: { q: Question }) {
           <span>
             <span className="text-primary-text" aria-hidden>▸ </span>эталонный ответ
           </span>
-          {q.reviewedAt == null ? <span className="text-ansi-yellow">ещё не вычитан</span> : <span>вычитан {q.reviewedAt}</span>}
+          {q.reviewedAt == null ? <span className="text-ansi-yellow">ещё не вычитан</span> : <span>обновлён {q.reviewedAt}</span>}
         </div>
         <div className="px-4 py-3 font-sans text-[0.95rem] leading-relaxed text-foreground">
           {hasFull ? <MiniMarkdown text={answer.full!} className="space-y-3" /> : <p className="whitespace-pre-wrap">{answer.short}</p>}

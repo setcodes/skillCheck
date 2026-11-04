@@ -1,11 +1,11 @@
 import { useRef, useState, type DragEvent, type ReactNode } from 'react'
-import { Download, RotateCcw, Upload } from 'lucide-react'
+import { Download, ExternalLink, RotateCcw, Upload } from 'lucide-react'
 import { useApp } from '@/app/providers/AppProvider'
 import {
-  exportBank,
   importBank,
   MAX_IMPORT_BYTES,
   resetBank,
+  useOwnChanges,
   useQuestions,
   useTasks,
 } from '@/shared/bank'
@@ -32,6 +32,10 @@ function Command({ cmd, children, hint }: { cmd: string; hint: string; children:
   )
 }
 
+const REPO_URL = 'https://github.com/setcodes/skillCheck'
+const PROPOSE_URL = `${REPO_URL}/issues/new?template=question.yml`
+const CONTRIBUTING_URL = `${REPO_URL}/blob/main/CONTRIBUTING.md`
+
 const now = () => new Date().toLocaleTimeString('ru-RU')
 
 export default function DataHubPage() {
@@ -43,20 +47,23 @@ export default function DataHubPage() {
   const [dragging, setDragging] = useState(false)
   const nextId = useRef(1)
   const fileRef = useRef<HTMLInputElement>(null)
+  const own = useOwnChanges(prof)
+  const ownCount = own.questions.length + own.tasks.length
 
   const write = (text: string, tone: LogLine['tone']) =>
     setLog((l) => [...l, { id: nextId.current++, text: `[${now()}] ${text}`, tone }].slice(-50))
 
   const exportJSON = () => {
-    const blob = new Blob([JSON.stringify(exportBank(prof), null, 2)], { type: 'application/json' })
+    const name = `skillcheck-${prof}-changes.json`
+    const blob = new Blob([JSON.stringify(own, null, 2) + '\n'], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `bank-${prof}.json`
+    a.download = name
     a.click()
     URL.revokeObjectURL(url)
-    write(`export → bank-${prof}.json: вопросов ${questions.length}, задач ${tasks.length}`, 'ok')
-    toast.success('Экспортировано', `Данные ${prof} экспортированы в файл.`)
+    write(`export → ${name}: вопросов ${own.questions.length}, задач ${own.tasks.length}`, 'ok')
+    toast.success('Экспортировано', `Ваши правки сохранены в ${name}.`)
   }
 
   const importFile = async (file: File) => {
@@ -77,7 +84,13 @@ export default function DataHubPage() {
     const q = report.questions
     const t = report.tasks
     const imported = q.added + q.updated + t.added + t.updated
+    const unchanged = q.unchanged + t.unchanged
     const rejected = q.rejected + t.rejected
+    if (imported === 0 && unchanged > 0 && rejected === 0) {
+      write(`import ${file.name}: всё совпадает со встроенным банком (${unchanged}), сохранять нечего`, 'muted')
+      toast.info('Нечего импортировать', 'Все записи совпадают со встроенным банком.')
+      return
+    }
     if (imported === 0) {
       write(
         `import ${file.name}: ничего не импортировано — ${report.errors[0] ?? 'нет подходящих записей'}`,
@@ -87,7 +100,8 @@ export default function DataHubPage() {
       return
     }
     write(
-      `import ${file.name}: вопросы +${q.added}, обновлено ${q.updated}; задачи +${t.added}, обновлено ${t.updated}`,
+      `import ${file.name}: вопросы +${q.added}, обновлено ${q.updated}; задачи +${t.added}, обновлено ${t.updated}` +
+        (unchanged ? `; совпадает со встроенным: ${unchanged}` : ''),
       'ok'
     )
     for (const err of report.errors.slice(0, 5)) write(`  отклонено: ${err}`, 'error')
@@ -136,23 +150,33 @@ export default function DataHubPage() {
                     Сейчас в банке:{' '}
                     <span className="tabular-nums text-foreground">{questions.length}</span>{' '}
                     вопросов и <span className="tabular-nums text-foreground">{tasks.length}</span>{' '}
-                    задач. Данные хранятся в браузере.
+                    задач, из них ваших правок:{' '}
+                    <span className="tabular-nums text-foreground">{ownCount}</span>. Правки хранятся
+                    только в этом браузере и никуда не отправляются.
                   </p>
                 </header>
 
                 <Command
-                  cmd={`skillcheck export > bank-${prof}.json`}
-                  hint="Сохранить текущий банк вопросов и задач в файл — для резервной копии или переноса в другой браузер."
+                  cmd={`skillcheck export > skillcheck-${prof}-changes.json`}
+                  hint="Сохранить в файл то, что вы добавили или изменили импортом. Встроенный банк приходит вместе с приложением и в файл не попадает. Файл подходит для резервной копии, переноса в другой браузер и для предложения вопросов в общий банк."
                 >
-                  <ToolButton variant="primary" onClick={exportJSON} className="h-8 px-3">
+                  <ToolButton
+                    variant="primary"
+                    onClick={exportJSON}
+                    disabled={ownCount === 0}
+                    className="h-8 px-3"
+                  >
                     <Download aria-hidden />
-                    Экспортировать
+                    Экспортировать мои правки
                   </ToolButton>
+                  {ownCount === 0 && (
+                    <p className="text-xs text-muted-foreground">своих правок пока нет — выгружать нечего</p>
+                  )}
                 </Command>
 
                 <Command
                   cmd="skillcheck import <file.json>"
-                  hint="Записи с тем же id заменяют встроенные, остальные добавляются; невалидные отклоняются с причиной в логе."
+                  hint="Записи с тем же id заменяют встроенные, остальные добавляются. Записи, которые совпадают со встроенными, не сохраняются — иначе они заслонили бы будущие исправления банка. Невалидные отклоняются с причиной в журнале."
                 >
                   <div
                     onDragOver={(e) => {
@@ -185,6 +209,32 @@ export default function DataHubPage() {
                     <p className="text-xs text-muted-foreground">
                       до {MAX_IMPORT_BYTES / 1024 / 1024} МБ
                     </p>
+                  </div>
+                </Command>
+
+                <Command
+                  cmd="skillcheck propose"
+                  hint="Общий банк живёт в репозитории: туда вопросы попадают через issue или pull request и проходят вычитку. Импорт меняет банк только в вашем браузере."
+                >
+                  <div className="flex flex-wrap gap-2">
+                    <a
+                      href={PROPOSE_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-sm border px-3 text-foreground hover:border-primary hover:text-primary-text"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                      Предложить вопрос
+                    </a>
+                    <a
+                      href={CONTRIBUTING_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex h-8 items-center gap-1.5 rounded-sm border px-3 text-muted-foreground hover:border-primary hover:text-primary-text"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                      Как сделать pull request
+                    </a>
                   </div>
                 </Command>
 
@@ -243,7 +293,10 @@ export default function DataHubPage() {
                 <pre className="rounded-sm bg-background p-2 text-xs text-foreground">
                   {'[{ id, level, category,\n   question, answer }]'}
                 </pre>
-                <p>Данные хранятся в браузере и не теряются при обновлении встроенной базы.</p>
+                <p>
+                  Поля вопроса описаны в README банка в репозитории. Файл экспорта имеет тот же формат.
+                </p>
+                <p>Правки хранятся в браузере и не теряются при обновлении встроенной базы.</p>
               </div>
             </InspectorSection>
           </>
