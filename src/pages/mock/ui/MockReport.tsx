@@ -5,6 +5,7 @@ import { ToolButton } from '@/shared/ui/tool-button'
 import { CodeView } from '@/shared/ui/code-view'
 import { buildReport } from '@/shared/api/mock'
 import type { MockSessionState, MockTaskItem, MockTheoryItem } from '@/entities/mock/model/types'
+import { NumberField } from '@/shared/ui/field'
 
 interface Props {
   s: MockSessionState
@@ -127,16 +128,7 @@ export function MockReport({ s, answerOf, solutionOf, onSelfScore, onCopy, onRes
                       </div>
                       <div className="flex items-center gap-2">
                         <label htmlFor={`self-${it.id}`} className="text-muted-foreground">Самооценка (0–5):</label>
-                        <input
-                          id={`self-${it.id}`}
-                          type="number"
-                          min={0}
-                          max={5}
-                          step={0.5}
-                          value={th.selfScore ?? ''}
-                          onChange={(e) => onSelfScore(it.id, Number(e.target.value) || 0)}
-                          className="h-7 w-16 rounded-sm border bg-background px-2 text-right tabular-nums outline-none focus:border-primary"
-                        />
+                        <NumberField id={`self-${it.id}`} min={0} max={5} step={0.5} value={th.selfScore} onValue={(n) => onSelfScore(it.id, n)} className="w-28" />
                       </div>
                     </div>
                   </article>

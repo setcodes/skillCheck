@@ -7,6 +7,7 @@ import { Explorer, type ExplorerGroup } from '@/shared/ui/explorer'
 import type { CaseKind } from '@/entities/case/model/types'
 import { CaseDetail } from './ui/CaseDetail'
 import { CaseInspector } from './ui/CaseInspector'
+import { InspectorSplit } from '@/shared/ui/inspector-split'
 
 const KINDS: { id: CaseKind; name: string; hint: string }[] = [
   { id: 'review', name: 'review', hint: 'Ревью кода' },
@@ -28,14 +29,25 @@ export default function CasesPage() {
       name: k.name,
       hint: k.hint,
       items: cases
-        .filter((c) => c.kind === k.id && (!q || c.title.toLowerCase().includes(q) || c.tags.some((t) => t.toLowerCase().includes(q))))
+        .filter(
+          (c) =>
+            c.kind === k.id &&
+            (!q ||
+              c.title.toLowerCase().includes(q) ||
+              c.tags.some((t) => t.toLowerCase().includes(q)))
+        )
         .map((c) => ({ id: c.id, title: c.title })),
     })).filter((g) => g.items.length > 0)
   }, [cases, query])
 
   const current = cases.find((c) => c.id === caseId)
 
-  if (cases.length === 0) return <p className="py-12 text-center font-mono text-sm text-muted-foreground">Для этой профессии пока нет кейсов</p>
+  if (cases.length === 0)
+    return (
+      <p className="py-12 text-center font-mono text-sm text-muted-foreground">
+        Для этой профессии пока нет кейсов
+      </p>
+    )
   if (!current) return <Navigate to={`/cases/${cases[0].id}`} replace />
 
   return (
@@ -60,33 +72,43 @@ export default function CasesPage() {
         }}
         query={query}
         onQuery={setQuery}
-        className={explorerOpen ? 'fixed bottom-7 left-14 top-10 z-30 flex shadow-2xl' : 'hidden xl:flex'}
+        className={
+          explorerOpen ? 'fixed bottom-7 left-14 top-10 z-30 flex shadow-2xl' : 'hidden xl:flex'
+        }
         onClose={explorerOpen ? () => setExplorerOpen(false) : undefined}
       />
 
-      <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
-        <div className="flex h-9 shrink-0 items-stretch border-b bg-card font-mono">
-          <button
-            type="button"
-            onClick={() => setExplorerOpen((o) => !o)}
-            aria-label="Список кейсов"
-            className="flex items-center border-r px-2.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:hidden"
-          >
-            <PanelLeft className="h-4 w-4" aria-hidden />
-          </button>
-          <span className="flex min-w-0 items-center gap-2 border-r bg-background px-3 text-xs text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]">
-            <FileText className="h-3.5 w-3.5 shrink-0 text-ansi-magenta" aria-hidden />
-            <span className="truncate">{current.id}.md</span>
-          </span>
-        </div>
-        <div className="flex-1 bg-background lg:min-h-0 lg:overflow-y-auto">
-          <CaseDetail item={current} role={role} />
-        </div>
-      </div>
-
-      <aside aria-label="Инспектор" className="shrink-0 border-t bg-card font-mono lg:w-96 lg:overflow-y-auto lg:border-l lg:border-t-0 2xl:w-[28rem]">
-        <CaseInspector item={current} role={role} />
-      </aside>
+      <InspectorSplit
+        id="cases"
+        defaultSize={30}
+        inspectorClassName="font-mono"
+        main={
+          <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
+            <div className="flex h-9 shrink-0 items-stretch border-b bg-card font-mono">
+              <button
+                type="button"
+                onClick={() => setExplorerOpen((o) => !o)}
+                aria-label="Список кейсов"
+                className="flex items-center border-r px-2.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:hidden"
+              >
+                <PanelLeft className="h-4 w-4" aria-hidden />
+              </button>
+              <span className="flex min-w-0 items-center gap-2 border-r bg-background px-3 text-xs text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]">
+                <FileText className="h-3.5 w-3.5 shrink-0 text-ansi-magenta" aria-hidden />
+                <span className="truncate">{current.id}.md</span>
+              </span>
+            </div>
+            <div className="flex-1 bg-background lg:min-h-0 lg:overflow-y-auto">
+              <CaseDetail item={current} role={role} />
+            </div>
+          </div>
+        }
+        inspector={
+          <>
+            <CaseInspector item={current} role={role} />
+          </>
+        }
+      />
     </div>
   )
 }

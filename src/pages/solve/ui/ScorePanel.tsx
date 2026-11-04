@@ -2,6 +2,7 @@ import { cn } from '@/shared/lib/utils'
 import { ToolButton } from '@/shared/ui/tool-button'
 import { ScoreForm } from '@/shared/ui/score-form'
 import { InspectorSection } from '@/shared/ui/inspector-section'
+import { Checkbox } from '@/shared/ui/field'
 
 interface Props {
   score?: number
@@ -37,12 +38,7 @@ export function ScorePanel({ score, comment, rubric, rubricDone, hintsUsed, onRu
               {rubric.map((r, i) => (
                 <li key={i}>
                   <label className="flex cursor-pointer items-start gap-2 leading-relaxed">
-                    <input
-                      type="checkbox"
-                      className="mt-1 h-3.5 w-3.5 shrink-0 accent-[hsl(var(--primary))]"
-                      checked={rubricDone.includes(i)}
-                      onChange={() => toggle(i)}
-                    />
+                    <Checkbox className="mt-0.5" checked={rubricDone.includes(i)} onChecked={() => toggle(i)} />
                     <span className={cn('flex-1', rubricDone.includes(i) ? 'text-foreground' : 'text-muted-foreground')}>{r.criterion}</span>
                     <span className="text-xs tabular-nums text-muted-foreground">{r.weight}%</span>
                   </label>

@@ -8,6 +8,7 @@ import { cn } from '@/shared/lib/utils'
 import { KEYS, clearAllEvaluations, readJSON, writeJSON } from '@/shared/storage/storage'
 import { Explorer, type ExplorerGroup } from '@/shared/ui/explorer'
 import { InspectorSection } from '@/shared/ui/inspector-section'
+import { InspectorSplit } from '@/shared/ui/inspector-split'
 import { ScoreForm } from '@/shared/ui/score-form'
 import { ToolButton } from '@/shared/ui/tool-button'
 import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants'
@@ -26,9 +27,11 @@ const KIND_LABEL: Record<Question['kind'], string> = {
 }
 
 const isEditable = (el: EventTarget | null) =>
-  el instanceof HTMLElement && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
+  el instanceof HTMLElement &&
+  (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))
 
-const byLevelThenTitle = (a: Question, b: Question) => LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.title.localeCompare(b.title)
+const byLevelThenTitle = (a: Question, b: Question) =>
+  LEVELS.indexOf(a.level) - LEVELS.indexOf(b.level) || a.title.localeCompare(b.title)
 
 export default function TheoryPage() {
   const { prof, role } = useApp()
@@ -42,10 +45,14 @@ export default function TheoryPage() {
   const [level, setLevel] = useState<LevelFilter>('all')
   const [explorerOpen, setExplorerOpen] = useState(false)
 
-  const cur = useMemo(() => all.find((q) => q.id === questionId || q.aliases?.includes(questionId ?? '')) ?? all[0], [all, questionId])
+  const cur = useMemo(
+    () => all.find((q) => q.id === questionId || q.aliases?.includes(questionId ?? '')) ?? all[0],
+    [all, questionId]
+  )
   // старые ссылки по прежним id ведут на актуальный адрес
   useEffect(() => {
-    if (cur && questionId && questionId !== cur.id) navigate(`/theory/${encodeURIComponent(cur.id)}`, { replace: true })
+    if (cur && questionId && questionId !== cur.id)
+      navigate(`/theory/${encodeURIComponent(cur.id)}`, { replace: true })
   }, [cur, questionId, navigate])
   const open = (id: string) => {
     navigate(`/theory/${encodeURIComponent(id)}`)
@@ -58,14 +65,19 @@ export default function TheoryPage() {
   useEffect(() => {
     writeJSON(draftsKey, drafts)
   }, [drafts, draftsKey])
-  const patchDraft = (p: Draft) => cur && setDrafts((d) => ({ ...d, [cur.id]: { ...d[cur.id], ...p } }))
+  const patchDraft = (p: Draft) =>
+    cur && setDrafts((d) => ({ ...d, [cur.id]: { ...d[cur.id], ...p } }))
 
   // Темы — папки в порядке справочника, внутри — по уровню и названию
   const groups: ExplorerGroup[] = useMemo(() => {
     const q = query.trim().toLowerCase()
     const match = (x: Question) =>
-      (level === 'all' || x.level === level) && (!q || x.title.toLowerCase().includes(q) || x.prompt.toLowerCase().includes(q))
-    const topicIds = [...FRONTEND_TOPICS.map((t) => t.id), ...new Set(all.map((x) => x.topic).filter((t) => !FRONTEND_TOPICS.some((f) => f.id === t)))]
+      (level === 'all' || x.level === level) &&
+      (!q || x.title.toLowerCase().includes(q) || x.prompt.toLowerCase().includes(q))
+    const topicIds = [
+      ...FRONTEND_TOPICS.map((t) => t.id),
+      ...new Set(all.map((x) => x.topic).filter((t) => !FRONTEND_TOPICS.some((f) => f.id === t))),
+    ]
     return topicIds
       .map((topic) => ({
         id: topic,
@@ -79,7 +91,10 @@ export default function TheoryPage() {
             return {
               id: x.id,
               title: x.title,
-              mark: interviewer && score !== undefined ? { text: String(score), tone: 'text-primary-text', label: `оценка ${score}` } : undefined,
+              mark:
+                interviewer && score !== undefined
+                  ? { text: String(score), tone: 'text-primary-text', label: `оценка ${score}` }
+                  : undefined,
             }
           }),
       }))
@@ -128,7 +143,12 @@ export default function TheoryPage() {
     toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения')
   }
 
-  if (!cur) return <p className="py-12 text-center font-mono text-sm text-muted-foreground">Для этой профессии пока нет вопросов</p>
+  if (!cur)
+    return (
+      <p className="py-12 text-center font-mono text-sm text-muted-foreground">
+        Для этой профессии пока нет вопросов
+      </p>
+    )
 
   const scored = Object.values(drafts).filter((d) => d.score !== undefined).length
   const showPrompt = cur.prompt.replace(/\?$/, '') !== cur.title.replace(/\?$/, '')
@@ -156,7 +176,9 @@ export default function TheoryPage() {
         onSelect={open}
         query={query}
         onQuery={setQuery}
-        className={explorerOpen ? 'fixed bottom-7 left-14 top-10 z-30 flex shadow-2xl' : 'hidden xl:flex'}
+        className={
+          explorerOpen ? 'fixed bottom-7 left-14 top-10 z-30 flex shadow-2xl' : 'hidden xl:flex'
+        }
         onClose={explorerOpen ? () => setExplorerOpen(false) : undefined}
         filters={
           <div className="flex flex-wrap gap-1 text-[0.7rem]" role="group" aria-label="Уровень">
@@ -168,7 +190,9 @@ export default function TheoryPage() {
                 onClick={() => setLevel(l)}
                 className={cn(
                   'rounded-sm border px-1.5 py-0.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  level === l ? 'border-primary bg-primary/15 text-foreground' : 'text-muted-foreground hover:text-foreground'
+                  level === l
+                    ? 'border-primary bg-primary/15 text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
                 )}
               >
                 --{l}
@@ -184,99 +208,135 @@ export default function TheoryPage() {
         }
       />
 
-      <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
-        <div className="flex h-9 shrink-0 items-stretch justify-between gap-2 border-b bg-card font-mono">
-          <div className="flex min-w-0 items-stretch">
-            <button
-              type="button"
-              onClick={() => setExplorerOpen((o) => !o)}
-              aria-label="Список вопросов"
-              className="flex items-center border-r px-2.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:hidden"
-            >
-              <PanelLeft className="h-4 w-4" aria-hidden />
-            </button>
-            <span className="flex min-w-0 items-center gap-2 border-r bg-background px-3 text-xs text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]">
-              <FileText className="h-3.5 w-3.5 shrink-0 text-ansi-blue" aria-hidden />
-              <span className="truncate">{cur.id}.md</span>
-            </span>
-          </div>
-          <div className="flex shrink-0 items-center gap-1 pr-2">
-            <span className="px-1 text-xs tabular-nums text-muted-foreground">
-              {index === -1 ? '—' : index + 1}/{flat.length}
-            </span>
-            <ToolButton variant="ghost" onClick={() => step(-1)} aria-label="Предыдущий вопрос" aria-keyshortcuts="[" title="Предыдущий ([)">
-              <ChevronLeft aria-hidden />
-            </ToolButton>
-            <ToolButton variant="ghost" onClick={() => step(1)} aria-label="Следующий вопрос" aria-keyshortcuts="]" title="Следующий (])">
-              <ChevronRight aria-hidden />
-            </ToolButton>
-          </div>
-        </div>
-
-        <div className="flex-1 bg-background lg:min-h-0 lg:overflow-y-auto">
-          <article className="mx-auto max-w-3xl space-y-8 px-5 py-8 sm:px-8">
-            <header className="space-y-3 font-mono">
-              <p className="text-xs text-muted-foreground">
-                <span className="text-ansi-blue">{cur.topic}</span> · {cur.level} · {KIND_LABEL[cur.kind]}
-              </p>
-              <h1 className="text-balance font-display text-2xl font-bold leading-snug tracking-[-0.02em] text-foreground">{cur.title}</h1>
-              {showPrompt && <p className="max-w-[65ch] font-sans text-base leading-relaxed text-foreground">{cur.prompt}</p>}
-              {cur.tags.length > 0 && (
-                <p className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
-                  {cur.tags.map((t) => (
-                    <span key={t} className="rounded-sm border px-1.5 py-0.5">#{t}</span>
-                  ))}
-                </p>
-              )}
-            </header>
-
-            {interviewer ? (
-              <AnswerView q={cur} />
-            ) : (
-              <section className="flex gap-3 rounded-sm border bg-card px-4 py-4 font-mono text-[0.85rem]">
-                <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-                <div className="space-y-1">
-                  <p className="text-foreground">В режиме «Кандидат» ответы скрыты.</p>
-                  <p className="text-muted-foreground">Ответьте вслух или набросайте тезисы — эталон и чек-лист видит интервьюер.</p>
-                </div>
-              </section>
-            )}
-          </article>
-        </div>
-      </div>
-
-      <aside aria-label="Инспектор" className="shrink-0 border-t bg-card lg:w-80 lg:overflow-y-auto lg:border-l lg:border-t-0 2xl:w-96">
-        <InspectorSection label="Оценка" title="Оценка" meta={interviewer ? `${scored} оценено` : undefined}>
-          {interviewer ? (
-            <ScoreForm
-              idPrefix="theory"
-              score={drafts[cur.id]?.score}
-              comment={drafts[cur.id]?.comment}
-              onScore={(score) => patchDraft({ score })}
-              onComment={(comment) => patchDraft({ comment })}
-              onSend={send}
-            />
-          ) : (
-            <p className="text-muted-foreground">Оценка доступна только интервьюеру.</p>
-          )}
-        </InspectorSection>
-        <InspectorSection label="Клавиши" title="Клавиши">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-muted-foreground">
-            {[
-              ['[ ]', 'предыдущий / следующий'],
-              ['/', 'поиск по вопросам'],
-              ['↑ ↓', 'по списку, enter — открыть'],
-            ].map(([k, v]) => (
-              <div key={k} className="contents">
-                <dt>
-                  <kbd className="rounded-sm bg-foreground px-1.5 py-0.5 font-bold text-background">{k}</kbd>
-                </dt>
-                <dd>{v}</dd>
+      <InspectorSplit
+        id="theory"
+        defaultSize={26}
+        main={
+          <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
+            <div className="flex h-9 shrink-0 items-stretch justify-between gap-2 border-b bg-card font-mono">
+              <div className="flex min-w-0 items-stretch">
+                <button
+                  type="button"
+                  onClick={() => setExplorerOpen((o) => !o)}
+                  aria-label="Список вопросов"
+                  className="flex items-center border-r px-2.5 text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:hidden"
+                >
+                  <PanelLeft className="h-4 w-4" aria-hidden />
+                </button>
+                <span className="flex min-w-0 items-center gap-2 border-r bg-background px-3 text-xs text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]">
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-ansi-blue" aria-hidden />
+                  <span className="truncate">{cur.id}.md</span>
+                </span>
               </div>
-            ))}
-          </dl>
-        </InspectorSection>
-      </aside>
+              <div className="flex shrink-0 items-center gap-1 pr-2">
+                <span className="px-1 text-xs tabular-nums text-muted-foreground">
+                  {index === -1 ? '—' : index + 1}/{flat.length}
+                </span>
+                <ToolButton
+                  variant="ghost"
+                  onClick={() => step(-1)}
+                  aria-label="Предыдущий вопрос"
+                  aria-keyshortcuts="["
+                  title="Предыдущий ([)"
+                >
+                  <ChevronLeft aria-hidden />
+                </ToolButton>
+                <ToolButton
+                  variant="ghost"
+                  onClick={() => step(1)}
+                  aria-label="Следующий вопрос"
+                  aria-keyshortcuts="]"
+                  title="Следующий (])"
+                >
+                  <ChevronRight aria-hidden />
+                </ToolButton>
+              </div>
+            </div>
+
+            <div className="flex-1 bg-background lg:min-h-0 lg:overflow-y-auto">
+              <article className="mx-auto max-w-3xl space-y-8 px-5 py-8 sm:px-8">
+                <header className="space-y-3 font-mono">
+                  <p className="text-xs text-muted-foreground">
+                    <span className="text-ansi-blue">{cur.topic}</span> · {cur.level} ·{' '}
+                    {KIND_LABEL[cur.kind]}
+                  </p>
+                  <h1 className="text-balance font-display text-2xl font-bold leading-snug tracking-[-0.02em] text-foreground">
+                    {cur.title}
+                  </h1>
+                  {showPrompt && (
+                    <p className="max-w-[65ch] font-sans text-base leading-relaxed text-foreground">
+                      {cur.prompt}
+                    </p>
+                  )}
+                  {cur.tags.length > 0 && (
+                    <p className="flex flex-wrap gap-1.5 text-xs text-muted-foreground">
+                      {cur.tags.map((t) => (
+                        <span key={t} className="rounded-sm border px-1.5 py-0.5">
+                          #{t}
+                        </span>
+                      ))}
+                    </p>
+                  )}
+                </header>
+
+                {interviewer ? (
+                  <AnswerView q={cur} />
+                ) : (
+                  <section className="flex gap-3 rounded-sm border bg-card px-4 py-4 font-mono text-[0.85rem]">
+                    <EyeOff className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <div className="space-y-1">
+                      <p className="text-foreground">В режиме «Кандидат» ответы скрыты.</p>
+                      <p className="text-muted-foreground">
+                        Ответьте вслух или набросайте тезисы — эталон и чек-лист видит интервьюер.
+                      </p>
+                    </div>
+                  </section>
+                )}
+              </article>
+            </div>
+          </div>
+        }
+        inspector={
+          <>
+            <InspectorSection
+              label="Оценка"
+              title="Оценка"
+              meta={interviewer ? `${scored} оценено` : undefined}
+            >
+              {interviewer ? (
+                <ScoreForm
+                  idPrefix="theory"
+                  score={drafts[cur.id]?.score}
+                  comment={drafts[cur.id]?.comment}
+                  onScore={(score) => patchDraft({ score })}
+                  onComment={(comment) => patchDraft({ comment })}
+                  onSend={send}
+                />
+              ) : (
+                <p className="text-muted-foreground">Оценка доступна только интервьюеру.</p>
+              )}
+            </InspectorSection>
+            <InspectorSection label="Клавиши" title="Клавиши">
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-muted-foreground">
+                {[
+                  ['[ ]', 'предыдущий / следующий'],
+                  ['/', 'поиск по вопросам'],
+                  ['↑ ↓', 'по списку, enter — открыть'],
+                ].map(([k, v]) => (
+                  <div key={k} className="contents">
+                    <dt>
+                      <kbd className="rounded-sm bg-foreground px-1.5 py-0.5 font-bold text-background">
+                        {k}
+                      </kbd>
+                    </dt>
+                    <dd>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </InspectorSection>
+          </>
+        }
+      />
     </div>
   )
 }

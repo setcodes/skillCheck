@@ -1,6 +1,7 @@
 import { Send } from 'lucide-react'
 import { cn } from '@/shared/lib/utils'
 import { ToolButton } from './tool-button'
+import { NumberField, TextArea } from './field'
 
 interface Props {
   /** префикс id полей — на странице может быть несколько форм */
@@ -22,17 +23,7 @@ export function ScoreForm({ idPrefix, score, comment, commentLabel = 'Комме
     <div className="space-y-3 font-mono text-[0.8rem]">
       <div className="flex items-center gap-2">
         <label htmlFor={`${idPrefix}-score`} className="text-muted-foreground">Оценка (0–5):</label>
-        <input
-          id={`${idPrefix}-score`}
-          type="number"
-          min={0}
-          max={5}
-          step={0.5}
-          value={score ?? ''}
-          disabled={disabled}
-          onChange={(e) => onScore(Math.min(5, Math.max(0, Number(e.target.value))))}
-          className="h-7 w-16 rounded-sm border px-2 text-right tabular-nums outline-none focus:border-primary"
-        />
+        <NumberField id={`${idPrefix}-score`} min={0} max={5} step={0.5} value={score} disabled={disabled} onValue={onScore} className="w-28" />
       </div>
       <div className="flex gap-1" aria-hidden>
         {SCORES.map((n) => (
@@ -53,13 +44,12 @@ export function ScoreForm({ idPrefix, score, comment, commentLabel = 'Комме
       </div>
       <div>
         <label htmlFor={`${idPrefix}-comment`} className="mb-1 block text-muted-foreground">{commentLabel}</label>
-        <textarea
+        <TextArea
           id={`${idPrefix}-comment`}
           placeholder="что получилось, что нет…"
           value={comment ?? ''}
           disabled={disabled}
           onChange={(e) => onComment(e.target.value)}
-          className="min-h-[80px] w-full resize-y rounded-sm border p-2 leading-relaxed outline-none focus:border-primary"
         />
       </div>
       <ToolButton variant="primary" onClick={onSend} disabled={disabled}>

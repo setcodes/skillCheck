@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import type { UserRole } from '@/entities/user/model/types'
 import type { Profession } from '@/entities/profession/model/types'
 import { DEFAULT_PROFESSION, isProfessionEnabled } from '@/entities/profession/model/constants'
@@ -10,9 +10,13 @@ interface AppContextType {
   setProf: (prof: Profession) => void
 }
 
-const AppContext = createContext<AppContextType>(null as any)
+const AppContext = createContext<AppContextType | null>(null)
 
-export const useApp = () => useContext(AppContext)
+export const useApp = () => {
+  const ctx = useContext(AppContext)
+  if (!ctx) throw new Error('useApp вне AppProvider')
+  return ctx
+}
 
 interface AppProviderProps {
   children: React.ReactNode

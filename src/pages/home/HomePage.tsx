@@ -275,38 +275,40 @@ export default function HomePage() {
 
           <div className="min-w-0 space-y-3 lg:border-l lg:pl-12">
             {cmd(bLs, lsCommand)}
-            {enabled ? (
-              <ul ref={sectionsRef} className="divide-y text-sm" aria-label={`Разделы: ${info.title}`}>
-                {sections.map(({ to, name, count, tone, note }, i) => (
-                  <li key={to} className={hide(bRows[i])}>
-                    <Link
-                      to={to}
-                      onClick={() => setProf(active)}
-                      onKeyDown={(e) => onSectionKey(e, i)}
-                      onFocus={() => setZone('sections')}
-                      className="group relative grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 rounded-sm py-2 pl-6 pr-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      <span
-                        className="invisible absolute left-2 top-2 text-primary-text group-hover:visible group-focus-visible:visible"
-                        aria-hidden
+            {/* обе ветки в одной ячейке сетки — высота не меняется при выборе профессии, блоки не прыгают */}
+            <div className="grid">
+                <ul ref={sectionsRef} className={cn('divide-y text-sm [grid-area:1/1]', !enabled && 'invisible')} aria-label={`Разделы: ${info.title}`} aria-hidden={!enabled || undefined}>
+                  {sections.map(({ to, name, count, tone, note }, i) => (
+                    <li key={to} className={hide(bRows[i])}>
+                      <Link
+                        to={to}
+                        onClick={() => setProf(active)}
+                        onKeyDown={(e) => onSectionKey(e, i)}
+                        onFocus={() => setZone('sections')}
+                        className="group relative grid grid-cols-[1fr_auto] gap-x-4 gap-y-0.5 rounded-sm py-2 pl-6 pr-2 transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        ❯
-                      </span>
-                      <span className={cn('font-bold', tone)}>{name}/</span>
-                      <span className="text-right tabular-nums text-foreground">{count ? (counts?.[count] ?? '··') : ''}</span>
-                      <span className="col-span-2 text-xs text-muted-foreground">{note}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="space-y-2 px-2 text-sm" aria-live="polite">
-                <p className="text-ansi-red">ls: ./{info.id}: банк в разработке</p>
-                <p className="text-muted-foreground">
-                  {info.title} · {info.subtitle}. Пока задачи, теория и мок-интервью есть только для Frontend.
-                </p>
-              </div>
-            )}
+                        <span
+                          className="invisible absolute left-2 top-2 text-primary-text group-hover:visible group-focus-visible:visible"
+                          aria-hidden
+                        >
+                          ❯
+                        </span>
+                        <span className={cn('font-bold', tone)}>{name}/</span>
+                        <span className="text-right tabular-nums text-foreground">{count ? (counts?.[count] ?? '··') : ''}</span>
+                        <span className="col-span-2 text-xs text-muted-foreground">{note}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              {!enabled && (
+                <div className="space-y-2 self-start px-2 text-sm [grid-area:1/1]" aria-live="polite">
+                  <p className="text-ansi-red">ls: ./{info.id}: банк в разработке</p>
+                  <p className="text-muted-foreground">
+                    {info.title} · {info.subtitle}. Пока задачи, теория и мок-интервью есть только для Frontend.
+                  </p>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-1 pt-5">
               {cmd(bWho, CMD_WHOAMI)}

@@ -1,6 +1,4 @@
 import type { Profession } from '@/entities/profession/model/types'
-import type { TheoryQuestion } from '@/entities/question/model/types'
-import type { UITask } from '@/entities/task/model/types'
 import { getQuestions, getTasks } from '@/shared/bank'
 import { levelNumber, topicLabel } from '@/entities/question/model/topics'
 import type { MockSessionConfig, MockSessionState, MockItem, MockTheoryItem, MockTaskItem } from '@/entities/mock/model/types'
@@ -79,7 +77,7 @@ export function createSession(
   const durationSec = cfg.durationSec ?? 90*60
   const allowPause = cfg.allowPause ?? true
   const weightTasks = cfg.weightTasks ?? 0.6
-  const level = levelOf(String((cfg as any).level ?? 'junior'))
+  const level = levelOf(cfg.level ?? 'junior')
 
   // вопросы: уровень + равномерный охват тем; задачи: уровень с добором ближайших
   const questionPool = poolByLevel(getQuestions(prof), level, theoryCount)
@@ -115,9 +113,9 @@ export function createSession(
       allowPause,
       level,
       weightTasks,
-      candidateName: (cfg as any).candidateName || '',
-      candidateDept: (cfg as any).candidateDept || '',
-      candidatePosition: (cfg as any).candidatePosition || ''
+      candidateName: cfg.candidateName || '',
+      candidateDept: cfg.candidateDept || '',
+      candidatePosition: cfg.candidatePosition || ''
     },
     items,
     currentIndex: 0,
