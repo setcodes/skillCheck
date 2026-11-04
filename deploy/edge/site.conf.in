@@ -1,0 +1,42 @@
+# Этап 2: HTTPS и проксирование на контейнер приложения. Плейсхолдеры подставляет vps-install.sh.
+server {
+    listen 80;
+    server_name __DOMAIN__;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root __WEBROOT__;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name __DOMAIN__;
+    resolver 127.0.0.11 valid=10s ipv6=off;
+
+    ssl_certificate __CERTS__/live/__DOMAIN__/fullchain.pem;
+    ssl_certificate_key __CERTS__/live/__DOMAIN__/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    location / {
+        # переменная: edge стартует, даже если контейнер приложения ещё не запущен
+        set $app_upstream http://__UPSTREAM__;
+        proxy_pass $app_upstream;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 5s;
+        proxy_read_timeout 30s;
+        # CSP и Cache-Control приходят от контейнера приложения
+    }
+}
