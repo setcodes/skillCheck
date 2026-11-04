@@ -23,6 +23,10 @@
 # доменов; после — nginx -t и сверка кодов. При расхождении конфигурация откатывается.
 set -Eeuo pipefail
 
+# Скрипт приходит по stdin (ssh … bash -s): тело обёрнуто в main, чтобы bash прочитал его
+# целиком до запуска и дочерние команды (docker compose run) не могли прочитать остаток.
+main() {
+
 : "${DOMAIN:?задайте DOMAIN}" "${EDGE_DIR:?задайте EDGE_DIR}" "${EDGE_PROJECT:?задайте EDGE_PROJECT}" "${EDGE_NETWORK:?задайте EDGE_NETWORK}"
 BRANCH="${BRANCH:-main}"
 REPO="${REPO:-https://github.com/setcodes/skillCheck.git}"
@@ -170,7 +174,7 @@ edge_apply() { # описание оверлей [доп. проверка]
 }
 
 certbot_run() {
-  compose_edge "${BASE_FILES[@]}" -- --profile "$CERTBOT_PROFILE" run --rm --pull never "$@"
+  compose_edge "${BASE_FILES[@]}" -- --profile "$CERTBOT_PROFILE" run --rm -T --pull never "$@" </dev/null
 }
 
 have_cert() { docker exec "$(edge_container)" test -f "$CERTS/live/$DOMAIN/fullchain.pem"; }
@@ -212,3 +216,6 @@ edge_apply "HTTPS-конфиг сайта" "$RENDERED/site.compose.yml" site_ok
 
 step "Готово: https://$DOMAIN"
 info "обновление — повторный запуск: код подтянется, контейнер пересоберётся"
+}
+
+main "$@"
