@@ -120,7 +120,7 @@ export const META_CORE: Record<string, TaskMeta> = {
     hints: [
       'Путь "a.b.c" — это цепочка ключей. Как пройти по ней, не падая на отсутствующем звене?',
       'Разбейте путь по точке и пройдите по объекту шаг за шагом. Если очередного ключа нет — вернуть значение по умолчанию.',
-      'path.split(".").reduce((cur, key) => cur != null && cur[key] !== undefined ? cur[key] : defaultValue, obj). Не проверяйте на «ложность»: 0, "" и false — настоящие значения.',
+      'let cur = obj; for (const key of path.split(".")) { if (cur == null) return defaultValue; cur = cur[key]; } return cur === undefined ? defaultValue : cur. Не проверяйте на «ложность»: 0, "" и false — настоящие значения. И не подставляйте defaultValue посреди пути — иначе обход продолжится уже по нему.',
     ],
     rubric: [
       { criterion: 'Проходит по вложенному пути и возвращает значение', weight: 30 },
@@ -132,6 +132,7 @@ export const META_CORE: Record<string, TaskMeta> = {
       'Проверка через `|| defaultValue` ломает значения 0, "" и false',
       'Падение на null/undefined посреди пути',
       'try/catch вместо проверки каждого звена',
+      'reduce с подстановкой defaultValue посреди пути: safeGet({}, "a.length", "def") вернёт 3 — длину строки "def"',
     ],
   },
 
@@ -246,6 +247,7 @@ export const META_CORE: Record<string, TaskMeta> = {
       'JSON.parse(JSON.stringify(x)) теряет Date, undefined и функции',
       'Поверхностная копия через спред',
       'Date копируют как обычный объект — теряется тип',
+      'x.hasOwnProperty(key) падает на объекте из Object.create(null) — нужен Object.keys или Object.hasOwn',
     ],
   },
 
@@ -291,7 +293,7 @@ export const META_CORE: Record<string, TaskMeta> = {
     hints: [
       'Один обработчик на контейнер получает все события потомков. Как понять, что событие пришло от нужного элемента?',
       'event.target — источник. Метод closest(selector) поднимается от него вверх и находит подходящего предка (или сам элемент).',
-      'const match = event.target?.closest(selector); if (match) handler.call(match, event). Верните функцию, которая снимает обработчик с root.',
+      'const match = event.target?.closest(selector); if (match && root.contains(match)) handler.call(match, event). Верните функцию, которая снимает обработчик с root.',
     ],
     rubric: [
       { criterion: 'Один обработчик на root, срабатывает для подходящих потомков', weight: 30 },
@@ -303,25 +305,27 @@ export const META_CORE: Record<string, TaskMeta> = {
       'Сравнивают event.target.matches(selector) — не работает для вложенных элементов внутри цели',
       'Вешают обработчик на каждый элемент — смысл делегирования теряется',
       'Не возвращают способ отписаться — утечка обработчиков',
+      'Не проверяют root.contains(match): closest находит подходящего предка выше root, и чужой элемент запускает обработчик',
     ],
   },
 
   fe_fetchJSON: {
     hints: [
       'fetch не отклоняется на ответ 404/500. Что ещё нужно проверить и обработать в «безопасной» обёртке?',
-      'Проверяйте response.ok и бросайте ошибку со статусом. Отмену запроса (AbortError) отличайте от остальных ошибок. Заголовок Content-Type по умолчанию — JSON, но пользовательские заголовки приоритетнее.',
-      'try { const r = await fetch(url, { ...opts, headers: { "Content-Type": "application/json", ...opts.headers } }); if (!r.ok) throw new Error(...); return r.json(); } catch (e) { if (e.name === "AbortError") throw new Error("Request was aborted"); throw e; }',
+      'Проверяйте response.ok и бросайте ошибку со статусом. У ответа 204 нет тела. Content-Type нужен, только когда есть body, а пользовательские заголовки приоритетнее. Ошибку отмены не трогайте — её отличает вызывающий код.',
+      'const headers = new Headers(opts.headers); if (opts.body != null && !headers.has("Content-Type")) headers.set("Content-Type", "application/json"); const r = await fetch(url, { ...opts, headers }); if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.status === 204 ? null : r.json(). Без try/catch: AbortError уходит наверх как есть.',
     ],
     rubric: [
       { criterion: 'Проверяет response.ok и бросает ошибку со статусом', weight: 30 },
-      { criterion: 'Возвращает разобранный JSON', weight: 20 },
-      { criterion: 'Объединяет заголовки: значение по умолчанию + пользовательские', weight: 25 },
-      { criterion: 'Отличает отмену (AbortError) от остальных ошибок', weight: 25 },
+      { criterion: 'Возвращает разобранный JSON, для 204 — null', weight: 20 },
+      { criterion: 'Объединяет заголовки (объект или Headers); Content-Type только при наличии body', weight: 25 },
+      { criterion: 'Пробрасывает AbortError как есть, не переупаковывая', weight: 25 },
     ],
     commonMistakes: [
       'Не проверяют response.ok — страница ошибки разбирается как JSON',
-      'Затирают пользовательские заголовки своими',
-      'Показывают пользователю AbortError как ошибку',
+      'Затирают пользовательские заголовки своими или теряют их при спреде Headers',
+      'Ставят Content-Type: application/json на каждый GET — запрос становится «непростым», появляется лишний preflight',
+      'Переупаковывают AbortError в new Error(...) — вызывающий код больше не отличает отмену от сбоя',
     ],
   },
 
@@ -348,16 +352,17 @@ export const META_CORE: Record<string, TaskMeta> = {
     hints: [
       'Сравнение по ссылке недостаточно. Перечислите, какие виды значений нужно сравнивать по-разному.',
       'Сначала быстрые случаи: строгое равенство, null/undefined, разные типы. Затем даты, массивы и обычные объекты — рекурсивно.',
-      'a === b → true; если не оба объекта — false; Date — сравнить getTime; массивы — длина и поэлементно; объекты — одинаковое множество ключей и deepEqual по каждому. Массив и объект — разные.',
+      'a === b → true; оба NaN → true; если не оба объекта — false; разные прототипы → false (Date и {}, массив и объект); Date — getTime; RegExp — source и flags; Map/Set — размер и содержимое; массивы — длина и поэлементно; объекты — одинаковое множество ключей и deepEqual по каждому.',
     ],
     rubric: [
       { criterion: 'Рекурсивное сравнение объектов и массивов', weight: 30 },
       { criterion: 'Различает массив и объект, null и undefined, типы', weight: 25 },
       { criterion: 'Сравнивает множества ключей (порядок не важен, лишний ключ — различие)', weight: 25 },
-      { criterion: 'Корректно обрабатывает Date', weight: 20 },
+      { criterion: 'Корректно обрабатывает Date, RegExp, Map/Set и NaN', weight: 20 },
     ],
     commonMistakes: [
       'JSON.stringify для сравнения зависит от порядка ключей и теряет undefined',
+      'Не сравнивают прототипы: new Date(5) и {} «равны», потому что у обоих нет собственных ключей',
       'Не проверяют число ключей — объект с лишним ключом считается равным',
       'Считают равными массив и объект с индексами в качестве ключей',
     ],

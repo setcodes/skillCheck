@@ -73,6 +73,7 @@ export function format(value: unknown, limit = 160): string {
         if (typeof v === 'function') return MARK + '«функция»'
         if (typeof v === 'bigint') return MARK + v + 'n'
         if (v instanceof RegExp) return MARK + String(v)
+        if (v instanceof Promise) return MARK + '«Promise»' // иначе JSON покажет {}, и не понять, что функция асинхронная
         if (v instanceof Map) return { '«Map»': [...v] }
         if (v instanceof Set) return { '«Set»': [...v] }
         return v

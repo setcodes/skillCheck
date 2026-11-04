@@ -96,16 +96,16 @@
   }
   
   /* Ensure content fits on page */
-  .print\\:h-auto {
+  .print\:h-auto {
     height: auto !important;
   }
   
-  .print\\:overflow-visible {
+  .print\:overflow-visible {
     overflow: visible !important;
   }
   
   /* Hide elements that shouldn't be printed */
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
   
@@ -167,38 +167,38 @@
   }
   
   /* Hide form elements in print mode */
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
   
   /* Show text-only content in print mode */
-  .print\\:block {
+  .print\:block {
     display: block !important;
   }
   
   /* Text styling for print */
-  .print\\:text-sm {
+  .print\:text-sm {
     font-size: 0.875rem !important;
     line-height: 1.25rem !important;
   }
   
-  .print\\:whitespace-pre-wrap {
+  .print\:whitespace-pre-wrap {
     white-space: pre-wrap !important;
   }
   
-  .print\\:min-h-\\[100px\\] {
+  .print\:min-h-\[100px\] {
     min-height: 100px !important;
   }
   
-  .print\\:border {
+  .print\:border {
     border: 1px solid #000000 !important;
   }
   
-  .print\\:border-gray-300 {
+  .print\:border-gray-300 {
     border-color: #d1d5db !important;
   }
   
-  .print\\:p-2 {
+  .print\:p-2 {
     padding: 0.5rem !important;
   }
   
@@ -213,27 +213,27 @@
   }
   
   /* Hide input borders and backgrounds for print */
-  .print\\:bg-transparent {
+  .print\:bg-transparent {
     background: transparent !important;
   }
   
-  .print\\:border-none {
+  .print\:border-none {
     border: none !important;
   }
   
-  .print\\:shadow-none {
+  .print\:shadow-none {
     box-shadow: none !important;
   }
   
   /* Show only text content in form fields */
-  .print\\:text-only {
+  .print\:text-only {
     border: none !important;
     background: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
   }
   
-  .print\\:text-only:before {
+  .print\:text-only:before {
     content: attr(data-value);
     display: block !important;
     color: #000000 !important;
@@ -252,36 +252,36 @@
   background-color: #ffffff !important;
 }
 
-.print-mode .print\\:hidden {
+.print-mode .print\:hidden {
   display: none !important;
 }
 
-.print-mode .print\\:block {
+.print-mode .print\:block {
   display: block !important;
 }
 
-.print-mode .print\\:text-sm {
+.print-mode .print\:text-sm {
   font-size: 0.875rem !important;
   line-height: 1.25rem !important;
 }
 
-.print-mode .print\\:whitespace-pre-wrap {
+.print-mode .print\:whitespace-pre-wrap {
   white-space: pre-wrap !important;
 }
 
-.print-mode .print\\:min-h-\\[100px\\] {
+.print-mode .print\:min-h-\[100px\] {
   min-height: 100px !important;
 }
 
-.print-mode .print\\:border {
+.print-mode .print\:border {
   border: 1px solid #000000 !important;
 }
 
-.print-mode .print\\:border-gray-300 {
+.print-mode .print\:border-gray-300 {
   border-color: #d1d5db !important;
 }
 
-.print-mode .print\\:p-2 {
+.print-mode .print\:p-2 {
   padding: 0.5rem !important;
 }
 

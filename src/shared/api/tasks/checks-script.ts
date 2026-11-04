@@ -226,6 +226,9 @@ assert.ok(copy.re !== src.re && copy.re.source === 'ab+' && copy.re.flags === 'g
 assert.equal(copy.nul, null, 'null сохраняется');
 assert.equal(deepClone(5), 5, 'примитив возвращается как есть');
 assert.ok(Array.isArray(deepClone([1, [2]])), 'массив остаётся массивом');
+const bare = Object.assign(Object.create(null), { a: { b: 1 } });
+const bareCopy: any = deepClone(bare);
+assert.ok(bareCopy.a.b === 1 && bareCopy.a !== bare.a, 'объект без прототипа (Object.create(null)) копируется');
 ` },
   ],
 
@@ -260,6 +263,7 @@ const listeners: Record<string, (e: any) => void> = {};
 const root: any = {
   addEventListener: (t: string, h: (e: any) => void) => { listeners[t] = h; },
   removeEventListener: (t: string, h: (e: any) => void) => { if (listeners[t] === h) delete listeners[t]; },
+  contains: () => true,
 };
 const li: any = { closest: (sel: string) => (sel === 'li.x' ? li : null), tag: 'li' };
 const span: any = { closest: () => null, tag: 'span' };
@@ -278,9 +282,11 @@ assert.equal(listeners.click, undefined, 'отписка снимает обра
 import * as m from 'MODULE';
 const { delegate } = m;
 const listeners: Record<string, (e: any) => void> = {};
+const outside: any = { tag: 'outside' };
 const root: any = {
   addEventListener: (type: string, h: (e: any) => void) => { listeners[type] = h; },
   removeEventListener: (type: string, h: (e: any) => void) => { if (listeners[type] === h) delete listeners[type]; },
+  contains: (el: any) => el !== outside,
 };
 const item: any = { closest: (s: string) => (s === '.item' ? item : null) };
 const nested: any = { closest: (s: string) => (s === '.item' ? item : null) };
@@ -295,6 +301,10 @@ listeners.keydown({ target: item });
 assert.equal(other, 0, 'неподходящий селектор — обработчик не вызывается');
 listeners.click({ target: null });
 assert.equal(seen.length, 1, 'пустая цель не ломает обработчик');
+let above = 0;
+delegate(root, '.wrapper', 'focusin', () => { above++; });
+listeners.focusin({ target: { closest: (s: string) => (s === '.wrapper' ? outside : null) } });
+assert.equal(above, 0, 'элемент, найденный closest выше root, не считается');
 ` },
   ],
 
@@ -305,7 +315,11 @@ import { strict as assert } from 'assert';
 import * as m from 'MODULE'; 
 const { fetchJSON } = m; 
 const r = await fetchJSON('/ok'); 
-assert.equal(r.ok, true); 
+assert.equal(r.ok, true, 'возвращает разобранный JSON');
+(global as any).fetch = async () => new Response('nope', { status: 404 });
+let msg = '';
+try { await fetchJSON('/missing'); } catch (e: any) { msg = e.message; }
+assert.ok(msg.includes('404'), 'ответ 404 — ошибка со статусом в сообщении');
 (global as any).fetch = orig;
 ` },
     { type: 'script', hidden: true, code: `import { strict as assert } from 'assert';
@@ -313,20 +327,30 @@ import * as m from 'MODULE';
 const { fetchJSON } = m;
 const orig = (global as any).fetch;
 const calls: any[] = [];
+// заголовки читаем через new Headers: решение вправе передать и объект, и Headers
+const header = (opts: any, name: string) => new Headers(opts?.headers).get(name);
 (global as any).fetch = async (url: string, opts: any) => { calls.push([url, opts]); return new Response(JSON.stringify({ n: 1 }), { status: 200 }); };
-const data = await fetchJSON('/a', { method: 'POST', headers: { 'X-Test': '1' } });
+const data = await fetchJSON('/a', { method: 'POST', body: '{"a":1}', headers: { 'X-Test': '1' } });
 assert.deepEqual(data, { n: 1 }, 'возвращает разобранный JSON');
 assert.equal(calls[0][1].method, 'POST', 'опции пробрасываются в fetch');
-assert.equal(calls[0][1].headers['X-Test'], '1', 'пользовательские заголовки сохраняются');
-assert.equal(calls[0][1].headers['Content-Type'], 'application/json', 'Content-Type по умолчанию — JSON');
+assert.equal(calls[0][1].body, '{"a":1}', 'тело пробрасывается в fetch');
+assert.equal(header(calls[0][1], 'X-Test'), '1', 'пользовательские заголовки сохраняются');
+assert.equal(header(calls[0][1], 'Content-Type'), 'application/json', 'с телом Content-Type по умолчанию — JSON');
+await fetchJSON('/b', { headers: new Headers({ 'X-Trace': '7' }) });
+assert.equal(header(calls[1][1], 'X-Trace'), '7', 'заголовки в виде Headers тоже сохраняются');
+assert.equal(header(calls[1][1], 'Content-Type'), null, 'GET без тела — без Content-Type (иначе лишний preflight)');
+await fetchJSON('/c', { method: 'POST', body: 'x=1', headers: { 'Content-Type': 'text/plain' } });
+assert.equal(header(calls[2][1], 'Content-Type'), 'text/plain', 'явный Content-Type не перезаписывается');
+(global as any).fetch = async () => new Response(null, { status: 204 });
+assert.equal(await fetchJSON('/empty'), null, '204 No Content — null без разбора тела');
 (global as any).fetch = async () => new Response('nope', { status: 500 });
 let msg = '';
 try { await fetchJSON('/x'); } catch (e: any) { msg = e.message; }
 assert.ok(msg.includes('500'), 'ответ не-2xx — ошибка со статусом');
-(global as any).fetch = async () => { const e: any = new Error('x'); e.name = 'AbortError'; throw e; };
-msg = '';
-try { await fetchJSON('/y'); } catch (e: any) { msg = e.message; }
-assert.equal(msg, 'Request was aborted', 'отмена отличается от обычной ошибки');
+(global as any).fetch = async () => { const e: any = new Error('The operation was aborted.'); e.name = 'AbortError'; throw e; };
+let name = '';
+try { await fetchJSON('/y'); } catch (e: any) { name = e.name; }
+assert.equal(name, 'AbortError', 'отмена пробрасывается как есть: имя AbortError не теряется');
 (global as any).fetch = orig;
 ` },
   ],
@@ -589,6 +613,13 @@ const off = em3.once('e', () => fired++);
 off();
 em3.emit('e');
 assert.equal(fired, 0, 'once можно отписать до срабатывания');
+const em4 = createEmitter();
+let viaOff = 0;
+const handler = () => viaOff++;
+em4.once('e', handler);
+em4.off('e', handler);
+em4.emit('e');
+assert.equal(viaOff, 0, 'off(event, handler) снимает и подписку once');
 ` },
   ],
 
@@ -628,6 +659,17 @@ const tasks = [0, 1, 2, 3].map((i) => async () => { order.push(i); running++; pe
 assert.deepEqual(await promisePool(tasks, 1), [0, 1, 2, 3], 'limit 1: результаты по порядку');
 assert.equal(peak, 1, 'limit 1: ровно одна задача одновременно');
 assert.deepEqual(order, [0, 1, 2, 3], 'limit 1: задачи стартуют по очереди');
+// синхронный throw внутри then-колбэка не дошёл бы до reject — пул завис бы навсегда
+const outcome = await Promise.race([
+  promisePool([async () => 1, () => { throw new Error('sync'); }, async () => 3], 1).then(() => 'выполнился', (e: any) => 'отклонён: ' + e.message),
+  sleep(300).then(() => 'завис'),
+]);
+assert.equal(outcome, 'отклонён: sync', 'синхронное исключение задачи отклоняет итоговый промис');
+const zero = await Promise.race([
+  promisePool([async () => 1], 0).then(() => 'выполнился', (e: any) => e.name),
+  sleep(300).then(() => 'завис'),
+]);
+assert.equal(zero, 'RangeError', 'limit 0 — RangeError, а не вечное ожидание');
 ` },
   ],
 
