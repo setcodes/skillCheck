@@ -1,0 +1,30 @@
+# Продакшен-контейнер. Порты наружу не публикуются: трафик приходит через общий
+# reverse proxy по внешней Docker-сети, имя которой задаётся EDGE_NETWORK.
+name: skillcheck
+
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: skillcheck-web:latest
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
+      - /tmp
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      edge:
+        aliases:
+          - skillcheck-web
+
+networks:
+  edge:
+    external: true
+    name: ${EDGE_NETWORK:?EDGE_NETWORK не задан}

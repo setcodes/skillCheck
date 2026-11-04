@@ -150,3 +150,7 @@ temp/
 test-results/
 playwright-report/
 blob-report/
+
+# деплой: локальные значения и отрендеренные на сервере конфиги
+deploy/deploy.env
+deploy/edge/rendered/
