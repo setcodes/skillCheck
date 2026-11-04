@@ -26,8 +26,8 @@ export const toast = {
       description,
     })
   },
-  custom: (jsx: React.ReactNode) => {
-    return sonnerToast.custom(jsx as any)
+  custom: (jsx: React.ReactElement) => {
+    return sonnerToast.custom(() => jsx)
   },
   dismiss: (toastId?: string | number) => {
     return sonnerToast.dismiss(toastId)
@@ -41,7 +41,7 @@ export const toast = {
     }: {
       loading: string
       success: string | ((data: T) => string)
-      error: string | ((error: any) => string)
+      error: string | ((error: unknown) => string)
     }
   ) => {
     return sonnerToast.promise(promise, {

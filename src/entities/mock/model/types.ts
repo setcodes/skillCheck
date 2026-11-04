@@ -59,4 +59,6 @@ export interface MockSessionState {
   timerMode: 'down'
   remainingSec: number
   running: boolean
+  /** метка времени последнего учтённого тика (для расчёта по Date.now) */
+  tickedAt?: number
 }

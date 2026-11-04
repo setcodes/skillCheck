@@ -4,6 +4,5 @@ export interface ProfessionInfo {
   id: Profession
   title: string
   subtitle: string
-  color: string
   status: 'active' | 'soon'
 }

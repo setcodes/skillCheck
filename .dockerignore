@@ -1,0 +1,12 @@
+node_modules
+dist
+test-results
+playwright-report
+.git
+.github
+.claude
+.impeccable
+.DS_Store
+*.log
+deploy/deploy.env
+deploy/edge/rendered

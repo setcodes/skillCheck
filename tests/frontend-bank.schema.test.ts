@@ -1,26 +1,27 @@
 import { describe, it, expect } from 'vitest'
-import { FE } from '@/shared/api/tasks/frontend'
-import questions from '@/shared/questions/frontend-qa-100.json'
+import { FRONTEND_TASKS as FE } from '@/shared/api/tasks'
+import questions from '@/shared/questions/frontend.json'
+import { QuestionSchema, TaskSchema, describeIssue } from '@/shared/bank/schema'
 
-type Q = { id: string; title: string; category: string; difficulty: number; bucket: string; prompt: string; answer: string }
-const QS = questions as Q[]
+const QS = questions as unknown[]
 
 describe('Frontend: вопросы', () => {
-  it('id уникальны', () => {
-    expect(new Set(QS.map((q) => q.id)).size).toBe(QS.length)
-  })
-  it('обязательные поля заполнены', () => {
-    for (const q of QS) {
-      for (const k of ['id', 'title', 'category', 'prompt', 'answer'] as const) {
-        expect(typeof q[k] === 'string' && q[k].trim().length > 0, `${q.id}.${k}`).toBe(true)
-      }
+  it('все вопросы проходят схему', () => {
+    for (const raw of QS) {
+      const r = QuestionSchema.safeParse(raw)
+      expect(r.success, `${(raw as { id: string }).id}: ${r.success ? '' : describeIssue(r.error)}`).toBe(true)
     }
   })
-  it('difficulty 1–3, bucket из списка', () => {
-    for (const q of QS) {
-      expect([1, 2, 3], q.id).toContain(q.difficulty)
-      expect(['screening', 'deep', 'architecture'], q.id).toContain(q.bucket)
-    }
+  it('id и alias уникальны и не пересекаются', () => {
+    const parsed = QS.map((q) => QuestionSchema.parse(q))
+    const ids = parsed.map((q) => q.id)
+    const aliases = parsed.flatMap((q) => q.aliases ?? [])
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(new Set(aliases).size).toBe(aliases.length)
+    expect(aliases.filter((a) => ids.includes(a))).toEqual([])
+  })
+  it('id начинается с fe-<тема>-', () => {
+    for (const q of QS.map((x) => QuestionSchema.parse(x))) expect(q.id.startsWith(`fe-${q.topic}-`), q.id).toBe(true)
   })
 })
 
@@ -30,14 +31,69 @@ describe('Frontend: задачи', () => {
   })
   it('у каждой задачи есть starter, tests, solution, exportName', () => {
     for (const t of FE) {
-      for (const k of ['starter', 'tests', 'solution', 'exportName', 'description'] as const) {
+      for (const k of ['starter', 'solution', 'exportName', 'description'] as const) {
         expect((t[k] ?? '').trim().length > 0, `${t.id}.${k}`).toBe(true)
       }
     }
   })
-  it('в каждом уровне есть задачи', () => {
+  it('всего задач не меньше 38', () => {
+    expect(FE.length).toBeGreaterThanOrEqual(38)
+  })
+  it('в каждом уровне не меньше 8 задач', () => {
     for (const l of ['junior', 'middle', 'senior']) {
-      expect(FE.filter((t) => t.level === l).length, l).toBeGreaterThan(0)
+      expect(FE.filter((t) => t.level === l).length, l).toBeGreaterThanOrEqual(8)
+    }
+  })
+})
+
+describe('Frontend: развёрнутые ответы', () => {
+  const parsed = (questions as unknown[]).map((q) => QuestionSchema.parse(q))
+  const withFull = parsed.filter((q) => q.answer.full)
+
+  it('у вопросов с полным ответом есть чек-лист «должно прозвучать»', () => {
+    expect(withFull.length).toBeGreaterThanOrEqual(95)
+    expect(withFull.filter((q) => q.answer.mustMention.length === 0).map((q) => q.id)).toEqual([])
+  })
+  it('полный ответ длиннее краткого', () => {
+    for (const q of withFull) expect(q.answer.full!.length, q.id).toBeGreaterThanOrEqual(q.answer.short.length)
+  })
+  it('покрыты ключевые темы: сеть, безопасность, производительность, асинхронность, состояние', () => {
+    const count = (t: string) => parsed.filter((q) => q.topic === t).length
+    for (const t of ['browser-network', 'security', 'performance', 'async', 'state']) expect(count(t), t).toBeGreaterThanOrEqual(5)
+  })
+})
+
+describe('Frontend: методические материалы задач', () => {
+  it('у каждой задачи три подсказки, рубрика с весами в сумме 100, типичные ошибки и скрытые проверки', () => {
+    for (const t of FE) {
+      expect(t.hints?.length, `${t.id}: подсказки`).toBe(3)
+      for (const h of t.hints ?? []) expect(h.trim().length, `${t.id}: пустая подсказка`).toBeGreaterThan(30)
+      expect(t.rubric?.length, `${t.id}: рубрика`).toBeGreaterThanOrEqual(3)
+      expect(t.rubric?.length, `${t.id}: рубрика`).toBeLessThanOrEqual(5)
+      expect(t.rubric?.reduce((s, r) => s + r.weight, 0), `${t.id}: сумма весов`).toBe(100)
+      expect(t.commonMistakes?.length, `${t.id}: типичные ошибки`).toBeGreaterThanOrEqual(2)
+      expect(t.checks.some((c) => c.hidden), `${t.id}: скрытые проверки`).toBe(true)
+      expect(t.checks.some((c) => !c.hidden), `${t.id}: видимые проверки`).toBe(true)
+    }
+  })
+  it('подсказки не повторяют друг друга и постепенно становятся конкретнее', () => {
+    for (const t of FE) {
+      const [a, b, c] = t.hints!
+      expect(new Set([a, b, c]).size, t.id).toBe(3)
+      expect(c.length, `${t.id}: третья подсказка конкретнее первой`).toBeGreaterThan(a.length * 0.6)
+    }
+  })
+  it('все задачи проходят схему, у каждой проверки валидны', () => {
+    for (const t of FE) {
+      const r = TaskSchema.safeParse(t)
+      expect(r.success, `${t.id}: ${r.success ? '' : describeIssue(r.error)}`).toBe(true)
+    }
+  })
+  it('большая часть чистых функций описана декларативно, сценарии — только для состояния, таймеров и моков', () => {
+    const declarative = FE.filter((t) => t.checks.every((c) => c.type === 'call'))
+    expect(declarative.length).toBeGreaterThanOrEqual(15)
+    for (const t of FE.filter((x) => x.checks.some((c) => c.type === 'script'))) {
+      expect(t.checks.filter((c) => c.type === 'script').length, `${t.id}: сценарная задача`).toBeGreaterThanOrEqual(2)
     }
   })
 })

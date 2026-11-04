@@ -1,0 +1,653 @@
+[
+  {
+    "id": "case-review-user-search",
+    "version": 2,
+    "title": "Ревью: поиск пользователей с подсказками",
+    "kind": "review",
+    "level": "middle",
+    "topic": "react",
+    "tags": [
+      "review",
+      "requests",
+      "race-conditions",
+      "effects"
+    ],
+    "brief": "Проведите ревью этого компонента. Сначала назовите проблемы в порядке риска, потом исправьте наиболее критичную часть. Полностью переписывать компонент не требуется. В конце назовите основные проверки или тесты.",
+    "context": [
+      "Бэкенд отвечает нестабильно: иногда за 100 мс, иногда за две секунды",
+      "Пользователей в системе много — список подсказок может быть большим",
+      "Компонент встроен в другой экран, initialQuery приходит сверху и может меняться"
+    ],
+    "requirements": [],
+    "files": [
+      {
+        "name": "UserSearch.tsx",
+        "language": "tsx",
+        "code": "type User = {\n  id: string;\n  name: string;\n};\n\ntype Props = {\n  initialQuery?: string;\n  onSelect: (user: User) => void;\n};\n\nexport function UserSearch({ initialQuery = '', onSelect }: Props) {\n  const [query, setQuery] = useState(initialQuery);\n  const [users, setUsers] = useState<User[]>([]);\n  const [loading, setLoading] = useState(false);\n\n  useEffect(() => {\n    setTimeout(async () => {\n      setLoading(true);\n\n      const response = await fetch(`/api/users?q=${query}`);\n      const data = await response.json();\n\n      setUsers(data);\n      setLoading(false);\n    }, 300);\n  }, [query]);\n\n  if (loading) {\n    return <Spinner />;\n  }\n\n  return (\n    <div className=\"search\">\n      <input\n        value={query}\n        onChange={(event) => setQuery(event.target.value)}\n      />\n\n      {users.map((user, index) => (\n        <div key={index} onClick={() => onSelect(user)}>\n          {user.name}\n        </div>\n      ))}\n    </div>\n  );\n}\n"
+      }
+    ],
+    "solution": [],
+    "issues": [
+      {
+        "title": "Гонка запросов: старый ответ перезаписывает новый",
+        "risk": "critical",
+        "consequence": "Пользователь видит подсказки не для того, что ввёл сейчас, кликает на чужого человека и отправляет данные не туда",
+        "fix": "Отменять устаревший запрос через AbortController в cleanup эффекта (или сверять номер запроса перед setState)"
+      },
+      {
+        "title": "Таймер в эффекте не очищается — debounce не работает",
+        "risk": "critical",
+        "consequence": "Каждое нажатие запускает свой таймер: запросы всё равно уходят на каждый символ, просто с задержкой; после ухода со страницы они обновляют состояние несуществующего компонента",
+        "fix": "Вернуть из эффекта cleanup с clearTimeout и abort"
+      },
+      {
+        "title": "Нет try/catch и проверки response.ok",
+        "risk": "critical",
+        "consequence": "При 500 или обрыве сети response.json() падает или возвращает не массив, loading навсегда остаётся true — вечный спиннер без объяснения",
+        "fix": "try/catch/finally, throw при !response.ok, loading сбрасывать в finally"
+      },
+      {
+        "title": "Ранний return со Spinner прячет поле ввода",
+        "risk": "critical",
+        "consequence": "На время запроса поле исчезает из DOM: пользователь теряет фокус и посреди набора не может продолжить ввод",
+        "fix": "Рендерить поле всегда, спиннер — рядом или под ним"
+      },
+      {
+        "title": "Запрос уходит на первом рендере и на пустой строке",
+        "risk": "important",
+        "consequence": "Лишняя нагрузка на бэкенд и показ «случайного» списка до того, как пользователь что-то ввёл",
+        "fix": "if (!query.trim()) — сбросить результаты и выйти из эффекта"
+      },
+      {
+        "title": "Параметр q не экранируется",
+        "risk": "important",
+        "consequence": "Символы & # + в запросе ломают URL или подставляют чужие параметры — искать «Tom & Jerry» невозможно",
+        "fix": "encodeURIComponent(query) или URLSearchParams"
+      },
+      {
+        "title": "useState(initialQuery) читает проп только при первом рендере",
+        "risk": "important",
+        "consequence": "Если initialQuery поменяется сверху, поле останется со старым значением — экран рассинхронизирован с родителем",
+        "fix": "Сбросить состояние через key у компонента, поднять состояние наверх или явно синхронизировать"
+      },
+      {
+        "title": "Нет состояний «ошибка» и «ничего не найдено»",
+        "risk": "important",
+        "consequence": "Пользователь не отличает «ничего не нашлось» от «не загрузилось» и не знает, что делать дальше",
+        "fix": "Тип-объединение состояния: idle | loading | error | empty | success вместо набора флагов"
+      },
+      {
+        "title": "key={index}",
+        "risk": "quality",
+        "consequence": "При смене списка внутренние состояния и фокус элементов переезжают на соседние строки",
+        "fix": "key={user.id}"
+      },
+      {
+        "title": "Кликабельный div без клавиатуры, нет label у поля, список не ul/li",
+        "risk": "quality",
+        "consequence": "Недоступно с клавиатуры и скринридеру: пользователь не может выбрать подсказку без мыши",
+        "fix": "ul/li и button type=\"button\", aria-label или label у input"
+      },
+      {
+        "title": "Функция-обработчик на каждый элемент, логика данных внутри компонента",
+        "risk": "cosmetic",
+        "consequence": "На больших списках лишние аллокации; логику нельзя переиспользовать на других экранах",
+        "fix": "Делегирование или мемоизированная строка; вынести данные в хук useUserSearch"
+      }
+    ],
+    "grading": [
+      "Нашёл ли проблемы и расставил ли их по риску, а не перечислил вперемешку",
+      "Называет ли последствие для пользователя, а не только название проблемы",
+      "Починил ли самое опасное, не переписывая всё",
+      "Назвал ли проверки и тесты в конце",
+      "Находит ли гонки, отмену и очистку таймера без подсказки",
+      "Знает ли три способа синхронизации пропса: эффект, key, подъём состояния"
+    ],
+    "followUps": [
+      "Почему debounce, а не throttle?",
+      "Что произойдёт, если убрать cleanup?",
+      "Как заменить три флага состояния на размеченный союз и сколько комбинаций он исключает?",
+      "Куда вынести логику, если такой поиск нужен на трёх экранах?"
+    ],
+    "testsToMention": [
+      "Руками: быстрый ввод и стирание, медленная сеть (throttling в DevTools), ошибка сервера, пустой результат, клавиатура вместо мыши",
+      "Автотест: при быстром вводе уходит один запрос, а не по запросу на символ",
+      "Автотест: старый ответ не перезаписывает новый",
+      "Автотест: при ошибке показывается сообщение, при пустом результате — «ничего не найдено»",
+      "Автотест: клик по подсказке вызывает onSelect с нужным пользователем"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-review-order-form",
+    "version": 2,
+    "title": "Ревью: форма оформления заказа",
+    "kind": "review",
+    "level": "middle",
+    "topic": "react",
+    "tags": [
+      "review",
+      "state-mutation",
+      "forms"
+    ],
+    "brief": "Проведите ревью этого компонента. Сначала назовите проблемы в порядке риска, потом исправьте наиболее критичную часть. Полностью переписывать компонент не требуется. В конце назовите основные проверки или тесты.",
+    "context": [
+      "Форма оформления заказа: контактные данные и список товаров",
+      "Отправка заказа — платная операция, повтор создаёт дубль",
+      "Список товаров может содержать десятки позиций",
+      "defaultContact приходит из профиля пользователя и может обновиться"
+    ],
+    "requirements": [],
+    "files": [
+      {
+        "name": "OrderForm.tsx",
+        "language": "tsx",
+        "code": "type Contact = {\n  name: string;\n  phone: string;\n};\n\ntype Item = {\n  id: string;\n  title: string;\n  price: number;\n};\n\ntype Props = {\n  defaultContact: Contact;\n  items: Item[];\n  onSubmitted: (orderId: string) => void;\n};\n\nexport function OrderForm({ defaultContact, items, onSubmitted }: Props) {\n  const [contact, setContact] = useState(defaultContact);\n  const [selected, setSelected] = useState<Item[]>([]);\n  const [total, setTotal] = useState(0);\n  const [sending, setSending] = useState(false);\n\n  useEffect(() => {\n    let sum = 0;\n    for (const item of selected) {\n      sum += item.price;\n    }\n    setTotal(sum);\n  }, [selected]);\n\n  const addItem = (item: Item) => {\n    selected.push(item);\n    setSelected(selected);\n  };\n\n  const sortByPrice = () => {\n    setSelected(selected.sort((a, b) => a.price - b.price));\n  };\n\n  const handleSubmit = async () => {\n    setSending(true);\n\n    const response = await fetch('/api/orders', {\n      method: 'POST',\n      body: JSON.stringify({ contact, items: selected }),\n    });\n\n    const order = await response.json();\n\n    onSubmitted(order.id);\n    setSending(false);\n  };\n\n  return (\n    <form onSubmit={handleSubmit}>\n      <input\n        value={contact.name}\n        onChange={(event) => {\n          contact.name = event.target.value;\n          setContact(contact);\n        }}\n      />\n\n      <input value={contact.phone} />\n\n      <button type=\"button\" onClick={sortByPrice}>\n        Сортировать по цене\n      </button>\n\n      {items.map((item, index) => (\n        <div key={index} onClick={() => addItem(item)}>\n          {item.title} — {item.price} ₽\n        </div>\n      ))}\n\n      <p>Итого: {total} ₽</p>\n\n      <button type=\"submit\">Оформить заказ</button>\n    </form>\n  );\n}\n"
+      }
+    ],
+    "solution": [],
+    "issues": [
+      {
+        "title": "selected.push + setSelected(selected): мутация и та же ссылка",
+        "risk": "critical",
+        "consequence": "React сравнивает по ссылке и не перерисовывает: клик по товару «ничего не делает», «Итого» не меняется, ошибок в консоли нет",
+        "fix": "setSelected(prev => [...prev, item])"
+      },
+      {
+        "title": "sortByPrice: sort мутирует массив и возвращает его же",
+        "risk": "critical",
+        "consequence": "Кнопка сортировки не меняет экран, а исходный массив состояния уже изменён — данные и интерфейс расходятся",
+        "fix": "setSelected(prev => [...prev].sort(...)) или toSorted"
+      },
+      {
+        "title": "contact.name = ...; setContact(contact): мутация объекта, у phone нет onChange",
+        "risk": "critical",
+        "consequence": "Поле имени «не печатает» (controlled input возвращает старое значение), поле телефона только для чтения — оформить заказ с контактами нельзя",
+        "fix": "setContact(c => ({ ...c, name: value })), onChange у обоих полей"
+      },
+      {
+        "title": "Нет защиты от двойной отправки (sending не используется)",
+        "risk": "critical",
+        "consequence": "Платная операция: двойной клик или повторный Enter создают два заказа и два списания",
+        "fix": "disabled у кнопки по sending, ранний выход в handleSubmit, идемпотентный ключ на сервере"
+      },
+      {
+        "title": "handleSubmit не вызывает preventDefault",
+        "risk": "critical",
+        "consequence": "Браузер выполняет родную отправку: страница перезагружается, состояние теряется; Enter в поле тоже отправляет форму",
+        "fix": "Принять event и вызвать event.preventDefault()"
+      },
+      {
+        "title": "Нет try/catch, response.ok, finally и Content-Type",
+        "risk": "critical",
+        "consequence": "При 500 order.id равен undefined и onSubmitted(undefined) сообщает об «успехе»; sending залипает; без Content-Type сервер не разберёт JSON",
+        "fix": "Проверка response.ok, try/catch/finally, headers: { \"Content-Type\": \"application/json\" }"
+      },
+      {
+        "title": "total хранится в состоянии и считается эффектом",
+        "risk": "important",
+        "consequence": "Лишний рендер и кадр с неверной суммой после каждого изменения",
+        "fix": "const total = selected.reduce(...) прямо при рендере"
+      },
+      {
+        "title": "useState(defaultContact) — копия пропса",
+        "risk": "important",
+        "consequence": "Если профиль обновится, форма покажет старые данные",
+        "fix": "key у формы, подъём состояния или явная синхронизация"
+      },
+      {
+        "title": "Товар можно добавить многократно и нельзя убрать",
+        "risk": "important",
+        "consequence": "Пользователь случайно удваивает позицию и не может исправить заказ",
+        "fix": "Хранить количество или Set идентификаторов, кнопка удаления"
+      },
+      {
+        "title": "Нет отмены/защиты при уходе со страницы",
+        "risk": "important",
+        "consequence": "Ответ приходит после размонтирования: вызывается onSubmitted и setSending для несуществующего компонента",
+        "fix": "AbortController в cleanup, проверка актуальности"
+      },
+      {
+        "title": "key={index}, кликабельные div, нет label",
+        "risk": "quality",
+        "consequence": "Состояние уезжает при изменении списка; форма недоступна с клавиатуры и скринридеру",
+        "fix": "key={item.id}, button type=\"button\", label у полей"
+      },
+      {
+        "title": "Цена как число с плавающей точкой",
+        "risk": "cosmetic",
+        "consequence": "Погрешность 0.1 + 0.2 в сумме заказа",
+        "fix": "Хранить цену в копейках целым числом"
+      }
+    ],
+    "grading": [
+      "Нашёл ли проблемы и расставил ли их по риску, а не перечислил вперемешку",
+      "Называет ли последствие для пользователя, а не только название проблемы",
+      "Починил ли самое опасное, не переписывая всё",
+      "Назвал ли проверки и тесты в конце",
+      "Видит ли, что три из четырёх багов — одна ошибка: мутация плюс та же ссылка"
+    ],
+    "followUps": [
+      "Почему React не перерисовывает при push?",
+      "Как предотвратить дубль заказа на уровне сервера?",
+      "Controlled и uncontrolled поля: что выбрать для большой формы?"
+    ],
+    "testsToMention": [
+      "Руками: клик по товару обновляет итог, сортировка меняет порядок, двойной клик по «Оформить» отправляет один запрос",
+      "Автотест: ввод в поле имени отображается",
+      "Автотест: при 500 пользователь видит ошибку, а onSubmitted не вызывается",
+      "Автотест: кнопка заблокирована, пока идёт отправка"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-review-task-board",
+    "version": 2,
+    "title": "Ревью: доска задач проекта",
+    "kind": "review",
+    "level": "senior",
+    "topic": "react",
+    "tags": [
+      "review",
+      "state-mutation",
+      "requests",
+      "grouping"
+    ],
+    "brief": "Проведите ревью этого компонента. Сначала назовите проблемы в порядке риска, потом исправьте наиболее критичную часть. Полностью переписывать компонент не требуется. В конце назовите основные проверки или тесты.",
+    "context": [
+      "Доска задач проекта: загрузка списка, фильтр по статусу, группировка, сортировка, форма комментария",
+      "projectId меняется, когда пользователь переключает проект в шапке",
+      "Статусы задач заводят сами пользователи в настройках проекта, текст произвольный",
+      "defaultFilter приходит из сохранённых настроек и может обновиться",
+      "Список задач — до нескольких сотен позиций",
+      "Проблем заметно больше пяти"
+    ],
+    "requirements": [],
+    "files": [
+      {
+        "name": "TaskBoard.tsx",
+        "language": "tsx",
+        "code": "import { useState, useEffect } from 'react';\n\ntype Task = {\n  id: number;\n  title: string;\n  status: string;\n  priority: number;\n  assignee: string;\n};\n\ntype Props = {\n  projectId: number;\n  defaultFilter: string;\n  onTaskOpen: (task: Task) => void;\n};\n\nexport function TaskBoard({ projectId, defaultFilter, onTaskOpen }: Props) {\n  const [tasks, setTasks] = useState<Task[]>([]);\n  const [filter, setFilter] = useState(defaultFilter);\n  const [comment, setComment] = useState('');\n  const [isLoading, setIsLoading] = useState(false);\n  const [saved, setSaved] = useState(false);\n\n  useEffect(() => {\n    setIsLoading(true);\n    fetch(`/api/projects/${projectId}/tasks`)\n      .then((response) => response.json())\n      .then((data) => {\n        setTasks(data);\n        setIsLoading(false);\n      });\n  }, [projectId]);\n\n  function sortByPriority() {\n    tasks.sort((a, b) => b.priority - a.priority);\n    setTasks(tasks);\n  }\n\n  function groupByStatus(list: Task[]) {\n    const groups: Record<string, Task[]> = {};\n    for (const task of list) {\n      if (!groups[task.status]) {\n        groups[task.status] = [];\n      }\n      groups[task.status].push(task);\n    }\n    return groups;\n  }\n\n  function handleSubmit(event: React.FormEvent) {\n    fetch(`/api/projects/${projectId}/comments`, {\n      method: 'POST',\n      body: JSON.stringify({ text: comment }),\n    })\n      .then((response) => response.json())\n      .then(() => {\n        setComment('');\n        setSaved(true);\n        setTimeout(setSaved(false), 3000);\n      });\n  }\n\n  const visible = tasks.filter((task) => task.status.includes(filter));\n  const groups = groupByStatus(visible);\n\n  return (\n    <div className=\"board\">\n      <input\n        value={filter}\n        onChange={(event) => setFilter(event.target.value)}\n        placeholder=\"Фильтр по статусу\"\n      />\n\n      <div className=\"sort\" onClick={sortByPriority}>\n        Сортировать по приоритету\n      </div>\n\n      {isLoading && <span>Загрузка…</span>}\n\n      {Object.keys(groups).map((status) => (\n        <section key={status}>\n          <h3>{status}</h3>\n          <ul>\n            {groups[status].map((task, index) => (\n              <li key={index} onClick={() => onTaskOpen(task)}>\n                {task.title} — {task.assignee}\n              </li>\n            ))}\n          </ul>\n        </section>\n      ))}\n\n      <form onSubmit={handleSubmit}>\n        <input\n          value={comment}\n          onChange={(event) => setComment(event.target.value)}\n          placeholder=\"Комментарий\"\n        />\n        <button type=\"submit\">Отправить</button>\n      </form>\n\n      {saved && <span>Сохранено</span>}\n    </div>\n  );\n}\n"
+      }
+    ],
+    "solution": [],
+    "issues": [
+      {
+        "title": "Гонка запросов при смене projectId, нет отмены",
+        "risk": "critical",
+        "consequence": "Медленный ответ предыдущего проекта приходит позже и показывает задачи не того проекта — пользователь работает с чужими данными",
+        "fix": "AbortController в cleanup эффекта; ответ применять только если он актуален"
+      },
+      {
+        "title": "Группировка в обычном объекте по пользовательскому тексту",
+        "risk": "critical",
+        "consequence": "Статус «constructor» или «toString» находит в groups унаследованную функцию, «__proto__» — сам Object.prototype: проверка «группы ещё нет» не срабатывает, .push падает с TypeError, и вся доска перестаёт рендериться",
+        "fix": "Map или Object.create(null)"
+      },
+      {
+        "title": "Нет catch и response.ok; isLoading не сбрасывается при ошибке",
+        "risk": "critical",
+        "consequence": "Ошибка сети — вечная «Загрузка…» и пустая доска без объяснения; 500 разбирается как данные",
+        "fix": "try/catch/finally, throw при !response.ok, состояние ошибки"
+      },
+      {
+        "title": "sortByPriority: tasks.sort мутирует массив и setTasks получает ту же ссылку",
+        "risk": "critical",
+        "consequence": "Кнопка «Сортировать» ничего не перерисовывает, при этом массив состояния уже изменён",
+        "fix": "setTasks(prev => [...prev].sort(...)) или toSorted"
+      },
+      {
+        "title": "handleSubmit без preventDefault и без Content-Type",
+        "risk": "critical",
+        "consequence": "Отправка комментария перезагружает страницу и теряет введённый текст",
+        "fix": "event.preventDefault(), заголовок Content-Type: application/json"
+      },
+      {
+        "title": "setTimeout(setSaved(false), 3000): передаётся результат вызова",
+        "risk": "critical",
+        "consequence": "setSaved(false) срабатывает сразу, а не через 3 секунды — «Сохранено» мигает и исчезает; сам таймер без cleanup",
+        "fix": "setTimeout(() => setSaved(false), 3000) и очистка таймера в cleanup"
+      },
+      {
+        "title": "Статус «Сохранено» показывается без проверки response.ok; нет блокировки и валидации",
+        "risk": "important",
+        "consequence": "Пользователь думает, что комментарий сохранён, хотя сервер вернул ошибку; можно отправить пустой комментарий и отправить дважды",
+        "fix": "Проверять response.ok, блокировать кнопку на время отправки, не отправлять пустой текст"
+      },
+      {
+        "title": "useState(defaultFilter) — копия пропса",
+        "risk": "important",
+        "consequence": "Сохранённые настройки обновились, а фильтр остался прежним",
+        "fix": "key у компонента или подъём состояния"
+      },
+      {
+        "title": "key={index} у задач",
+        "risk": "important",
+        "consequence": "После сортировки и фильтрации состояние элементов и фокус переезжают на соседние",
+        "fix": "key={task.id}"
+      },
+      {
+        "title": "Кликабельные li и div вместо button, placeholder вместо label",
+        "risk": "quality",
+        "consequence": "Доска недоступна с клавиатуры и скринридеру",
+        "fix": "button внутри li, label или aria-label у полей"
+      },
+      {
+        "title": "Фильтр и группировка считаются на каждый рендер",
+        "risk": "quality",
+        "consequence": "Каждый символ в поле комментария пересчитывает сотни задач",
+        "fix": "useMemo по tasks и filter"
+      },
+      {
+        "title": "Фильтр чувствителен к регистру, нет состояния «ничего нет»",
+        "risk": "quality",
+        "consequence": "«в работе» не найдёт «В работе»; пустая доска ничего не объясняет",
+        "fix": "Нормализовать регистр, показать пустое состояние"
+      },
+      {
+        "title": "Всё в одном компоненте",
+        "risk": "cosmetic",
+        "consequence": "Нельзя переиспользовать загрузку и тяжело тестировать",
+        "fix": "Вынести useTasks(projectId), groupByStatus — за пределы компонента"
+      }
+    ],
+    "grading": [
+      "Нашёл ли проблемы и расставил ли их по риску, а не перечислил вперемешку",
+      "Называет ли последствие для пользователя, а не только название проблемы",
+      "Починил ли самое опасное, не переписывая всё",
+      "Назвал ли проверки и тесты в конце",
+      "Находит ли прототипные ключи в группировке",
+      "Видит ли повтор ошибок из предыдущих ревью (мутация, preventDefault)"
+    ],
+    "followUps": [
+      "Почему Map лучше объекта для группировки?",
+      "Как проще всего сбросить состояние при смене projectId?",
+      "Что изменится при тысячах задач?"
+    ],
+    "testsToMention": [
+      "Руками: быстро переключить проекты при медленной сети, статус с названием constructor, отправка комментария при 500",
+      "Автотест: ответ старого проекта не перезаписывает новый",
+      "Автотест: группировка не падает на статусах constructor и __proto__",
+      "Автотест: «Сохранено» показывается только после успешного ответа"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-live-autocomplete",
+    "version": 2,
+    "title": "Live coding: автокомплит",
+    "kind": "live",
+    "level": "middle",
+    "topic": "react",
+    "tags": [
+      "live",
+      "debounce",
+      "abort",
+      "states"
+    ],
+    "brief": "Напишите компонент поиска пользователей. При вводе в поле подтягиваются подсказки с сервера. Учтите, что пользователь печатает быстро, а сервер отвечает нестабильно.",
+    "context": [
+      "Это самая частая задача live coding на фронтенде",
+      "Проверяют не знание React, а умение подумать о краевых случаях до того, как их назовут"
+    ],
+    "requirements": [
+      "Поле ввода, под ним список подсказок",
+      "Запрос уходит не на каждый символ, а после паузы",
+      "Старый ответ не перезаписывает новый",
+      "Запрос отменяется при новом вводе и при размонтировании",
+      "Состояния: ничего не искали, загрузка, ошибка, пусто, результаты",
+      "На пустой строке запроса нет",
+      "Параметр запроса экранируется, статус ответа проверяется"
+    ],
+    "files": [
+      {
+        "name": "Autocomplete.tsx",
+        "language": "tsx",
+        "code": "// Автокомплит. Пишите здесь.\n//\n// type User = { id: string; name: string };\n// API: GET /api/users?q=... → User[]\n//\n// Требования:\n//   запрос после паузы, не на каждый символ\n//   отмена устаревших запросов\n//   состояния: idle / loading / error / empty / success\n//   на пустом запросе запроса нет\n\nexport function Autocomplete() {\n  return null;\n}\n"
+      }
+    ],
+    "solution": [
+      {
+        "name": "Autocomplete.tsx",
+        "language": "tsx",
+        "code": "import { useEffect, useState } from 'react';\n\ntype User = { id: string; name: string };\n\ntype State =\n  | { kind: 'idle' }\n  | { kind: 'loading' }\n  | { kind: 'error'; message: string }\n  | { kind: 'empty' }\n  | { kind: 'success'; users: User[] };\n\ntype Props = { onSelect: (user: User) => void };\n\nexport function Autocomplete({ onSelect }: Props) {\n  const [query, setQuery] = useState('');\n  const [state, setState] = useState<State>({ kind: 'idle' });\n\n  useEffect(() => {\n    const text = query.trim();\n    if (!text) {\n      setState({ kind: 'idle' });\n      return;\n    }\n\n    const controller = new AbortController();\n    const timerId = setTimeout(async () => {\n      setState({ kind: 'loading' });\n      try {\n        const response = await fetch(`/api/users?q=${encodeURIComponent(text)}`, {\n          signal: controller.signal,\n        });\n        if (!response.ok) throw new Error(`Сервер ответил ${response.status}`);\n        const users: User[] = await response.json();\n        setState(users.length > 0 ? { kind: 'success', users } : { kind: 'empty' });\n      } catch (error) {\n        if ((error as Error).name === 'AbortError') return; // отмену мы устроили сами\n        setState({ kind: 'error', message: 'Не удалось загрузить' });\n      }\n    }, 300);\n\n    return () => {\n      clearTimeout(timerId);\n      controller.abort();\n    };\n  }, [query]);\n\n  return (\n    <div>\n      <input\n        value={query}\n        onChange={(event) => setQuery(event.target.value)}\n        aria-label=\"Поиск пользователей\"\n      />\n      {state.kind === 'loading' && <p>Загрузка…</p>}\n      {state.kind === 'error' && <p role=\"alert\">{state.message}</p>}\n      {state.kind === 'empty' && <p>Ничего не нашлось</p>}\n      {state.kind === 'success' && (\n        <ul>\n          {state.users.map((user) => (\n            <li key={user.id}>\n              <button type=\"button\" onClick={() => onSelect(user)}>\n                {user.name}\n              </button>\n            </li>\n          ))}\n        </ul>\n      )}\n    </div>\n  );\n}\n"
+      }
+    ],
+    "issues": [],
+    "grading": [
+      "Сначала проговорил план вслух: состояния, что в эффекте, как чиним гонки — на секции это половина оценки",
+      "Уточнить требования до кода: задержка debounce, минимальная длина запроса, нужна ли навигация стрелками",
+      "Назвать состояние: строка ввода и размеченный союз idle | loading | error | empty | success",
+      "Краевые случаи: пустой ввод, быстрый ввод при медленном сервере, размонтирование, ошибка сети",
+      "Сделать MVP: сначала рабочий базовый сценарий",
+      "В конце качество: типы, доступность, имена",
+      "Улучшения (кэш, тесты, виртуализация, мемоизация) — следующим шагом и только если есть причина"
+    ],
+    "followUps": [
+      "Почему debounce, а не throttle?",
+      "Что будет, если убрать cleanup?",
+      "Как поведёт себя компонент при быстром вводе и медленном сервере?",
+      "Куда вынести логику, если такой поиск нужен на трёх экранах?"
+    ],
+    "testsToMention": [
+      "При быстром вводе уходит один запрос",
+      "Старый ответ не перезаписывает новый",
+      "При ошибке показывается сообщение, при пустом результате — «ничего не нашлось»",
+      "Клик по подсказке вызывает onSelect",
+      "На пустой строке запросов нет"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-live-use-fetch",
+    "version": 2,
+    "title": "Live coding: хук useFetch",
+    "kind": "live",
+    "level": "senior",
+    "topic": "react",
+    "tags": [
+      "live",
+      "hooks",
+      "abort",
+      "race-conditions"
+    ],
+    "brief": "Напишите хук useFetch, который загружает данные по url и возвращает данные, ошибку, признак загрузки и функцию повторного запроса.",
+    "context": [
+      "Задача на 10–15 минут live-кодинга",
+      "options почти всегда приходит объектным литералом прямо в JSX — новый объект на каждом рендере"
+    ],
+    "requirements": [
+      "url и options (method, headers, body)",
+      "Возврат { data, error, loading, refetch }",
+      "Гонки запросов: устаревший ответ ничего не меняет",
+      "Отмена при размонтировании и при смене url",
+      "Статус вне 2xx считается ошибкой (fetch не отклоняется на 404 и 500)",
+      "Нет setState после размонтирования",
+      "refetch стабилен между рендерами"
+    ],
+    "files": [
+      {
+        "name": "useFetch.ts",
+        "language": "ts",
+        "code": "// useFetch(url, options) → { data, error, loading, refetch }\n//\n// Требования:\n//   url и необязательные options (method, headers, body)\n//   гонки запросов: устаревший ответ не должен ничего менять\n//   отмена запроса при размонтировании и при смене url\n//   статус ответа вне 2xx — это ошибка\n//   не вызывать setState после размонтирования\n\nexport interface UseFetchOptions {\n  method?: string;\n  headers?: Record<string, string>;\n  body?: BodyInit | null;\n}\n\nexport interface UseFetchResult<T> {\n  data: T | null;\n  error: Error | null;\n  loading: boolean;\n  refetch: () => void;\n}\n\nexport function useFetch<T>(url: string, options?: UseFetchOptions): UseFetchResult<T> {\n  throw new Error('Not implemented');\n}\n"
+      }
+    ],
+    "solution": [
+      {
+        "name": "useFetch.ts",
+        "language": "ts",
+        "code": "// Эталон useFetch. Задача с реального собеседования, ~10 минут лайв-кодинга.\n// Требования: url + options; возврат { data, error, loading, refetch };\n// гонки запросов; отмена при размонтировании; response.ok как ошибка;\n// отсутствие setState после размонтирования.\n\nimport { useCallback, useEffect, useRef, useState } from 'react';\n\nexport interface UseFetchOptions {\n  method?: string;\n  headers?: Record<string, string>;\n  body?: BodyInit | null;\n}\n\nexport interface UseFetchResult<T> {\n  data: T | null;\n  error: Error | null;\n  loading: boolean;\n  refetch: () => void;\n}\n\nexport function useFetch<T>(url: string, options?: UseFetchOptions): UseFetchResult<T> {\n  const [data, setData] = useState<T | null>(null);\n  const [error, setError] = useState<Error | null>(null);\n  const [loading, setLoading] = useState<boolean>(false);\n\n  // options приходит из вызывающего кода и почти всегда создаётся объектным\n  // литералом прямо в JSX. Такой объект НОВЫЙ на каждом рендере, и если\n  // положить его в зависимости эффекта — эффект будет перезапускаться\n  // бесконечно. Поэтому держим последнее значение в ref: оно доступно внутри\n  // эффекта, но не участвует в сравнении зависимостей.\n  const optionsRef = useRef<UseFetchOptions | undefined>(options);\n  optionsRef.current = options;\n\n  // Номер запроса. Каждый новый запрос увеличивает счётчик и запоминает свой\n  // номер. Перед записью в состояние сравниваем: если номер устарел — значит\n  // за это время стартовал более свежий запрос, и результат старого не нужен.\n  const requestIdRef = useRef<number>(0);\n\n  // Флаг «компонент ещё на экране». Нужен для требования «не вызывать setState\n  // после размонтирования»: промис может завершиться уже после того, как\n  // компонент убран из дерева.\n  const isMountedRef = useRef<boolean>(true);\n\n  // Счётчик ручных перезапросов. Менять состояние — самый простой способ\n  // заставить эффект выполниться заново: число попадает в зависимости.\n  const [attempt, setAttempt] = useState<number>(0);\n\n  // useCallback нужен, чтобы refetch не менялся между рендерами. Иначе\n  // вызывающий компонент, положивший refetch в зависимости своего эффекта,\n  // получит бесконечный цикл.\n  const refetch = useCallback(() => {\n    setAttempt((n) => n + 1);\n  }, []);\n\n  // Отдельный эффект с пустыми зависимостями: выставляет флаг при монтировании\n  // и снимает при размонтировании. В StrictMode эффекты вызываются дважды,\n  // поэтому флаг обязательно поднимается в теле, а не только объявляется.\n  useEffect(() => {\n    isMountedRef.current = true;\n    return () => {\n      isMountedRef.current = false;\n    };\n  }, []);\n\n  useEffect(() => {\n    // Свой контроллер на каждый запрос. Один контроллер нельзя переиспользовать:\n    // после abort() его signal навсегда остаётся прерванным.\n    const controller = new AbortController();\n\n    // Инкремент и запоминание своего номера ДО старта запроса.\n    const myRequestId = requestIdRef.current + 1;\n    requestIdRef.current = myRequestId;\n\n    // Проверка «этот ответ ещё актуален». Два условия: компонент на экране\n    // и с момента старта не было более нового запроса.\n    const isCurrent = () => isMountedRef.current && myRequestId === requestIdRef.current;\n\n    setLoading(true);\n    setError(null);\n\n    const currentOptions = optionsRef.current;\n\n    fetch(url, {\n      method: currentOptions?.method ?? 'GET',\n      headers: currentOptions?.headers,\n      body: currentOptions?.body ?? null,\n      signal: controller.signal,\n    })\n      .then(async (response) => {\n        // fetch НЕ отклоняется на 404 и 500 — он отклоняется только при сетевом\n        // сбое. Статус надо проверять руками, иначе код пойдёт парсить\n        // страницу ошибки как JSON.\n        if (!response.ok) {\n          throw new Error(`HTTP ${response.status} ${response.statusText}`);\n        }\n        return (await response.json()) as T;\n      })\n      .then((json) => {\n        if (!isCurrent()) return;\n        setData(json);\n        setError(null);\n      })\n      .catch((cause: unknown) => {\n        // Отмена — не ошибка приложения. Прерванный запрос отклоняется\n        // с DOMException по имени AbortError, и показывать это пользователю\n        // не нужно: мы сами его отменили.\n        if (cause instanceof DOMException && cause.name === 'AbortError') return;\n        if (!isCurrent()) return;\n        setError(cause instanceof Error ? cause : new Error(String(cause)));\n        setData(null);\n      })\n      .finally(() => {\n        // loading снимается только для актуального запроса. Иначе устаревший\n        // ответ погасил бы индикатор у нового, ещё идущего.\n        if (!isCurrent()) return;\n        setLoading(false);\n      });\n\n    // Очистка выполняется и при размонтировании, и ПЕРЕД каждым следующим\n    // запуском эффекта — то есть при смене url. Отмена здесь закрывает\n    // сразу два требования: гонки и отсутствие работы после размонтирования.\n    return () => {\n      controller.abort();\n    };\n  }, [url, attempt]);\n\n  return { data, error, loading, refetch };\n}\n"
+      }
+    ],
+    "issues": [],
+    "grading": [
+      "Видит ловушку с options в зависимостях эффекта (бесконечный перезапуск) и решает её через ref",
+      "Использует AbortController на каждый запрос и не переиспользует контроллер",
+      "Отличает AbortError от настоящей ошибки",
+      "Проверяет response.ok",
+      "Уточнить требования до кода: что делать при смене options, нужен ли кэш, что возвращать до первого ответа",
+      "Назвать состояние: data, error, loading и счётчик перезапросов — и почему options живут в ref",
+      "Краевые случаи: быстрая смена url, размонтирование посреди запроса, ответ 404/500, StrictMode",
+      "Сделать MVP: сначала рабочий базовый сценарий",
+      "В конце качество: типы, доступность, имена",
+      "Улучшения (кэш, тесты, виртуализация, мемоизация) — следующим шагом и только если есть причина"
+    ],
+    "followUps": [
+      "Почему options нельзя положить в зависимости эффекта?",
+      "Зачем счётчик запросов, если есть AbortController?",
+      "Как поведёт себя хук в StrictMode?",
+      "Чем это решение отличается от TanStack Query?"
+    ],
+    "testsToMention": [
+      "Смена url отменяет предыдущий запрос и применяет только последний ответ",
+      "404 и 500 попадают в error, а не в data",
+      "Размонтирование отменяет запрос и не вызывает setState",
+      "refetch запускает запрос заново, ссылка на него не меняется"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-live-todo",
+    "version": 2,
+    "title": "Live coding: список задач (CRUD)",
+    "kind": "live",
+    "level": "junior",
+    "topic": "react",
+    "tags": [
+      "live",
+      "crud",
+      "immutability",
+      "localstorage"
+    ],
+    "brief": "Напишите список задач: добавление, отметка выполненным, редактирование и удаление. Данные должны сохраняться между перезагрузками страницы.",
+    "context": [
+      "Одна из самых частых задач live coding на React"
+    ],
+    "requirements": [
+      "Добавление, удаление, редактирование и отметка «выполнено»",
+      "Состояние обновляется без мутаций: новые массивы и объекты",
+      "Данные сохраняются в localStorage и читаются при старте",
+      "Пустой список и пустой ввод обрабатываются"
+    ],
+    "files": [],
+    "solution": [],
+    "issues": [],
+    "grading": [
+      "Обновление массивов без мутаций — главное, что проверяют",
+      "Уточнить требования до кода: нужна ли сортировка, редактирование по двойному клику, что делать с пустым текстом",
+      "Назвать состояние: массив задач с id, текст нового ввода, id редактируемой задачи",
+      "Краевые случаи: пустой и пробельный ввод, удаление редактируемой задачи, битый JSON в localStorage",
+      "Сделать MVP: сначала рабочий базовый сценарий",
+      "В конце качество: типы, доступность, имена",
+      "Улучшения (кэш, тесты, виртуализация, мемоизация) — следующим шагом и только если есть причина"
+    ],
+    "followUps": [
+      "Почему нельзя вызывать push и setState с тем же массивом?",
+      "Как бы вы синхронизировали данные между вкладками?",
+      "Как организовать ключи, если задачи можно сортировать?"
+    ],
+    "testsToMention": [
+      "Добавление и удаление обновляют список",
+      "Данные переживают перезагрузку",
+      "Пустой ввод не добавляет задачу"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-live-modal",
+    "version": 2,
+    "title": "Live coding: модальное окно и доступность",
+    "kind": "live",
+    "level": "middle",
+    "topic": "a11y",
+    "tags": [
+      "live",
+      "a11y",
+      "portal",
+      "focus"
+    ],
+    "brief": "Сделайте модальное окно: открытие по кнопке, закрытие по Escape и клику снаружи, корректная работа с фокусом и клавиатурой.",
+    "context": [
+      "Проверяют не вёрстку, а доступность и работу с DOM"
+    ],
+    "requirements": [
+      "Рендер через портал, чтобы не попасть в контекст наложения родителя",
+      "Закрытие по Escape и по клику на фон",
+      "Фокус переходит внутрь при открытии и возвращается на кнопку при закрытии",
+      "Фокус не уходит за пределы окна (ловушка фокуса)",
+      "Роль диалога, связанный заголовок, фон недоступен скринридеру"
+    ],
+    "files": [],
+    "solution": [],
+    "issues": [],
+    "grading": [
+      "Различает контролируемое и неконтролируемое состояние открытия",
+      "Помнит про очистку слушателей при размонтировании",
+      "Уточнить требования до кода: кто управляет открытием, нужна ли блокировка прокрутки, есть ли вложенные окна",
+      "Назвать состояние: открыто ли окно и где хранится элемент, на который вернуть фокус",
+      "Краевые случаи: Tab и Shift+Tab на границах окна, клик с нажатием внутри и отпусканием снаружи, размонтирование открытого окна",
+      "Сделать MVP: сначала рабочий базовый сценарий",
+      "В конце качество: типы, доступность, имена",
+      "Улучшения (кэш, тесты, виртуализация, мемоизация) — следующим шагом и только если есть причина"
+    ],
+    "followUps": [
+      "Почему портал, а не обычный элемент?",
+      "Как закрыть окно по клику снаружи и не закрыть по клику внутри?",
+      "Как проверить доступность без скринридера?"
+    ],
+    "testsToMention": [
+      "Escape закрывает окно",
+      "Фокус возвращается на кнопку открытия",
+      "Tab не уходит за пределы окна"
+    ],
+    "reviewedAt": null
+  },
+  {
+    "id": "case-live-infinite-scroll",
+    "version": 2,
+    "title": "Live coding: бесконечная прокрутка",
+    "kind": "live",
+    "level": "senior",
+    "topic": "react",
+    "tags": [
+      "live",
+      "pagination",
+      "intersection-observer",
+      "performance"
+    ],
+    "brief": "Реализуйте список с подгрузкой следующей страницы при прокрутке до конца.",
+    "context": [
+      "Проверяют работу с браузерным API и защиту от повторных запросов"
+    ],
+    "requirements": [
+      "IntersectionObserver на последний элемент или «сторожевой» блок",
+      "Нельзя запрашивать следующую страницу, пока идёт предыдущая",
+      "Корректный конец списка: больше не запрашивать",
+      "Ошибка загрузки с возможностью повторить",
+      "Наблюдатель отключается при размонтировании"
+    ],
+    "files": [],
+    "solution": [],
+    "issues": [],
+    "grading": [
+      "Защита от повторных запросов и корректное завершение списка",
+      "Уточнить требования до кода: курсор или номер страницы, размер страницы, как сервер сообщает о конце списка",
+      "Назвать состояние: элементы, курсор, флаги «идёт загрузка» и «больше нет», ошибка",
+      "Краевые случаи: быстрый скролл до конца, ошибка посреди списка, пустая первая страница, размонтирование во время запроса",
+      "Сделать MVP: сначала рабочий базовый сценарий",
+      "В конце качество: типы, доступность, имена",
+      "Улучшения (кэш, тесты, виртуализация, мемоизация) — следующим шагом и только если есть причина"
+    ],
+    "followUps": [
+      "Почему IntersectionObserver лучше обработчика scroll?",
+      "Как сохранить позицию прокрутки при возврате на страницу?",
+      "Когда нужна виртуализация?"
+    ],
+    "testsToMention": [
+      "Запрос следующей страницы уходит один раз",
+      "После последней страницы запросов нет",
+      "Ошибка не ломает уже загруженный список"
+    ],
+    "reviewedAt": null
+  }
+]

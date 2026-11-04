@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import type { UserRole } from '@/entities/user/model/types'
 import type { Profession } from '@/entities/profession/model/types'
 import { DEFAULT_PROFESSION, isProfessionEnabled } from '@/entities/profession/model/constants'
@@ -8,13 +8,15 @@ interface AppContextType {
   setRole: (role: UserRole) => void
   prof: Profession
   setProf: (prof: Profession) => void
-  selectedProf: Profession | null
-  setSelectedProf: (prof: Profession | null) => void
 }
 
-const AppContext = createContext<AppContextType>(null as any)
+const AppContext = createContext<AppContextType | null>(null)
 
-export const useApp = () => useContext(AppContext)
+export const useApp = () => {
+  const ctx = useContext(AppContext)
+  if (!ctx) throw new Error('useApp вне AppProvider')
+  return ctx
+}
 
 interface AppProviderProps {
   children: React.ReactNode
@@ -28,7 +30,6 @@ export function AppProvider({ children }: AppProviderProps) {
     const saved = localStorage.getItem('prof')
     return isProfessionEnabled(saved) ? saved : DEFAULT_PROFESSION
   })
-  const [selectedProf, setSelectedProf] = useState<Profession | null>(null)
 
   const saveRole = (newRole: UserRole) => {
     setRole(newRole)
@@ -48,8 +49,6 @@ export function AppProvider({ children }: AppProviderProps) {
         setRole: saveRole, 
         prof, 
         setProf: saveProf, 
-        selectedProf, 
-        setSelectedProf 
       }}
     >
       {children}
