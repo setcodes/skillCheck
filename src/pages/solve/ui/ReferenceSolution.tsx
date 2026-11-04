@@ -1,11 +1,12 @@
-import { ChevronDown, Copy, Star } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/shared/ui/collapsible'
-import { CodeEditor } from '@/features/code-editor/ui'
+import { useState } from 'react'
+import { ChevronDown, ChevronRight, Copy, Star } from 'lucide-react'
+import { ToolButton } from '@/shared/ui/tool-button'
 import { useToast } from '@/shared/hooks/use-sonner'
+import { InspectorSection } from '@/shared/ui/inspector-section'
 
-export function ReferenceSolution({ solution, language }: { solution: string; language: string }) {
+export function ReferenceSolution({ solution, onOpenInEditor }: { solution: string; onOpenInEditor?: () => void }) {
   const { toast } = useToast()
+  const [open, setOpen] = useState(false)
 
   const copy = async () => {
     try {
@@ -17,27 +18,39 @@ export function ReferenceSolution({ solution, language }: { solution: string; la
   }
 
   return (
-    <div className="mt-6">
-      <Collapsible>
-        <div className="border rounded-lg">
-          <div className="flex items-center justify-between p-4 bg-muted/50">
-            <CollapsibleTrigger className="group cursor-pointer flex items-center gap-2 hover:bg-muted/70 transition-colors rounded px-2 py-1">
-              <Star className="h-4 w-4 text-yellow-500" fill="currentColor" stroke="none" aria-hidden />
-              <span className="font-medium">Эталонное решение</span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" aria-hidden />
-            </CollapsibleTrigger>
-            <Button variant="ghost" size="sm" onClick={copy} className="h-8 px-2 text-muted-foreground hover:text-foreground">
-              <Copy className="h-3 w-3 mr-1" aria-hidden />
-              Копировать
-            </Button>
-          </div>
-          <CollapsibleContent>
-            <div className="p-4 border-t">
-              <CodeEditor value={solution} onChange={() => {}} language={language} height="300px" placeholder="Эталонное решение..." />
-            </div>
-          </CollapsibleContent>
-        </div>
-      </Collapsible>
-    </div>
+    <InspectorSection
+      label="Эталонное решение"
+      title={
+        <button
+          type="button"
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+          className="flex items-center gap-2 rounded-sm hover:text-primary-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {open ? <ChevronDown className="h-3.5 w-3.5" aria-hidden /> : <ChevronRight className="h-3.5 w-3.5" aria-hidden />}
+          <Star className="h-3.5 w-3.5 text-ansi-yellow" fill="currentColor" stroke="none" aria-hidden />
+          Эталонное решение
+        </button>
+      }
+      meta={
+        <ToolButton variant="ghost" onClick={copy}>
+          <Copy aria-hidden />
+          Копировать
+        </ToolButton>
+      }
+    >
+      {open ? (
+        <>
+          <pre className="max-h-80 overflow-auto rounded-sm border bg-background p-3 text-xs leading-relaxed text-foreground">{solution}</pre>
+          {onOpenInEditor && (
+            <ToolButton variant="ghost" onClick={onOpenInEditor} className="mt-2">
+              показать во вкладке редактора
+            </ToolButton>
+          )}
+        </>
+      ) : (
+        <p className="text-muted-foreground">Скрыто от кандидата. Разверните, чтобы свериться с решением.</p>
+      )}
+    </InspectorSection>
   )
 }

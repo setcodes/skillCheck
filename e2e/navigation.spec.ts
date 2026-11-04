@@ -43,3 +43,18 @@ test.describe('главная и навигация', () => {
     await expect(page).toHaveURL(/\/theory\/fe-html-006/)
   })
 })
+
+test.describe('главная: клавиатура', () => {
+  test('↑/↓ по профессиям, → в разделы, Enter открывает раздел', async ({ page }) => {
+    await page.goto('/')
+    const frontend = page.getByRole('button', { name: /Frontend/ })
+    await expect(frontend).toBeFocused() // фокус приходит после анимации загрузки
+    await page.keyboard.press('ArrowDown')
+    await expect(page.getByText('банк в разработке')).toBeVisible()
+    await page.keyboard.press('ArrowUp')
+    await page.keyboard.press('ArrowRight')
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Enter')
+    await expect(page).toHaveURL(/\/theory/)
+  })
+})

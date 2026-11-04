@@ -1,6 +1,7 @@
 import { Lightbulb } from 'lucide-react'
-import { Button } from '@/shared/ui/button'
+import { ToolButton } from '@/shared/ui/tool-button'
 import type { UserRole } from '@/entities/user/model/types'
+import { InspectorSection } from '@/shared/ui/inspector-section'
 
 interface Props {
   hints: string[]
@@ -17,30 +18,35 @@ export function HintsPanel({ hints, used, role, onReveal }: Props) {
   const visible = interviewer ? hints.length : used
 
   return (
-    <section className="mb-6 border rounded-lg p-4" aria-label="Подсказки">
-      <div className="flex items-center justify-between gap-2 mb-2">
-        <h3 className="flex items-center gap-2 text-sm font-medium">
-          <Lightbulb className="h-4 w-4 text-yellow-500" aria-hidden />
-          Подсказки {interviewer ? `(кандидат открыл: ${used} из ${hints.length})` : `(${used} из ${hints.length})`}
-        </h3>
-        {!interviewer && used < hints.length && (
-          <Button size="sm" variant="outline" onClick={onReveal}>
-            {used === 0 ? 'Показать подсказку' : 'Следующая подсказка'}
-          </Button>
-        )}
-      </div>
+    <InspectorSection
+      label="Подсказки"
+      title={
+        <>
+          <Lightbulb className="h-3.5 w-3.5 text-ansi-yellow" aria-hidden />
+          Подсказки
+        </>
+      }
+      meta={interviewer ? `кандидат открыл ${used}/${hints.length}` : `${used}/${hints.length}`}
+    >
       {visible === 0 ? (
-        <p className="text-sm text-muted-foreground">Подсказки открываются по одной: от общего направления к почти готовой идее. Использованные подсказки видит интервьюер.</p>
+        <p className="text-muted-foreground">
+          Открываются по одной: от общего направления к почти готовой идее. Использованные подсказки видит интервьюер.
+        </p>
       ) : (
-        <ol className="space-y-2 text-sm">
+        <ol className="space-y-3">
           {hints.slice(0, visible).map((h, i) => (
-            <li key={i}>
-              <span className="font-medium">{i + 1}. {TITLES[i] ?? 'Подсказка'}. </span>
-              {h}
+            <li key={i} className="leading-relaxed">
+              <span className="text-ansi-yellow">{i + 1}. {TITLES[i] ?? 'Подсказка'}. </span>
+              <span className="text-foreground">{h}</span>
             </li>
           ))}
         </ol>
       )}
-    </section>
+      {!interviewer && used < hints.length && (
+        <ToolButton onClick={onReveal} className="mt-3">
+          {used === 0 ? 'Показать подсказку' : 'Следующая подсказка'}
+        </ToolButton>
+      )}
+    </InspectorSection>
   )
 }

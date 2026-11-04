@@ -1,312 +1,457 @@
-import React,{useMemo,useState} from 'react'
-import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
-import { Textarea } from '@/shared/ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Badge } from '@/shared/ui/badge'
-import { DatePicker } from '@/shared/ui/date-picker'
-import { Calendar } from '@/shared/ui/calendar'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Label } from '@/shared/ui/label'
-import { useToast } from '@/shared/hooks/use-sonner'
-import { clearAllEvaluations, KEYS, readJSON } from '@/shared/storage/storage'
-import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import { Printer, Trash2, X } from 'lucide-react'
 import { useApp } from '@/app/providers/AppProvider'
-import { Save, Printer, Trash2, Info, CheckCircle } from 'lucide-react'
-import { PROFESSIONS } from '@/entities/profession/model/constants'
-type Row={prof:string;level:string;taskId:string;title:string;score:number;comment:string}
-type TheoryRow={prof:string;questionId:string;title:string;category:string;difficulty:number;score:number;comment:string}
-export default function Interview(){
-  const {prof}=useApp()
-  const {toast} = useToast()
-  const[name,setName]=useState(localStorage.getItem("cand.name")||"")
-  const[pos,setPos]=useState(localStorage.getItem("cand.pos")||"")
-  const[note,setNote]=useState(localStorage.getItem("cand.note")||"")
-  const today = new Date(); const iso = new Date(today.getTime()-today.getTimezoneOffset()*60000).toISOString().slice(0,10)
-  const[date,setDate]=useState(localStorage.getItem("cand.date")||iso)
-  const[timeSpent,setTimeSpent]=useState(localStorage.getItem("cand.timeSpent")||"")
-  const[interviewers,setInterviewers]=useState<string[]>(()=>{ try { const v=localStorage.getItem("cand.interviewers"); if(!v) return []; const p=JSON.parse(v); return Array.isArray(p)? p.filter(x=>typeof x==='string'): [] } catch { return [] } })
-  const[newInterviewer,setNewInterviewer]=useState("")
-  
-  const[bridge,setBridge]=useState<Record<string,Row>>(()=>readJSON(KEYS.taskScoresBridge,{}))
-  const rows=useMemo(()=>Object.values(bridge).filter(r=>r.prof===prof),[prof,bridge])
-  const[tBridge,setTBridge]=useState<Record<string,TheoryRow>>(()=>readJSON(KEYS.theoryScoresBridge,{}))
-  const tRows=useMemo(()=>Object.values(tBridge).filter(r=>r.prof===prof),[prof,tBridge])
-  const final=rows.length? (rows.reduce((s,r)=>s+(r.score||0),0)/(rows.length*5))*100:0
-  const level=final>=85?"Senior":final>=65?"Middle":"Junior-"
-  const persist=()=>{
-    localStorage.setItem("cand.name",name);
-    localStorage.setItem("cand.pos",pos);
-    localStorage.setItem("cand.note",note);
-    localStorage.setItem("cand.date",date);
-    localStorage.setItem("cand.timeSpent",timeSpent);
-    localStorage.setItem("cand.interviewers",JSON.stringify(interviewers));
-    toast.success("Сохранено", "Данные кандидата сохранены.")
+import { useToast } from '@/shared/hooks/use-sonner'
+import { cn } from '@/shared/lib/utils'
+import { clearAllEvaluations, KEYS, readJSON } from '@/shared/storage/storage'
+import { InspectorSection } from '@/shared/ui/inspector-section'
+import { InspectorSplit } from '@/shared/ui/inspector-split'
+import { ToolButton } from '@/shared/ui/tool-button'
+import { TextField } from '@/shared/ui/field'
+import { DateField, TimeField } from '@/shared/ui/date-time'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { ENABLED_PROFESSIONS, PROFESSIONS } from '@/entities/profession/model/constants'
+
+type TaskRow = {
+  prof: string
+  level: string
+  taskId: string
+  title: string
+  score: number
+  comment: string
+}
+type TheoryRow = {
+  prof: string
+  questionId: string
+  title: string
+  category: string
+  difficulty: number
+  score: number
+  comment: string
+}
+
+// Данные отчёта сохраняются в браузере по мере ввода (те же ключи, что и раньше)
+const CAND = {
+  name: 'cand.name',
+  pos: 'cand.pos',
+  note: 'cand.note',
+  date: 'cand.date',
+  timeSpent: 'cand.timeSpent',
+  interviewers: 'cand.interviewers',
+} as const
+
+function read(key: string, fallback = ''): string {
+  try {
+    return localStorage.getItem(key) ?? fallback
+  } catch {
+    return fallback
+  }
+}
+
+function write(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // приватный режим — отчёт живёт до перезагрузки
+  }
+}
+
+function readInterviewers(): string[] {
+  try {
+    const parsed = JSON.parse(read(CAND.interviewers, '[]'))
+    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : []
+  } catch {
+    return []
+  }
+}
+
+const todayIso = () => {
+  const d = new Date()
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10)
+}
+
+
+function ScoreCell({ score }: { score: number }) {
+  return (
+    <span className="flex items-center gap-2">
+      <span
+        className={cn(
+          'w-6 text-right tabular-nums font-bold',
+          score >= 4 ? 'text-ok' : score >= 3 ? 'text-ansi-yellow' : 'text-ansi-red'
+        )}
+      >
+        {score}
+      </span>
+      <span className="h-1.5 w-16 overflow-hidden rounded-full bg-muted print:hidden" aria-hidden>
+        <span
+          className={cn(
+            'block h-full',
+            score >= 4 ? 'bg-ok' : score >= 3 ? 'bg-ansi-yellow' : 'bg-ansi-red'
+          )}
+          style={{ width: `${(score / 5) * 100}%` }}
+        />
+      </span>
+    </span>
+  )
+}
+
+function ScoreTable({
+  title,
+  head,
+  rows,
+  empty,
+}: {
+  title: string
+  head: string
+  rows: { key: string; tag: string; title: string; score: number; comment: string }[]
+  empty: ReactNode
+}) {
+  return (
+    <section className="space-y-2">
+      <h2 className="text-xs font-bold text-foreground">
+        {title} <span className="font-normal text-muted-foreground">· {rows.length}</span>
+      </h2>
+      {rows.length === 0 ? (
+        <p className="rounded-sm border border-dashed px-4 py-3 text-muted-foreground">{empty}</p>
+      ) : (
+        <div className="overflow-x-auto rounded-sm border">
+          <table className="w-full border-collapse text-left">
+            <thead className="bg-card text-xs text-muted-foreground">
+              <tr className="border-b">
+                <th className="px-3 py-2 font-normal">{head}</th>
+                <th className="px-3 py-2 font-normal">Название</th>
+                <th className="px-3 py-2 font-normal">Оценка</th>
+                <th className="px-3 py-2 font-normal">Комментарий</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.key} className="border-b last:border-b-0 hover:bg-accent/50">
+                  <td className="whitespace-nowrap px-3 py-2 text-ansi-blue">{r.tag}</td>
+                  <td className="px-3 py-2 text-foreground">{r.title}</td>
+                  <td className="px-3 py-2">
+                    <ScoreCell score={r.score} />
+                  </td>
+                  <td className="px-3 py-2 font-sans text-[0.85rem] text-muted-foreground">
+                    {r.comment || '—'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  )
+}
+
+export default function InterviewPage() {
+  const { prof } = useApp()
+  const { toast } = useToast()
+  const [name, setName] = useState(() => read(CAND.name))
+  const [pos, setPos] = useState(() => read(CAND.pos))
+  const [note, setNote] = useState(() => read(CAND.note))
+  const [date, setDate] = useState(() => read(CAND.date) || todayIso())
+  const [timeSpent, setTimeSpent] = useState(() => read(CAND.timeSpent))
+  const [interviewers, setInterviewers] = useState<string[]>(readInterviewers)
+  const [newInterviewer, setNewInterviewer] = useState('')
+
+  useEffect(() => {
+    write(CAND.name, name)
+    write(CAND.pos, pos)
+    write(CAND.note, note)
+    write(CAND.date, date)
+    write(CAND.timeSpent, timeSpent)
+    write(CAND.interviewers, JSON.stringify(interviewers))
+  }, [name, pos, note, date, timeSpent, interviewers])
+
+  const [bridge, setBridge] = useState<Record<string, TaskRow>>(() =>
+    readJSON(KEYS.taskScoresBridge, {})
+  )
+  const [tBridge, setTBridge] = useState<Record<string, TheoryRow>>(() =>
+    readJSON(KEYS.theoryScoresBridge, {})
+  )
+  const rows = useMemo(() => Object.values(bridge).filter((r) => r.prof === prof), [prof, bridge])
+  const tRows = useMemo(
+    () => Object.values(tBridge).filter((r) => r.prof === prof),
+    [prof, tBridge]
+  )
+
+  // итог считается по задачам, как и раньше; теория — справочно
+  const final = rows.length
+    ? (rows.reduce((s, r) => s + (r.score || 0), 0) / (rows.length * 5)) * 100
+    : 0
+  const level = final >= 85 ? 'Senior' : final >= 65 ? 'Middle' : 'Junior-'
+  const theoryAvg = tRows.length
+    ? tRows.reduce((s, r) => s + (r.score || 0), 0) / tRows.length
+    : null
+
+  const addInterviewer = () => {
+    const v = newInterviewer.trim()
+    if (!v) return
+    setInterviewers((a) => Array.from(new Set([...a, v])))
+    setNewInterviewer('')
+  }
+
+  const resetAll = () => {
+    if (!window.confirm('Сбросить все оценки, комментарии и решения?')) return
+    clearAllEvaluations(ENABLED_PROFESSIONS)
+    setBridge({})
+    setTBridge({})
+    toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения')
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 print:grid-cols-1 gap-6">
-      {/* Instructions */}
-      <div className="lg:col-span-1 print:hidden">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Info className="h-5 w-5 text-blue-600" />
-              Режим интервью — {prof}
-            </CardTitle>
-            <CardDescription>
-              Ставь оценки в «Решение задач», затем вернись сюда — они появятся ниже.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-3">
-              <Button variant="outline" onClick={persist} className="inline-flex items-center gap-2 w-full">
-                <Save className="h-4 w-4" />
-                Сохранить
-              </Button>
-              <Button variant="outline" onClick={()=>window.print()} className="inline-flex items-center gap-2 w-full">
-                <Printer className="h-4 w-4" />
-                Печать
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={()=>{
-                  if (!window.confirm('Сбросить все оценки, комментарии и решения?')) return
-                  clearAllEvaluations(ENABLED_PROFESSIONS)
-                  setBridge({})
-                  setTBridge({})
-                  toast.success('Все оценки сброшены', 'Очищены оценки задач, теории и решения')
-                }}
-                className="inline-flex items-center gap-2 w-full"
-              >
-                <Trash2 className="h-4 w-4" />
-                Сброс всех оценок
-              </Button>
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden print:block print:overflow-visible">
+      <InspectorSplit
+        id="interview"
+        defaultSize={24}
+        inspectorClassName="font-mono print:hidden"
+        main={
+          <div className="flex min-w-0 flex-col lg:min-h-0 lg:flex-1">
+            <div className="flex h-9 shrink-0 items-stretch justify-between border-b bg-card font-mono print:hidden">
+              <span className="flex items-center border-r bg-background px-3 text-xs text-foreground shadow-[inset_0_2px_0_hsl(var(--primary))]">
+                interview-report.md
+              </span>
+              <div className="flex items-center gap-1.5 pr-2">
+                <ToolButton onClick={() => window.print()}>
+                  <Printer aria-hidden />
+                  Печать
+                </ToolButton>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
 
-      {/* Report */}
-      <div className="lg:col-span-2 print:col-span-1">
-        <Card>
-          <CardHeader>
-            <CardTitle>Отчет по результатам собеседования</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 max-h-[70vh] overflow-y-auto print:max-h-none print:overflow-visible">
-            {/* Meta: Date, Time, Interviewers */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Дата интервью:</label>
-                <div className="print:hidden">
-                  <Input 
-                    type="date" 
-                    value={date} 
-                    onChange={e=>setDate(e.target.value)}
-                    placeholder="Выберите дату интервью"
-                  />
-                </div>
-                <div className="hidden print:block print:text-sm" data-value={date || "Не указано"}>
-                  {date || "Не указано"}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="time-picker" className="px-1">
-                  Время (чч:мм)
-                </Label>
-                <div className="print:hidden">
-                  <Input 
-                    id="time-picker"
-                    type="time" 
-                    value={timeSpent} 
-                    onChange={e => setTimeSpent(e.target.value)}
-                    step="1"
-                    className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none w-32"
-                  />
-                </div>
-                <div className="hidden print:block print:text-sm" data-value={timeSpent || "Не указано"}>
-                  {timeSpent || "Не указано"}
-                </div>
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">Интервьюеры:</label>
-                <div className="print:hidden">
-                  <div className="flex gap-2">
-                    <Input placeholder="Имя интервьюера" value={newInterviewer} onChange={e=>setNewInterviewer(e.target.value)} className="flex-1" />
-                    <Button type="button" onClick={()=>{ const v=newInterviewer.trim(); if(!v) return; setInterviewers(a=>Array.from(new Set([...a, v]))); setNewInterviewer("") }}>Добавить</Button>
+            <div className="flex-1 bg-background lg:min-h-0 lg:overflow-y-auto print:overflow-visible">
+              <article className="mx-auto max-w-4xl space-y-8 px-5 py-8 font-mono text-[0.85rem] sm:px-8">
+                <header className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    Режим интервью — {prof} · сохраняется автоматически
+                  </p>
+                  <h1 className="font-display text-2xl font-bold tracking-[-0.02em] text-foreground">
+                    Отчет по результатам собеседования
+                  </h1>
+                </header>
+
+                <section
+                  aria-label="Данные интервью"
+                  className="grid gap-4 rounded-sm border bg-card p-4 md:grid-cols-2"
+                >
+                  <div className="space-y-1">
+                    <label htmlFor="iv-name" className="text-xs text-muted-foreground">
+                      Кандидат:
+                    </label>
+                    <TextField
+                      id="iv-name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Имя кандидата"
+                    />
                   </div>
-                  {interviewers.length>0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {interviewers.map((p,i)=>(
-                        <span key={i} className="inline-flex items-center gap-1 px-2 py-1 rounded border text-sm">
-                          {p}
-                          <button className="text-muted-foreground hover:text-foreground" onClick={()=> setInterviewers(arr=>arr.filter((_,idx)=>idx!==i))}>×</button>
-                        </span>
-                      ))}
+                  <div className="space-y-1">
+                    <label htmlFor="iv-pos" className="text-xs text-muted-foreground">
+                      Позиция:
+                    </label>
+                    <Select value={pos || undefined} onValueChange={setPos}>
+                      <SelectTrigger id="iv-pos">
+                        <SelectValue placeholder="не выбрана" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {PROFESSIONS.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.title} <span className="text-muted-foreground">· {p.subtitle}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label htmlFor="iv-date" className="text-xs text-muted-foreground">
+                        Дата интервью:
+                      </label>
+                      <DateField id="iv-date" value={date} onChange={setDate} />
                     </div>
-                  )}
-                </div>
-                <div className="hidden print:block print:text-sm" data-value={interviewers.length > 0 ? interviewers.join(", ") : "Не указано"}>
-                  {interviewers.length > 0 ? interviewers.join(", ") : "Не указано"}
-                </div>
-              </div>
-            </div>
-            {/* Candidate Info */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Кандидат:</label>
-                <div className="print:hidden">
-                  <Input 
-                    value={name} 
-                    onChange={e=>setName(e.target.value)}
-                    placeholder="Имя кандидата"
-                  />
-                </div>
-                <div className="hidden print:block print:text-sm" data-value={name || "Не указано"}>
-                  {name || "Не указано"}
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Позиция:</label>
-                <div className="print:hidden">
-                  <Select value={pos} onValueChange={setPos}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Выберите позицию" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PROFESSIONS.map((profession) => (
-                        <SelectItem key={profession.id} value={profession.id}>
-                          <div className="flex items-center gap-2">
-                            <span className={profession.color}>
-                              {profession.title}
-                            </span>
-                            <span className="text-muted-foreground text-sm">
-                              {profession.subtitle}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="hidden print:block print:text-sm" data-value={pos ? PROFESSIONS.find(p => p.id === pos)?.title || pos : "Не указано"}>
-                  {pos ? PROFESSIONS.find(p => p.id === pos)?.title || pos : "Не указано"}
-                </div>
-              </div>
-            </div>
+                    <div className="space-y-1">
+                      <label htmlFor="iv-time" className="text-xs text-muted-foreground">
+                        Время (чч:мм)
+                      </label>
+                      <TimeField id="iv-time" value={timeSpent} onChange={setTimeSpent} />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label htmlFor="iv-new" className="text-xs text-muted-foreground">
+                      Интервьюеры:
+                    </label>
+                    <div className="flex gap-2 print:hidden">
+                      <TextField
+                        id="iv-new"
+                        value={newInterviewer}
+                        onChange={(e) => setNewInterviewer(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            addInterviewer()
+                          }
+                        }}
+                        placeholder="Имя интервьюера"
+                      />
+                      <ToolButton onClick={addInterviewer} className="h-8">
+                        Добавить
+                      </ToolButton>
+                    </div>
+                    {interviewers.length > 0 && (
+                      <ul className="flex flex-wrap gap-1.5 pt-1" aria-label="Интервьюеры">
+                        {interviewers.map((p, i) => (
+                          <li
+                            key={p}
+                            className="inline-flex items-center gap-1 rounded-sm border bg-background px-2 py-0.5 text-foreground"
+                          >
+                            {p}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setInterviewers((arr) => arr.filter((_, idx) => idx !== i))
+                              }
+                              aria-label={`Убрать интервьюера ${p}`}
+                              className="text-muted-foreground hover:text-foreground print:hidden"
+                            >
+                              <X className="h-3 w-3" aria-hidden />
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </section>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Общая обратная связь:</label>
-              <div className="print:hidden">
-                <Textarea 
-                  value={note} 
-                  onChange={e=>setNote(e.target.value)}
-                  placeholder="Общие комментарии по кандидату..."
-                  className="min-h-[100px]"
+                <section
+                  aria-label="Итог"
+                  className="grid gap-4 rounded-sm border bg-card p-5 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-8"
+                >
+                  <div>
+                    <p className="text-xs text-muted-foreground">Финальный процент:</p>
+                    <p className="font-display text-5xl font-bold tabular-nums tracking-[-0.03em] text-foreground">
+                      {final.toFixed(0)}%
+                    </p>
+                  </div>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+                    <dt className="text-muted-foreground">Уровень:</dt>
+                    <dd
+                      className={cn(
+                        'font-bold',
+                        level === 'Senior'
+                          ? 'text-ok'
+                          : level === 'Middle'
+                            ? 'text-ansi-yellow'
+                            : 'text-ansi-red'
+                      )}
+                    >
+                      {level}
+                    </dd>
+                    <dt className="text-muted-foreground">задач оценено</dt>
+                    <dd className="tabular-nums text-foreground">{rows.length}</dd>
+                    <dt className="text-muted-foreground">теория, среднее</dt>
+                    <dd className="tabular-nums text-foreground">
+                      {theoryAvg === null ? '—' : `${theoryAvg.toFixed(1)} из 5 · ${tRows.length}`}
+                    </dd>
+                  </dl>
+                </section>
+
+                <ScoreTable
+                  title="Оценки по задачам"
+                  head="Уровень"
+                  rows={rows.map((r) => ({
+                    key: `${r.level}:${r.taskId}`,
+                    tag: r.level,
+                    title: r.title,
+                    score: r.score,
+                    comment: r.comment,
+                  }))}
+                  empty={
+                    <>
+                      Пока пусто. Оцените решение в разделе{' '}
+                      <Link to="/solve" className="text-primary-text underline underline-offset-4">
+                        задачи
+                      </Link>{' '}
+                      и нажмите «Отправить оценку».
+                    </>
+                  }
                 />
-              </div>
-              <div className="hidden print:block print:text-sm print:whitespace-pre-wrap print:min-h-[100px] print:border print:border-gray-300 print:p-2" data-value={note || "Не указано"}>
-                {note || "Не указано"}
-              </div>
+                <ScoreTable
+                  title="Оценки по теории"
+                  head="Категория"
+                  rows={tRows.map((r) => ({
+                    key: r.questionId,
+                    tag: r.category,
+                    title: r.title,
+                    score: r.score,
+                    comment: r.comment,
+                  }))}
+                  empty={
+                    <>
+                      Пока пусто. Оцените ответ в разделе{' '}
+                      <Link to="/theory" className="text-primary-text underline underline-offset-4">
+                        теория
+                      </Link>{' '}
+                      и нажмите «Отправить оценку».
+                    </>
+                  }
+                />
+
+                <section className="space-y-1">
+                  <label htmlFor="iv-note" className="text-xs font-bold text-foreground">
+                    Общая обратная связь:
+                  </label>
+                  <textarea
+                    id="iv-note"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Общие комментарии по кандидату..."
+                    className="min-h-[120px] w-full resize-y rounded-sm border bg-card p-3 font-sans text-[0.95rem] leading-relaxed outline-none transition-colors placeholder:text-muted-foreground/70 hover:border-muted-foreground/50 focus:border-primary print:border print:bg-transparent"
+                  />
+                </section>
+              </article>
             </div>
-
-            {/* Results Summary */}
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="flex items-center gap-4">
-                <div>
-                  <span className="text-sm text-muted-foreground">Финальный процент:</span>
-                  <span className="ml-2 font-semibold">{final.toFixed(0)}%</span>
-                </div>
-                <div>
-                  <span className="text-sm text-muted-foreground">Уровень:</span>
-                  <Badge 
-                    variant={level==='Senior' ? 'default' : level==='Middle' ? 'secondary' : 'destructive'}
-                    className="ml-2"
-                  >
-                    {level}
-                  </Badge>
-                </div>
-              </div>
-            </div>
-
-            {/* Tasks Table */}
-            {rows.length > 0 && (
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Оценки по задачам</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Профессия</th>
-                        <th className="text-left p-2">Уровень</th>
-                        <th className="text-left p-2">Задача</th>
-                        <th className="text-left p-2">Оценка</th>
-                        <th className="text-left p-2">Комментарий</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((r,i)=>(
-                        <tr key={i} className="border-b">
-                          <td className="p-2">{r.prof}</td>
-                          <td className="p-2">
-                            <Badge variant="outline">{r.level}</Badge>
-                          </td>
-                          <td className="p-2">{r.title}</td>
-                          <td className="p-2">
-                            <Badge variant={r.score>=4 ? 'default' : r.score>=3 ? 'secondary' : 'destructive'}>
-                              {r.score}
-                            </Badge>
-                          </td>
-                          <td className="p-2 text-sm text-muted-foreground">{r.comment}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Theory Table */}
-            {tRows.length > 0 && (
-              <div className="space-y-4">
-                <h4 className="text-lg font-semibold">Оценки по теории</h4>
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr className="border-b">
-                        <th className="text-left p-2">Профессия</th>
-                        <th className="text-left p-2">Категория</th>
-                        <th className="text-left p-2">Вопрос</th>
-                        <th className="text-left p-2">Оценка</th>
-                        <th className="text-left p-2">Комментарий</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tRows.map((r,i)=>(
-                        <tr key={i} className="border-b">
-                          <td className="p-2">{r.prof}</td>
-                          <td className="p-2">
-                            <Badge variant="outline">{r.category}</Badge>
-                          </td>
-                          <td className="p-2">{r.title}</td>
-                          <td className="p-2">
-                            <Badge variant={r.score>=4 ? 'default' : r.score>=3 ? 'secondary' : 'destructive'}>
-                              {r.score}
-                            </Badge>
-                          </td>
-                          <td className="p-2 text-sm text-muted-foreground">{r.comment}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-
-            {/* Actions moved to left panel */}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        }
+        inspector={
+          <>
+            <InspectorSection label="Как собирается отчёт" title="Как собирается отчёт">
+              <ol className="space-y-2 leading-relaxed text-muted-foreground">
+                <li>
+                  <span className="text-primary-text">1.</span> В{' '}
+                  <Link to="/solve" className="text-foreground underline underline-offset-4">
+                    задачах
+                  </Link>{' '}
+                  и{' '}
+                  <Link to="/theory" className="text-foreground underline underline-offset-4">
+                    теории
+                  </Link>{' '}
+                  ставьте оценку и жмите «Отправить оценку».
+                </li>
+                <li>
+                  <span className="text-primary-text">2.</span> Оценки появляются здесь, итог
+                  считается по задачам.
+                </li>
+                <li>
+                  <span className="text-primary-text">3.</span> Заполните данные и обратную связь —
+                  всё сохраняется само. Отчёт можно распечатать.
+                </li>
+              </ol>
+            </InspectorSection>
+            <InspectorSection label="Опасная зона" title="Опасная зона">
+              <ToolButton
+                onClick={resetAll}
+                className="border-ansi-red text-ansi-red hover:border-ansi-red hover:bg-ansi-red/10 hover:text-ansi-red"
+              >
+                <Trash2 aria-hidden />
+                Сброс всех оценок
+              </ToolButton>
+            </InspectorSection>
+          </>
+        }
+      />
     </div>
   )
 }

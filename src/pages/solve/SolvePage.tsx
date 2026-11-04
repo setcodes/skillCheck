@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useApp } from '@/app/providers/AppProvider'
 import { useTasks } from '@/shared/bank'
@@ -7,11 +7,10 @@ import { useTimer } from '@/shared/hooks/use-timer'
 import { formatSeconds } from '@/shared/lib/timer'
 import { KEYS, clearAllEvaluations, readJSON, writeJSON } from '@/shared/storage/storage'
 import { ENABLED_PROFESSIONS } from '@/entities/profession/model/constants'
-import type { UITask } from '@/entities/task/model/types'
 import type { TestResult } from '@/shared/api/runner'
 import { useSolutions } from './model/useSolutions'
 import { useTaskRunner } from './model/useTaskRunner'
-import { TaskList } from './ui/TaskList'
+import { TaskExplorer } from './ui/TaskExplorer'
 import { TaskWorkspace } from './ui/TaskWorkspace'
 
 export default function SolvePage() {
@@ -23,8 +22,8 @@ export default function SolvePage() {
   const { solutions, patch, clearAll } = useSolutions()
 
   const task = tasks.find((t) => t.id === taskId)
-  const levels = useMemo(() => [...new Set(tasks.map((t) => t.level))] as UITask['level'][], [tasks])
-  const list = useMemo(() => tasks.filter((t) => t.level === task?.level), [tasks, task?.level])
+  // ниже xl проводник — выезжающая панель
+  const [explorerOpen, setExplorerOpen] = useState(false)
 
   const onResult = useCallback(
     (id: string, code: string, lastResult: TestResult[]) => patch(id, { code, lastResult }),
@@ -73,51 +72,54 @@ export default function SolvePage() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full min-h-0">
-      <div className="lg:col-span-1 h-full min-h-0">
-        <TaskList
-          prof={prof}
-          levels={levels}
-          level={task.level}
-          tasks={list}
-          currentId={task.id}
-          onLevel={(l) => {
-            const first = tasks.find((t) => t.level === l)
-            if (first) navigate(`/solve/${first.id}`)
-          }}
-          onSelect={(id) => navigate(`/solve/${id}`)}
-          onResetEvaluations={resetEvaluations}
+    <div className="relative flex h-full min-h-0 flex-col overflow-y-auto lg:flex-row lg:overflow-hidden">
+      {explorerOpen && (
+        <button
+          type="button"
+          aria-label="Закрыть список задач"
+          onClick={() => setExplorerOpen(false)}
+          className="fixed inset-0 z-20 bg-background/60 backdrop-blur-[2px] xl:hidden"
         />
-      </div>
-      <div className="lg:col-span-2 h-full min-h-0">
-        <div className="bg-card border rounded-lg h-full flex flex-col">
-          <TaskWorkspace
-            task={task}
-            role={role}
-            solution={solution}
-            timer={timer}
-            logs={runner.logs}
-            onCode={(code) => patch(task.id, { code })}
-            onRun={(code) => runner.run(task, code)}
-            onResetTask={() => {
-              patch(task.id, { code: task.starter, lastResult: undefined })
-              runner.clearLogs()
-              toast.info('Задача сброшена', 'Код возвращен к исходному состоянию')
-            }}
-            onResetTests={() => {
-              patch(task.id, { lastResult: undefined })
-              runner.clearLogs()
-              toast.info('Результаты очищены', 'Очищены результаты тестов и консоль')
-            }}
-            onClearLogs={runner.clearLogs}
-            onScore={(score) => patch(task.id, { score })}
-            onComment={(comment) => patch(task.id, { comment })}
-            onSendScore={sendScore}
-            onRevealHint={() => patch(task.id, { hintsUsed: Math.min((solution.hintsUsed ?? 0) + 1, task.hints?.length ?? 0) })}
-            onRubric={(rubricDone) => patch(task.id, { rubricDone })}
-          />
-        </div>
-      </div>
+      )}
+      <TaskExplorer
+        tasks={tasks}
+        solutions={solutions}
+        currentId={task.id}
+        onSelect={(id) => {
+          navigate(`/solve/${id}`)
+          setExplorerOpen(false)
+        }}
+        onResetEvaluations={resetEvaluations}
+        onClose={explorerOpen ? () => setExplorerOpen(false) : undefined}
+        className={explorerOpen ? 'fixed bottom-7 left-14 top-10 z-30 flex shadow-2xl' : 'hidden xl:flex'}
+      />
+      <TaskWorkspace
+        task={task}
+        role={role}
+        solution={solution}
+        timer={timer}
+        logs={runner.logs}
+        running={runner.running}
+        onCode={(code) => patch(task.id, { code })}
+        onRun={(code) => runner.run(task, code)}
+        onResetTask={() => {
+          patch(task.id, { code: task.starter, lastResult: undefined })
+          runner.clearLogs()
+          toast.info('Задача сброшена', 'Код возвращен к исходному состоянию')
+        }}
+        onResetTests={() => {
+          patch(task.id, { lastResult: undefined })
+          runner.clearLogs()
+          toast.info('Результаты очищены', 'Очищены результаты тестов и консоль')
+        }}
+        onClearLogs={runner.clearLogs}
+        onScore={(score) => patch(task.id, { score })}
+        onComment={(comment) => patch(task.id, { comment })}
+        onSendScore={sendScore}
+        onRevealHint={() => patch(task.id, { hintsUsed: Math.min((solution.hintsUsed ?? 0) + 1, task.hints?.length ?? 0) })}
+        onRubric={(rubricDone) => patch(task.id, { rubricDone })}
+        onToggleExplorer={() => setExplorerOpen((o) => !o)}
+      />
     </div>
   )
 }
