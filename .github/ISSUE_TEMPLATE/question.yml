@@ -1,0 +1,91 @@
+name: Предложить вопрос
+description: Новый вопрос в банк Frontend или исправление ответа — без git и JSON
+title: "Вопрос: "
+labels: ["content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Мейнтейнер перенесёт вопрос в банк и вычитает его. Если готовы сами сделать pull request —
+        порядок описан в [CONTRIBUTING.md](https://github.com/setcodes/skillCheck/blob/main/CONTRIBUTING.md).
+  - type: dropdown
+    id: type
+    attributes:
+      label: Что предлагаете
+      options:
+        - Новый вопрос
+        - Исправление существующего вопроса
+    validations:
+      required: true
+  - type: input
+    id: existing
+    attributes:
+      label: id существующего вопроса
+      description: Только для исправления. id виден в адресе страницы, например fe-react-004.
+      placeholder: fe-react-004
+  - type: textarea
+    id: prompt
+    attributes:
+      label: Вопрос
+      description: Так, как его задаёт интервьюер.
+    validations:
+      required: true
+  - type: dropdown
+    id: level
+    attributes:
+      label: Уровень
+      options:
+        - junior
+        - middle
+        - senior
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Тема
+      options:
+        - "JavaScript: основы"
+        - Асинхронность и event loop
+        - TypeScript
+        - HTML
+        - CSS
+        - Доступность
+        - React
+        - Управление состоянием
+        - Браузер и сеть
+        - Производительность
+        - Безопасность
+        - Тестирование
+        - Архитектура
+        - Алгоритмы
+        - Разное
+    validations:
+      required: true
+  - type: textarea
+    id: answer
+    attributes:
+      label: Ответ
+      description: Как его стоит произнести на собеседовании. Код — в блоках ```.
+    validations:
+      required: true
+  - type: textarea
+    id: must-mention
+    attributes:
+      label: Что обязательно должно прозвучать
+      description: Чек-лист для интервьюера, по пункту на строку.
+  - type: textarea
+    id: mistakes
+    attributes:
+      label: Типичные ошибки и красные флаги
+      description: Необязательно.
+  - type: textarea
+    id: sources
+    attributes:
+      label: Источники
+      description: MDN, спецификация, документация — по ссылке на строку.
+  - type: input
+    id: author
+    attributes:
+      label: Как подписать авторство
+      description: Необязательно. Ник попадёт в поле author.

@@ -43,7 +43,7 @@ describe('банк: встроенные данные и overlay', () => {
     const before = bank.getQuestions('frontend')
     const existing = before[0]
     const r = bank.importBank('frontend', [q('custom-1'), { ...existing, answer: { ...existing.answer, short: 'Новый ответ' } }])
-    expect(r.questions).toEqual({ added: 1, updated: 1, rejected: 0 })
+    expect(r.questions).toEqual({ added: 1, updated: 1, unchanged: 0, rejected: 0 })
     const after = bank.getQuestions('frontend')
     expect(after).not.toBe(before)
     expect(after).toHaveLength(before.length + 1)
@@ -91,6 +91,48 @@ describe('банк: встроенные данные и overlay', () => {
     expect(bank.getQuestions('frontend').some((x) => x.id === 'custom-3')).toBe(true)
   })
 
+  it('повторный импорт полной выгрузки не заслоняет встроенный банк', async () => {
+    const bank = await load()
+    const full = { questions: bank.getQuestions('frontend'), tasks: bank.getTasks('frontend') }
+    const r = bank.importBank('frontend', JSON.parse(JSON.stringify(full)))
+    expect(r.questions).toMatchObject({ added: 0, updated: 0, unchanged: full.questions.length, rejected: 0 })
+    expect(r.tasks).toMatchObject({ added: 0, updated: 0, unchanged: full.tasks.length, rejected: 0 })
+    expect(localStorage.getItem('bank:v2:frontend')).toBeNull()
+    expect(bank.exportBank('frontend')).toEqual({ questions: [], tasks: [] })
+  })
+
+  it('импорт вопроса, совпадающего со встроенным, снимает прежнюю правку', async () => {
+    const bank = await load()
+    const original = bank.getQuestions('frontend')[0]
+    bank.importBank('frontend', [{ ...original, answer: { ...original.answer, short: 'Правка' } }])
+    expect(bank.exportBank('frontend').questions).toHaveLength(1)
+    const r = bank.importBank('frontend', [original])
+    expect(r.questions.unchanged).toBe(1)
+    expect(bank.getQuestions('frontend').find((x) => x.id === original.id)?.answer.short).toBe(original.answer.short)
+    expect(bank.exportBank('frontend').questions).toEqual([])
+  })
+
+  it('экспорт содержит только свои правки и импортируется обратно', async () => {
+    let bank = await load()
+    const original = bank.getQuestions('frontend')[0]
+    bank.importBank('frontend', [q('own-1'), { ...original, answer: { ...original.answer, short: 'Своя версия' } }])
+    const file = JSON.parse(JSON.stringify(bank.exportBank('frontend')))
+    expect(file.questions.map((x: { id: string }) => x.id).sort()).toEqual([original.id, 'own-1'].sort())
+    expect(file.tasks).toEqual([])
+    localStorage.clear()
+    bank = await load()
+    const r = bank.importBank('frontend', file)
+    expect(r.questions).toMatchObject({ added: 1, updated: 1, unchanged: 0 })
+  })
+
+  it('сохранённые копии встроенных вопросов отбрасываются при чтении', async () => {
+    const first = await load()
+    const original = first.getQuestions('frontend')[0]
+    localStorage.setItem('bank:v2:frontend', JSON.stringify({ v: 1, questions: { [original.id]: original }, tasks: {} }))
+    const bank = await load()
+    expect(bank.exportBank('frontend').questions).toEqual([])
+  })
+
   it('подписчики получают уведомление об изменении', async () => {
     const bank = await load()
     const fn = vi.fn()
@@ -117,7 +159,7 @@ describe('задачи: импорт в прежнем формате (tests / h
   it('tests и hiddenTests превращаются в сценарные проверки', async () => {
     const bank = await load()
     const r = bank.importBank('frontend', { tasks: [legacyTask] })
-    expect(r.tasks).toEqual({ added: 1, updated: 0, rejected: 0 })
+    expect(r.tasks).toEqual({ added: 1, updated: 0, unchanged: 0, rejected: 0 })
     const task = bank.getTasks('frontend').find((t) => t.id === 'custom_legacy')!
     expect(task.checks.map((c) => [c.type, !!c.hidden])).toEqual([['script', false], ['script', true]])
     expect(task).not.toHaveProperty('tests')

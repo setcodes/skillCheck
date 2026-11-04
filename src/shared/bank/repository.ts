@@ -24,9 +24,17 @@ export interface Overrides {
   tasks: Record<string, UITask>
 }
 
+export interface ImportStat {
+  added: number
+  updated: number
+  /** совпали со встроенным банком — не сохраняются, чтобы не заслонять будущие исправления */
+  unchanged: number
+  rejected: number
+}
+
 export interface ImportReport {
-  questions: { added: number; updated: number; rejected: number }
-  tasks: { added: number; updated: number; rejected: number }
+  questions: ImportStat
+  tasks: ImportStat
   errors: string[]
 }
 
@@ -59,6 +67,35 @@ export function mergeBank(builtin: Bank, o: Overrides): Bank {
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b)
+
+// Сравнение без учёта порядка ключей: файл банка и результат схемы перечисляют поля по-разному.
+function stable(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stable)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .filter((k) => (value as Record<string, unknown>)[k] !== undefined)
+        .map((k) => [k, stable((value as Record<string, unknown>)[k])])
+    )
+  }
+  return value
+}
+const sameContent = (a: unknown, b: unknown) => same(stable(a), stable(b))
+
+// Встроенный банк, приведённый схемой, — чтобы сравнивать импорт с ним по содержимому.
+const normalizedBuiltin = new Map<Profession, { questions: Map<string, Question>; tasks: Map<string, UITask> }>()
+function builtinIndex(prof: Profession) {
+  const hit = normalizedBuiltin.get(prof)
+  if (hit) return hit
+  const b = BUILTIN[prof] ?? { questions: [], tasks: [] }
+  const index = {
+    questions: new Map(b.questions.map((q) => [q.id, QuestionSchema.safeParse(q).data ?? q])),
+    tasks: new Map(b.tasks.map((t) => [t.id, TaskSchema.safeParse(t).data ?? t])),
+  }
+  normalizedBuiltin.set(prof, index)
+  return index
+}
 
 /** Карта «прежний id → актуальный id» по полю aliases встроенных вопросов. */
 export function aliasMap(questions: Question[]): Map<string, string> {
@@ -103,26 +140,29 @@ export function migrateLegacy(
 }
 
 // Overlay мог быть записан до смены схемы вопроса: приводим к текущей и переносим на актуальные id.
-function normalizeStored(builtin: Bank | undefined, stored: Overrides): Overrides {
-  const aliases = aliasMap(builtin?.questions ?? [])
+function normalizeStored(prof: Profession, stored: Overrides): Overrides {
+  const aliases = aliasMap(BUILTIN[prof]?.questions ?? [])
+  const index = builtinIndex(prof)
   const questions: Record<string, Question> = {}
   for (const [key, raw] of Object.entries(stored.questions ?? {})) {
     const parsed = QuestionSchema.safeParse(coerceQuestion(raw))
     if (!parsed.success) continue
     const id = aliases.get(key) ?? aliases.get(parsed.data.id) ?? parsed.data.id
-    questions[id] = { ...parsed.data, id }
+    const q = { ...parsed.data, id }
+    // копия встроенного вопроса (например, после импорта полной выгрузки) — не правка
+    if (!sameContent(q, index.questions.get(id))) questions[id] = q
   }
   const tasks: Record<string, UITask> = {}
   for (const [key, raw] of Object.entries(stored.tasks ?? {})) {
     const parsed = TaskSchema.safeParse(coerceTask(raw))
-    if (parsed.success) tasks[key] = parsed.data
+    if (parsed.success && !sameContent(parsed.data, index.tasks.get(key))) tasks[key] = parsed.data
   }
   return { v: 1, questions, tasks }
 }
 
 function loadOverrides(prof: Profession): Overrides {
   const stored = readJSON<Overrides | null>(KEYS.bankOverrides(prof), null)
-  if (stored && stored.v === 1) return normalizeStored(BUILTIN[prof], stored)
+  if (stored && stored.v === 1) return normalizeStored(prof, stored)
   const builtin = BUILTIN[prof]
   const legacyQ = readJSON<unknown>(KEYS.legacyBankQuestions(prof), null)
   const legacyT = readJSON<unknown>(KEYS.legacyBankTasks(prof), null)
@@ -138,10 +178,12 @@ function loadOverrides(prof: Profession): Overrides {
 
 // --- кэш с устойчивыми ссылками (важно для зависимостей useEffect/useMemo) ---
 const cache = new Map<Profession, Bank>()
+const ownCache = new Map<Profession, Bank>()
 const listeners = new Set<() => void>()
 
 function notify() {
   cache.clear()
+  ownCache.clear()
   listeners.forEach((l) => l())
 }
 
@@ -181,16 +223,30 @@ export function resetBank(prof: Profession): void {
   notify()
 }
 
+/**
+ * Выгрузка только своих правок: добавленное и изменённое импортом.
+ * Встроенный банк приходит с приложением и в файл не попадает — так файл годится и для переноса
+ * в другой браузер, и для предложения вопросов в репозиторий, а его повторный импорт не заслоняет
+ * будущие исправления встроенного банка.
+ */
 export function exportBank(prof: Profession): Bank {
-  return getBank(prof)
+  const hit = ownCache.get(prof)
+  if (hit) return hit
+  const o = loadOverrides(prof)
+  const own = {
+    questions: Object.values(o.questions).sort(sortQuestions),
+    tasks: Object.values(o.tasks),
+  }
+  ownCache.set(prof, own)
+  return own
 }
 
 // Импорт: { questions?, tasks? } или просто массив вопросов. Невалидные элементы отбрасываются
 // с понятным сообщением, валидные накладываются поверх встроенного банка.
 export function importBank(prof: Profession, raw: unknown): ImportReport {
   const report: ImportReport = {
-    questions: { added: 0, updated: 0, rejected: 0 },
-    tasks: { added: 0, updated: 0, rejected: 0 },
+    questions: { added: 0, updated: 0, unchanged: 0, rejected: 0 },
+    tasks: { added: 0, updated: 0, unchanged: 0, rejected: 0 },
     errors: [],
   }
   const rawQuestions = Array.isArray(raw) ? raw : (raw as { questions?: unknown })?.questions
@@ -204,34 +260,59 @@ export function importBank(prof: Profession, raw: unknown): ImportReport {
   const knownQ = new Set(current.questions.map((q) => q.id))
   const knownT = new Set(current.tasks.map((t) => t.id))
   const overrides = loadOverrides(prof)
+  const index = builtinIndex(prof)
+  const aliases = aliasMap(BUILTIN[prof]?.questions ?? [])
+  let changed = false
 
   const take = <T extends { id: string }>(
     list: unknown,
     parse: (x: unknown) => { success: true; data: T } | { success: false; error: { issues: { path: PropertyKey[]; message: string }[] } },
     known: Set<string>,
+    builtin: Map<string, T>,
     into: Record<string, T>,
-    stat: ImportReport['questions'],
-    label: string
+    stat: ImportStat,
+    label: string,
+    canonical: (id: string) => string = (id) => id
   ) => {
     if (!Array.isArray(list)) return
-    list.forEach((item, i) => {
-      const parsed = parse(item)
+    list.forEach((raw, i) => {
+      const parsed = parse(raw)
       if (!parsed.success) {
         stat.rejected++
         if (report.errors.length < 10) report.errors.push(`${label} #${i + 1}: ${describeIssue(parsed.error)}`)
         return
       }
-      if (known.has(parsed.data.id)) stat.updated++
+      const id = canonical(parsed.data.id)
+      const item = { ...parsed.data, id }
+      if (sameContent(item, builtin.get(id))) {
+        // совпадает со встроенным: прежнюю правку (если была) снимаем, копию не храним
+        stat.unchanged++
+        if (id in into) {
+          delete into[id]
+          changed = true
+        }
+        return
+      }
+      if (known.has(id)) stat.updated++
       else stat.added++
-      into[parsed.data.id] = parsed.data
+      into[id] = item
+      changed = true
     })
   }
 
-  take(rawQuestions, (x) => QuestionSchema.safeParse(coerceQuestion(x)), knownQ, overrides.questions, report.questions, 'Вопрос')
-  take(rawTasks, (x) => TaskSchema.safeParse(coerceTask(x)), knownT, overrides.tasks, report.tasks, 'Задача')
+  take(
+    rawQuestions,
+    (x) => QuestionSchema.safeParse(coerceQuestion(x)),
+    knownQ,
+    index.questions,
+    overrides.questions,
+    report.questions,
+    'Вопрос',
+    (id) => aliases.get(id) ?? id
+  )
+  take(rawTasks, (x) => TaskSchema.safeParse(coerceTask(x)), knownT, index.tasks, overrides.tasks, report.tasks, 'Задача')
 
-  const imported = report.questions.added + report.questions.updated + report.tasks.added + report.tasks.updated
-  if (imported > 0) {
+  if (changed) {
     writeJSON(KEYS.bankOverrides(prof), overrides)
     notify()
   }
