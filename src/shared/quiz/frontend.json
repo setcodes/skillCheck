@@ -30,7 +30,7 @@
       "приватность замыкания",
       "свойство функции не связано с переменной замыкания"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-let-loop-array",
@@ -61,7 +61,7 @@
       "let копирует значение, а не данные",
       "ссылка на общий массив"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-var-vs-let-timeouts",
@@ -96,7 +96,7 @@
       "одна переменная var против привязки на итерацию",
       "порядок таймеров"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-event-loop-order",
@@ -133,7 +133,7 @@
       "каждое звено цепочки — отдельный тик",
       "микрозадачи полностью раньше таймера"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-hoisting-tdz",
@@ -164,7 +164,7 @@
       "function declaration доступна целиком",
       "let в TDZ"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-this-extracted-method",
@@ -197,7 +197,7 @@
       "строгий режим: undefined вместо глобального объекта",
       "bind и call"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-coercion-mix",
@@ -228,7 +228,7 @@
       "NaN !== NaN",
       "погрешность float"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-sort-mutates",
@@ -259,7 +259,7 @@
       "sort мутирует и возвращает тот же массив",
       "сортировка по умолчанию строковая"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-shallow-copy",
@@ -288,7 +288,7 @@
       "поверхностная копия делит вложенные объекты",
       "push меняет только копию"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-async-await-order",
@@ -320,7 +320,7 @@
       "async синхронна до await",
       "код после await — микрозадача"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-class-getter-own-property",
@@ -349,7 +349,7 @@
       "геттер живёт на прототипе",
       "in и hasOwnProperty различаются"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-nan-and-map",
@@ -378,7 +378,7 @@
       "SameValueZero против ===",
       "объекты в Map по ссылке"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-default-params",
@@ -410,7 +410,7 @@
       "null — это значение",
       "join и null"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-promise-chains-interleave",
@@ -443,7 +443,7 @@
       "каждое then — один тик",
       "цепочки чередуются, а не идут по очереди"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "quiz-finally-return",
@@ -472,6 +472,6 @@
     "pitfalls": [
       "finally выполняется до фактического возврата"
     ],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   }
 ]

@@ -27,7 +27,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-a11y-002",
@@ -51,7 +51,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-algorithms-001",
@@ -78,7 +78,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-algorithms-002",
@@ -106,7 +106,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-algorithms-003",
@@ -134,7 +134,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-algorithms-004",
@@ -162,7 +162,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-algorithms-005",
@@ -190,7 +190,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-001",
@@ -218,7 +218,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-002",
@@ -246,7 +246,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-003",
@@ -273,7 +273,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-004",
@@ -301,7 +301,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-005",
@@ -329,7 +329,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-006",
@@ -356,7 +356,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-007",
@@ -384,7 +384,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-009",
@@ -408,7 +408,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-architecture-010",
@@ -432,7 +432,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-architecture-008",
       "arch_10"
@@ -465,7 +465,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-002",
@@ -492,7 +492,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-003",
@@ -520,7 +520,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-004",
@@ -535,19 +535,19 @@
     "topic": "async",
     "tags": [],
     "answer": {
-      "short": "Оба ставят макрозадачу, но у setTimeout есть минимальная задержка 4 мс после пяти вложенных вызовов, а у MessageChannel её нет.",
+      "short": "Оба ставят макрозадачу, но у setTimeout после пяти вложенных вызовов задержка не бывает меньше 4 мс, а у MessageChannel её нет.",
       "mustMention": [
         "Оба — макрозадачи",
-        "setTimeout ограничен 4 мс после вложенности и сильнее в фоне",
+        "setTimeout не быстрее 4 мс после вложенности и сильнее в фоне",
         "MessageChannel без ограничения — его использует планировщик React"
       ],
       "commonMistakes": [],
       "redFlags": [],
-      "full": "Оба ставят **макрозадачу**, ни один не микрозадача. Но у `setTimeout` есть минимальная задержка: после пяти вложенных вызовов браузер ограничивает её 4 мс, а в фоновой вкладке — до секунды и больше. `postMessage` через `MessageChannel` такого ограничения не имеет, поэтому планировщик React использует именно его, чтобы отдавать управление браузеру между кусками работы без лишних пауз."
+      "full": "Оба ставят **макрозадачу**, ни один не микрозадача. Но у `setTimeout` есть минимальная задержка: после пяти вложенных вызовов она не бывает меньше 4 мс, а в фоновой вкладке растягивается до секунды и больше. `postMessage` через `MessageChannel` такого ограничения не имеет, поэтому планировщик React использует именно его, чтобы отдавать управление браузеру между кусками работы без лишних пауз."
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-005",
@@ -571,7 +571,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-006",
@@ -595,7 +595,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-007",
@@ -620,7 +620,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-008",
@@ -644,7 +644,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-009",
@@ -668,7 +668,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-010",
@@ -692,7 +692,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-011",
@@ -716,7 +716,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-async-012",
@@ -742,7 +742,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-001",
@@ -770,7 +770,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-002",
@@ -796,7 +796,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-003",
@@ -821,7 +821,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-004",
@@ -834,7 +834,7 @@
     "tags": [],
     "answer": {
       "short": "Политика браузера, а не сервера. Для простого запроса браузер отправляет его, сервер обрабатывает, но ответ не отдаётся скрипту, если нет заголовка Access-Control-Allow-Origin.",
-      "full": "Политика **браузера**, а не сервера. Для простого запроса браузер отправляет его, сервер обрабатывает, но **ответ не отдаётся** скрипту, если нет заголовка `Access-Control-Allow-Origin`. Для непростого — другой метод, `application/json`, кастомные заголовки — сначала уходит предварительный запрос `OPTIONS`, и если сервер не разрешил, основной не отправляется вообще. С куками `Allow-Origin` не может быть `*`, нужен конкретный адрес плюс `Allow-Credentials`.",
+      "full": "Политика **браузера**, а не сервера. Для простого запроса браузер отправляет его, сервер обрабатывает, но **ответ не отдаётся** скрипту, если нет заголовка `Access-Control-Allow-Origin`. Для непростого — метод кроме `GET`, `HEAD` и `POST`, `Content-Type: application/json`, собственные заголовки — сначала уходит предварительный запрос `OPTIONS`, и если сервер не разрешил, основной не отправляется вообще. С куками `Allow-Origin` не может быть `*`, нужен конкретный адрес плюс `Allow-Credentials`.",
       "mustMention": [
         "Политика браузера, а не сервера",
         "Без Access-Control-Allow-Origin ответ не отдаётся скрипту",
@@ -846,7 +846,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-005",
@@ -871,7 +871,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-006",
@@ -895,7 +895,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-browser-network-007",
@@ -921,7 +921,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-001",
@@ -948,7 +948,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-002",
@@ -976,7 +976,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-003",
@@ -1004,7 +1004,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-004",
@@ -1032,7 +1032,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-005",
@@ -1060,7 +1060,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-006",
@@ -1087,7 +1087,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-008",
@@ -1115,7 +1115,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-009",
@@ -1142,7 +1142,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-010",
@@ -1169,7 +1169,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-011",
@@ -1197,7 +1197,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-012",
@@ -1225,7 +1225,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-013",
@@ -1253,7 +1253,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-014",
@@ -1277,7 +1277,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-015",
@@ -1302,7 +1302,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-016",
@@ -1326,7 +1326,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-css-017",
@@ -1349,7 +1349,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-css-007",
       "css_08"
@@ -1380,7 +1380,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-002",
@@ -1407,7 +1407,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-003",
@@ -1434,7 +1434,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-004",
@@ -1461,7 +1461,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-005",
@@ -1488,7 +1488,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-006",
@@ -1516,7 +1516,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-008",
@@ -1543,7 +1543,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-009",
@@ -1571,7 +1571,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-html-010",
@@ -1594,7 +1594,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-html-007",
       "html_08"
@@ -1624,7 +1624,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-001",
@@ -1651,7 +1651,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-002",
@@ -1678,7 +1678,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-004",
@@ -1693,8 +1693,8 @@
     "topic": "js-core",
     "tags": [],
     "answer": {
-      "short": "Событие идёт от целевого элемента вверх по дереву до document.",
-      "full": "Событие идёт от целевого элемента вверх по дереву до `document`. Останавливается через `event.stopPropagation()`. Есть и обратная фаза — погружение, обработчик на неё вешается третьим аргументом `addEventListener(type, fn, true)`. `preventDefault()` — другое: отменяет действие браузера по умолчанию, а не распространение.",
+      "short": "Событие идёт от целевого элемента вверх по дереву до document и window.",
+      "full": "Событие идёт от целевого элемента вверх по дереву до `document` и `window`. Останавливается через `event.stopPropagation()`. Есть и обратная фаза — погружение, обработчик на неё вешается третьим аргументом `addEventListener(type, fn, true)`. `preventDefault()` — другое: отменяет действие браузера по умолчанию, а не распространение.",
       "mustMention": [
         "Событие идёт от цели вверх до document",
         "stopPropagation останавливает всплытие",
@@ -1706,7 +1706,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-005",
@@ -1734,7 +1734,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-006",
@@ -1761,7 +1761,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-009",
@@ -1789,7 +1789,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-010",
@@ -1817,7 +1817,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-011",
@@ -1845,7 +1845,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-012",
@@ -1873,7 +1873,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-013",
@@ -1901,7 +1901,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-014",
@@ -1929,7 +1929,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-015",
@@ -1957,7 +1957,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-016",
@@ -1985,7 +1985,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-017",
@@ -2009,7 +2009,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-js-core-003",
       "js_03"
@@ -2037,7 +2037,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-019",
@@ -2061,7 +2061,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-020",
@@ -2085,7 +2085,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-021",
@@ -2110,7 +2110,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-js-core-007",
       "js_08"
@@ -2138,7 +2138,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-js-core-008",
       "js_09"
@@ -2166,7 +2166,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-024",
@@ -2190,7 +2190,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-025",
@@ -2215,7 +2215,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-026",
@@ -2241,7 +2241,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-027",
@@ -2267,7 +2267,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-028",
@@ -2293,7 +2293,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-js-core-029",
@@ -2319,7 +2319,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-001",
@@ -2346,7 +2346,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-002",
@@ -2374,7 +2374,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-003",
@@ -2402,7 +2402,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-004",
@@ -2430,7 +2430,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-005",
@@ -2454,7 +2454,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-006",
@@ -2478,7 +2478,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-007",
@@ -2503,7 +2503,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-react-005",
       "react_05"
@@ -2531,7 +2531,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-009",
@@ -2555,7 +2555,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-performance-010",
@@ -2579,7 +2579,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-001",
@@ -2606,7 +2606,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-002",
@@ -2633,7 +2633,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-004",
@@ -2661,7 +2661,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-006",
@@ -2688,7 +2688,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-009",
@@ -2716,7 +2716,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-010",
@@ -2744,7 +2744,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-012",
@@ -2772,7 +2772,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-013",
@@ -2800,7 +2800,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-014",
@@ -2828,7 +2828,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-015",
@@ -2856,7 +2856,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-016",
@@ -2884,7 +2884,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-017",
@@ -2909,7 +2909,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-018",
@@ -2933,7 +2933,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-019",
@@ -2957,7 +2957,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-020",
@@ -2981,7 +2981,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-021",
@@ -3005,7 +3005,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-022",
@@ -3029,7 +3029,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-023",
@@ -3053,7 +3053,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-react-008",
       "react_08"
@@ -3081,7 +3081,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-react-003",
       "react_03"
@@ -3109,7 +3109,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-react-007",
       "react_07"
@@ -3139,7 +3139,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-027",
@@ -3165,7 +3165,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-028",
@@ -3190,7 +3190,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-029",
@@ -3216,7 +3216,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-030",
@@ -3242,7 +3242,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-031",
@@ -3268,7 +3268,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-react-032",
@@ -3293,7 +3293,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-security-001",
@@ -3321,7 +3321,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-security-002",
@@ -3349,7 +3349,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-security-003",
@@ -3373,7 +3373,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-security-004",
@@ -3397,7 +3397,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-security-005",
@@ -3422,7 +3422,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-001",
@@ -3449,7 +3449,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-002",
@@ -3477,7 +3477,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-003",
@@ -3505,7 +3505,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-004",
@@ -3532,7 +3532,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-005",
@@ -3559,7 +3559,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-006",
@@ -3587,7 +3587,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-007",
@@ -3615,7 +3615,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-008",
@@ -3642,7 +3642,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-009",
@@ -3666,7 +3666,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-state-010",
@@ -3678,7 +3678,7 @@
     "topic": "state",
     "tags": [],
     "answer": {
-      "short": "Главное деление, с которого стоит начинать ответ.",
+      "short": "Серверное состояние — копия данных бэкенда: оно устаревает, его кэшируют и инвалидируют; клиентское — то, чего на сервере нет: панели, фильтры, черновики.",
       "full": "Главное деление, с которого стоит начинать ответ. **Серверное** — данные с бэкенда: у них есть владелец на другой стороне, они устаревают, их надо кэшировать и инвалидировать. Это зона TanStack Query или RTK Query. **Клиентское** — то, чего на сервере нет: открытые панели, фильтры, черновики. Это Zustand, Redux или локальное состояние. Половина «глобального состояния» в проектах — на самом деле серверное, и в сторе ему не место.",
       "mustMention": [
         "Серверное: владелец на бэкенде, устаревает, нужен кэш и инвалидация",
@@ -3690,7 +3690,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-testing-001",
@@ -3718,7 +3718,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-001",
@@ -3746,7 +3746,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-002",
@@ -3773,7 +3773,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-003",
@@ -3800,7 +3800,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-006",
@@ -3828,7 +3828,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-007",
@@ -3856,7 +3856,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-008",
@@ -3884,7 +3884,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-010",
@@ -3912,7 +3912,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-011",
@@ -3940,7 +3940,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-012",
@@ -3968,7 +3968,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-013",
@@ -3992,7 +3992,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-typescript-014",
@@ -4016,7 +4016,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-typescript-009",
       "ts_09"
@@ -4045,7 +4045,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-typescript-005",
       "ts_05"
@@ -4073,7 +4073,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null,
+    "reviewedAt": "2026-11-04",
     "aliases": [
       "fe-typescript-004",
       "ts_04"
@@ -4107,7 +4107,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-a11y-004",
@@ -4135,7 +4135,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-a11y-005",
@@ -4161,7 +4161,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-testing-002",
@@ -4189,7 +4189,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-testing-003",
@@ -4217,7 +4217,7 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   },
   {
     "id": "fe-testing-004",
@@ -4243,6 +4243,6 @@
     },
     "followUps": [],
     "sources": [],
-    "reviewedAt": null
+    "reviewedAt": "2026-11-04"
   }
 ]
