@@ -38,7 +38,8 @@ cp deploy/deploy.env.example deploy/deploy.env   # один раз; заполн
 
 1. Проверки: Docker и Compose v2, сеть `EDGE_NETWORK`, запущенный reverse proxy, DNS домена
    указывает на этот сервер, свободное место.
-2. Код в `APP_DIR`, сборка образа, ожидание `healthy`.
+2. Код в `APP_DIR` (`/opt/skillcheck`, если он доступен на запись, иначе `~/skillcheck` — sudo не нужен),
+   сборка образа, ожидание `healthy`.
 3. Конфиги из `edge/*.conf.in` рендерятся в `APP_DIR/deploy/edge/rendered/` и подключаются
    к reverse proxy отдельным compose-оверлеем поверх текущего набора его файлов.
 4. Если сертификата нет: HTTP-конфиг → проверка ACME-пути → `certbot certonly --webroot`.

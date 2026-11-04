@@ -9,7 +9,8 @@
 #   EDGE_PROJECT   — имя этого compose-проекта
 #   EDGE_NETWORK   — внешняя Docker-сеть, в которой reverse proxy видит приложения
 # Необязательные (значения по умолчанию в скобках):
-#   BRANCH (main), REPO (адрес origin), APP_DIR (/opt/skillcheck), EMAIL (пусто),
+#   BRANCH (main), REPO (адрес origin), EMAIL (пусто),
+#   APP_DIR (/opt/skillcheck, если он есть и доступен на запись, иначе ~/skillcheck — sudo не нужен),
 #   EDGE_SERVICE (nginx), CERTBOT_SERVICE (certbot), CERTBOT_PROFILE (operations),
 #   WEBROOT (/var/www/certbot), CERTS (/etc/letsencrypt)
 #
@@ -25,7 +26,9 @@ set -Eeuo pipefail
 : "${DOMAIN:?задайте DOMAIN}" "${EDGE_DIR:?задайте EDGE_DIR}" "${EDGE_PROJECT:?задайте EDGE_PROJECT}" "${EDGE_NETWORK:?задайте EDGE_NETWORK}"
 BRANCH="${BRANCH:-main}"
 REPO="${REPO:-https://github.com/setcodes/skillCheck.git}"
-APP_DIR="${APP_DIR:-/opt/skillcheck}"
+if [ -z "${APP_DIR:-}" ]; then
+  if [ -w /opt/skillcheck ]; then APP_DIR=/opt/skillcheck; else APP_DIR="$HOME/skillcheck"; fi
+fi
 EMAIL="${EMAIL:-}"
 EDGE_SERVICE="${EDGE_SERVICE:-nginx}"
 CERTBOT_SERVICE="${CERTBOT_SERVICE:-certbot}"
@@ -86,7 +89,7 @@ if [ -d "$APP_DIR/.git" ]; then
   git -C "$APP_DIR" fetch --quiet origin "$BRANCH"
   git -C "$APP_DIR" checkout --quiet -B "$BRANCH" "origin/$BRANCH"
 else
-  mkdir -p "$APP_DIR" 2>/dev/null || die "нет прав создать $APP_DIR: sudo mkdir -p $APP_DIR && sudo chown $(id -un) $APP_DIR"
+  mkdir -p "$APP_DIR" 2>/dev/null || die "нет прав создать $APP_DIR — уберите APP_DIR из deploy.env (будет ~/skillcheck) или создайте каталог: sudo mkdir -p $APP_DIR && sudo chown $(id -un) $APP_DIR"
   git clone --quiet --branch "$BRANCH" "$REPO" "$APP_DIR"
 fi
 info "коммит $(git -C "$APP_DIR" log -1 --format='%h %s')"
