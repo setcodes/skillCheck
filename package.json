@@ -2,6 +2,13 @@
   "name": "skillcheck-interview-suite",
   "private": true,
   "version": "1.0.0",
+  "description": "Тренажёр технических собеседований: теория, задачи с автопроверкой, кейсы и мок-интервью",
+  "homepage": "https://skillcheck.setcode.ru/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/setcodes/skillCheck.git"
+  },
+  "bugs": "https://github.com/setcodes/skillCheck/issues",
   "type": "module",
   "scripts": {
     "dev": "vite",
