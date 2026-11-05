@@ -17,7 +17,8 @@ export function AppVersion({ className }: { className?: string }) {
     <span className={cn('items-center gap-1.5 tabular-nums', className)} title={title}>
       <span>v{__APP_VERSION__}</span>
       {__APP_COMMIT__ && (
-        <>
+        // на узких экранах хеш прячем: версии и подписи достаточно
+        <span className="contents max-sm:hidden">
           <span aria-hidden>·</span>
           <a
             href={`${REPO_URL}/commit/${__APP_COMMIT__}`}
@@ -28,7 +29,7 @@ export function AppVersion({ className }: { className?: string }) {
           >
             {__APP_COMMIT__}
           </a>
-        </>
+        </span>
       )}
     </span>
   )
