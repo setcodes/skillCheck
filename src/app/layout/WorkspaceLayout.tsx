@@ -23,6 +23,7 @@ import type { UserRole } from '@/entities/user/model/types'
 import { useApp } from '../providers/AppProvider'
 import { useConsole } from '../providers/ConsoleProvider'
 import { useInterviewTimer } from '../providers/InterviewTimerProvider'
+import { AppVersion } from '@/shared/ui/app-version'
 
 const INTERVIEWER_ONLY = ['/interview', '/data']
 
@@ -233,6 +234,7 @@ function StatusBar({ section, count }: { section?: Section; count: number }) {
         </span>
       </div>
       <div className="flex items-stretch">
+        <AppVersion className="hidden border-l px-3 md:flex" />
         <button
           type="button"
           onClick={toggle}

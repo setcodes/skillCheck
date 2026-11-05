@@ -1,62 +1,42 @@
-# Changelog
+# Журнал изменений
 
-All notable changes to this project will be documented in this file.
+Все заметные изменения проекта. Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
+версии — [семантическое версионирование](https://semver.org/lang/ru/). Как выпускать версию —
+раздел «Версии» в [README](README.md).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## [Не выпущено]
 
-## [Unreleased]
+### Добавлено
+- Версия сайта в футере и строке состояния: `v<версия> · <коммит>`, коммит ведёт на GitHub,
+  дата сборки — во всплывающей подсказке.
+- Подпись «сделано в setcode» со ссылкой на [setcode.ru](https://setcode.ru/) в футере главной.
+- Скриншоты и карточка-превью репозитория (`docs/images/`), шаблоны issue для ошибок и pull request.
 
-### Added
-- Open source release preparation
-- MIT License
-- Comprehensive documentation
-- CI/CD workflows
-- Security audit integration
-- Question validation system
-- shadcn/ui components integration
-- Sonner toast notifications
-- Calendar component for date selection
+### Изменено
+- `SECURITY.md` и журнал изменений переписаны на русском под текущее состояние проекта, в
+  `CODE_OF_CONDUCT.md` указан контакт для жалоб; устаревший `RELEASE_NOTES.md` удалён — релизы
+  описываются здесь и на странице GitHub Releases.
 
-### Changed
-- Updated Vite to latest version (7.1.6)
-- Fixed all TypeScript errors
-- Improved toast notification system
-- Enhanced question management system
-- Refactored task structure by profession
+## [1.0.0] — 2026-11-05
 
-### Fixed
-- Security vulnerabilities in dependencies
-- TypeScript compilation errors
-- Code editor language detection in mock interview mode
-- Toast notification styling and functionality
+Первая версия с номером: тренажёр перестроен вокруг профессии Frontend.
 
-### Removed
-- Temporary files and backup files
-- Unused dependencies
-- Debug console logs
+### Добавлено
+- Интерфейс в стиле терминала: главная-экран, оболочка с рейлом разделов, проводником и инспектором,
+  консоль команд (`⌘K`), темы `dark`, `dracula`, `monokai`, `light`.
+- Теория: 159 вопросов по 14 темам с эталонным ответом, чек-листом «должно прозвучать», типичными
+  ошибками, красными флагами и уточняющими вопросами; весь банк вычитан.
+- Задачи: 38 задач junior–senior с видимыми и скрытыми проверками в изолированном Web Worker,
+  подсказками, эталоном и рубрикой для интервьюера.
+- «Что выведет код?» — 15 фрагментов, ответы проверены запуском.
+- Кейсы — 8 сценариев ревью кода и live coding с эталонами.
+- Мок-интервью с балансом тем, общим таймером и отчётом; режим интервью со сводным отчётом и печатью.
+- Импорт своих вопросов и задач поверх встроенного банка, выгрузка только своих правок.
+- Предложение вопросов через форму issue и pull request, проверка банка в CI (`validate-questions`).
+- Деплой: Docker-образ с Nginx и CSP за существующим reverse proxy, скрипт `deploy/deploy.sh`.
 
-## [1.0.0] - 2024-12-19
+### Изменено
+- Backend, Аналитик и DevOps заморожены в `/frozen` и временно не входят в сборку.
 
-### Added
-- Initial release of SkillCheck platform
-- Support for Frontend, Backend (Java), Business Analyst, and DevOps professions
-- Junior, Middle, and Senior difficulty levels
-- Mock interview mode
-- Code editor with syntax highlighting
-- Automatic test execution
-- Timer and notification system
-- Question and task management
-- Export/import functionality
-- Responsive design
-
-### Features
-- **Candidate Mode**: Solve practical tasks and take tests
-- **Interviewer Mode**: Evaluate solutions and score candidates
-- **Mock Interview**: Practice real interviews with random questions
-- **Code Editor**: Monaco editor with Prettier formatting
-- **Testing System**: Automatic test execution with detailed feedback
-- **Timer System**: Global and task-specific timers with notifications
-- **Question Bank**: Comprehensive database of technical questions
-- **Task Library**: Curated coding challenges for each profession
-- **Export/Import**: Data portability for questions and tasks
+[Не выпущено]: https://github.com/setcodes/skillCheck/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/setcodes/skillCheck/releases/tag/v1.0.0

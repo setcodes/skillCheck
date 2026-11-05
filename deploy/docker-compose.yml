@@ -7,6 +7,8 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
+      args:
+        APP_COMMIT: ${APP_COMMIT:-}
     image: skillcheck-web:latest
     restart: unless-stopped
     read_only: true

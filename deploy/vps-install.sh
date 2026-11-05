@@ -99,7 +99,8 @@ fi
 info "коммит $(git -C "$APP_DIR" log -1 --format='%h %s')"
 
 step "Сборка и запуск контейнера (внутри npm run check — несколько минут)"
-docker compose -f "$APP_DIR/deploy/docker-compose.yml" up -d --build
+APP_COMMIT="$(git -C "$APP_DIR" rev-parse --short=7 HEAD)" \
+  docker compose -f "$APP_DIR/deploy/docker-compose.yml" up -d --build
 for i in $(seq 1 30); do
   [ "$(docker inspect -f '{{.State.Health.Status}}' skillcheck-web-1 2>/dev/null || true)" = healthy ] && break
   [ "$i" = 30 ] && die "контейнер не стал healthy: docker logs skillcheck-web-1"
