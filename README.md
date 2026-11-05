@@ -97,6 +97,22 @@ deploy/           # Docker-образ, конфиги Nginx и скрипты д
 
 Ветки по gitflow: `feature/*` → `dev` → `main`. Перед PR — `npm run check` и `npm run e2e`.
 
+## Версии
+
+Версия сайта — поле `version` в `package.json` по [semver](https://semver.org/lang/ru/). Она показывается
+в футере вместе с коротким хешем коммита (ведёт на GitHub), дата сборки — во всплывающей подсказке.
+Отсчёт начат с `1.0.0`.
+
+Перед каждым релизом (PR `dev` → `main`) версию поднимают в ветке `dev`:
+
+```sh
+npm version patch --no-git-tag-version   # исправления и правки контента: 1.0.0 → 1.0.1
+npm version minor --no-git-tag-version   # новые возможности: 1.0.0 → 1.1.0
+npm version major --no-git-tag-version   # несовместимые изменения: 1.0.0 → 2.0.0
+```
+
+После слияния в `main` релиз помечают тегом `vX.Y.Z` и выкатывают `./deploy/deploy.sh`.
+
 ## Лицензия
 
 MIT — см. [LICENSE](LICENSE).

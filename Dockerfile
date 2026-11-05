@@ -4,6 +4,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY . .
+# Коммит для футера: .git в образ не копируется (.dockerignore), его передаёт скрипт деплоя
+ARG APP_COMMIT=""
+ENV APP_COMMIT=$APP_COMMIT
 RUN npm run check
 
 # Раздача: только dist и конфиг Nginx, без node и исходников.

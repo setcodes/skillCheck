@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Toaster } from '@/shared/ui/sonner'
+import { AppVersion } from '@/shared/ui/app-version'
 import { AppProvider } from './providers/AppProvider'
 import { InterviewTimerProvider } from './providers/InterviewTimerProvider'
 import { ConsoleProvider } from './providers/ConsoleProvider'
@@ -26,7 +27,21 @@ function SiteLayout() {
       <footer className="border-t bg-card font-mono text-xs print:hidden">
         <div className="container mx-auto flex h-8 items-stretch justify-between gap-3 px-4 text-muted-foreground">
           <span className="flex items-center bg-primary px-2 font-medium text-primary-foreground">skillcheck</span>
-          <p className="flex items-center truncate">&copy; {new Date().getFullYear()} SkillCheck.<span className="max-sm:hidden">&nbsp;Все права защищены.</span></p>
+          <div className="flex min-w-0 items-center gap-3">
+            <p className="truncate max-sm:hidden">&copy; {new Date().getFullYear()} SkillCheck.<span className="max-sm:hidden">&nbsp;Все права защищены.</span></p>
+            <AppVersion className="flex shrink-0 sm:border-l sm:pl-3" />
+            <span className="shrink-0 border-l pl-3">
+              сделано в{' '}
+              <a
+                href="https://setcode.ru/"
+                target="_blank"
+                rel="noopener"
+                className="rounded-sm text-foreground underline-offset-2 transition-colors hover:text-primary-text hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                setcode
+              </a>
+            </span>
+          </div>
         </div>
       </footer>
     </>
