@@ -128,8 +128,15 @@ npm version minor --no-git-tag-version   # новые возможности: 1.
 npm version major --no-git-tag-version   # несовместимые изменения: 1.0.0 → 2.0.0
 ```
 
-После слияния в `main` релиз помечают тегом `vX.Y.Z`, переносят пункты из раздела «Не выпущено» в
-[CHANGELOG.md](CHANGELOG.md) под номер версии и выкатывают `./deploy/deploy.sh`.
+В том же PR пункты из раздела «Не выпущено» в [CHANGELOG.md](CHANGELOG.md) переносят под номер
+версии. После слияния в `main` создают релиз с тегом — описание берётся из CHANGELOG — и выкатывают:
+
+```sh
+gh release create vX.Y.Z --target main --title "vX.Y.Z" --notes "$(awk '/^## \[X.Y.Z\]/{f=1;next} /^## \[|^\[/{f=0} f' CHANGELOG.md)"
+./deploy/deploy.sh
+```
+
+Отдельного workflow для релизов нет: тег ставится вместе с релизом, сборку проверяет CI на `main`.
 
 ## Лицензия
 
